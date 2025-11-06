@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Usuario Principal - Firebase</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #D4AF37;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: #1a1a1a;
+            border: 2px solid #D4AF37;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        h1 {
+            color: #D4AF37;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #D4AF37;
+        }
+
+        button {
+            background: #D4AF37;
+            color: #1a1a1a;
+            border: 2px solid #af9974;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        button:hover {
+            background: #af9974;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success {
+            color: #4CAF50;
+            margin-top: 15px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+
+        .error {
+            color: #f44336;
+            margin-top: 15px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+
+        .warning {
+            color: #ff9800;
+            margin-top: 15px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>[CLASIFICADO] CREAR USUARIO PRINCIPAL</h1>
+
+        <div class="info">
+            <strong>Instrucciones:</strong><br>
+            1. Asegúrate de haber configurado Firebase correctamente<br>
+            2. Ve a Firebase Console > Authentication > Sign-in method<br>
+            3. Habilita "Email/Password"<br>
+            4. Haz clic en el botón de abajo para crear el usuario
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ IMPORTANTE:</strong><br>
+            Este script creará el usuario directamente en Firebase usando la API de Admin.
+            La forma más sencilla es crear el usuario manualmente desde la consola de Firebase.
+        </div>
+
+        <button id="createUserBtn" onclick="createUser()">Crear Usuario Principal</button>
+
+        <div id="result"></div>
+
+        <div class="info" style="margin-top: 30px;">
+            <strong>Método Recomendado (Manual):</strong><br>
+            1. Ve a: <a href="https://console.firebase.google.com/" target="_blank" style="color: #D4AF37;">Firebase
+                Console</a><br>
+            2. Selecciona tu proyecto: campo-tiro-valle<br>
+            3. Ve a "Authentication" > "Users"<br>
+            4. Haz clic en "Add user"<br>
+            5. Email: <strong>clubtirovalle2025@campo-tiro-valle.com</strong><br>
+            6. Password: <strong>cobateairsoft2025</strong><br>
+            7. Haz clic en "Add user"
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpf_sBlrHSoyNRo64uONsmacbj-L9SSaY",
+            authDomain: "campo-tiro-valle.firebaseapp.com",
+            projectId: "campo-tiro-valle",
+            storageBucket: "campo-tiro-valle.firebasestorage.app",
+            messagingSenderId: "350378916779",
+            appId: "1:350378916779:web:a7b0263a6100f6a3f570ee"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.createUser = async function () {
+            const btn = document.getElementById('createUserBtn');
+            const result = document.getElementById('result');
+
+            btn.disabled = true;
+            btn.textContent = 'Creando usuario...';
+            result.innerHTML = '';
+
+            const email = 'clubtirovalle2025@campo-tiro-valle.com';
+            const password = 'cobateairsoft2025';
+
+            try {
+                // NOTA: createUserWithEmailAndPassword requiere que el usuario esté deslogueado
+                // y que Email/Password esté habilitado
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                result.innerHTML = `<div class="success">✅ Usuario creado exitosamente!<br>UID: ${userCredential.user.uid}</div>`;
+                btn.textContent = 'Usuario Creado';
+            } catch (error) {
+                let errorMessage = 'Error al crear usuario: ';
+
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage += 'El usuario ya existe. Puedes usarlo para iniciar sesión.';
+                    result.innerHTML = `<div class="warning">⚠️ ${errorMessage}</div>`;
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage += 'La contraseña es muy débil.';
+                    result.innerHTML = `<div class="error">❌ ${errorMessage}</div>`;
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'El email no es válido.';
+                    result.innerHTML = `<div class="error">❌ ${errorMessage}</div>`;
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMessage += 'Email/Password no está habilitado en Firebase. Ve a Authentication > Sign-in method y habilítalo.';
+                    result.innerHTML = `<div class="error">❌ ${errorMessage}</div>`;
+                } else {
+                    errorMessage += error.message;
+                    result.innerHTML = `<div class="error">❌ ${errorMessage}<br><br>Recomendación: Crea el usuario manualmente desde la consola de Firebase.</div>`;
+                }
+
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario Principal';
+            }
+        };
+    </script>
+</body>
+
+</html>

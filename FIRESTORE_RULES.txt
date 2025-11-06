@@ -1,0 +1,62 @@
+// ============================================
+// REGLAS DE FIRESTORE PARA DESARROLLO
+// ============================================
+// ⚠️ IMPORTANTE: Estas reglas son para DESARROLLO
+// En producción, deberías restringirlas más
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Colección de carnets - PERMISIVA PARA DESARROLLO
+    match /carnets/{cardId} {
+      // Permitir lectura a todos
+      allow read: if true;
+      // Permitir escritura a usuarios autenticados
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+  }
+}
+
+// ============================================
+// INSTRUCCIONES PASO A PASO
+// ============================================
+// 1. Ve a: https://console.firebase.google.com/
+// 2. Selecciona tu proyecto: "campo-tiro-valle"
+// 3. En el menú lateral izquierdo, haz clic en:
+//    "Firestore Database" (ícono de base de datos)
+// 4. En la parte superior, haz clic en la pestaña "Rules"
+// 5. BORRA TODO el contenido actual del editor
+// 6. COPIA Y PEGA exactamente las reglas de arriba
+//    (desde "rules_version" hasta el último "}")
+// 7. Haz clic en el botón "Publish" (publicar)
+// 8. Espera a que aparezca un mensaje de confirmación
+// 9. Vuelve a intentar guardar el carnet
+
+// ============================================
+// VERIFICACIÓN
+// ============================================
+// Para verificar que las reglas se aplicaron:
+// - Deberías ver "Rules published successfully" después de hacer clic en Publish
+// - Espera 5-10 segundos para que se propaguen los cambios
+// - Si aún tienes problemas, verifica que:
+//   1. Estás autenticado con Google en la aplicación
+//   2. El proyecto Firebase es el correcto
+//   3. Las reglas fueron guardadas correctamente
+
+// ============================================
+// REGLAS ALTERNATIVAS (MÁS PERMISIVAS - SOLO PARA DEBUG)
+// ============================================
+// Si las reglas de arriba no funcionan, prueba estas temporalmente:
+// (NO las uses en producción - permiten acceso sin autenticación)
+/*
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+*/
