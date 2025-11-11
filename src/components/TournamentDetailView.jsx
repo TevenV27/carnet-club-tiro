@@ -327,8 +327,8 @@ function TournamentDetailView() {
     }
 
     return (
-        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px]  shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
                         {tournament.nombre}
@@ -372,7 +372,7 @@ function TournamentDetailView() {
             </header>
 
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <header className="px-6 py-4 border-b border-tactical-border/60">
                         <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
                             Registrar actividad
@@ -434,7 +434,7 @@ function TournamentDetailView() {
                     </form>
                 </div>
 
-                <div className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
@@ -562,7 +562,7 @@ function TournamentDetailView() {
                 </div>
             </section>
 
-            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[5px] md:p-6 space-y-4">
+            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">

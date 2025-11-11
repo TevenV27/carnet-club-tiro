@@ -147,7 +147,7 @@ function UserDetailView() {
     }
 
     return (
-        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.35em]">
@@ -166,7 +166,7 @@ function UserDetailView() {
             </div>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-6">
+                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-6">
                     <div>
                         <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em] mb-2">
                             Fotografía Operador
@@ -202,7 +202,7 @@ function UserDetailView() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6">
+                <div className="lg:col-span-2 bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6">
                     <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em] mb-4">
                         Datos tácticos del operador
                     </p>
@@ -221,7 +221,7 @@ function UserDetailView() {
             </section>
 
             {card && (
-                <section className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
+                <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em]">
                             Credencial Generada

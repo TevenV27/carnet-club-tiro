@@ -124,8 +124,8 @@ function RankingView() {
     }
 
     return (
-        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8">
-            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
                     Ranking de Operadores
                 </h1>
@@ -135,7 +135,7 @@ function RankingView() {
             </header>
 
             <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-                <div className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     {topOperators.map((operator, idx) => (
                         <div
                             key={getCedula(operator)}
@@ -179,7 +179,7 @@ function RankingView() {
                         </div>
                     ))}
                 </div>
-                <div className="bg-black/30 border border-tactical-border rounded-lg p-[5px] md:p-6 shadow-[0_0_20px_rgba(0,0,0,0.45)]">
+                <div className="bg-black/30 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_20px_rgba(0,0,0,0.45)]">
                     <header className="px-6 py-4 border-b border-tactical-border/60 flex items-center justify-between">
                         <div>
                             <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">

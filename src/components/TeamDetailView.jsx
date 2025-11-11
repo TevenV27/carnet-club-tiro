@@ -224,8 +224,8 @@ function TeamDetailView() {
   }
 
   return (
-    <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] gap-4">
+    <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] gap-4">
         <div className="flex items-center gap-4">
           <div className="w-24 h-24 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">
             {team.logo ? (
@@ -263,7 +263,7 @@ function TeamDetailView() {
         </div>
       </header>
 
-      <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden space-y-4 p-[5px] md:p-6">
+      <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden space-y-4 p-[10px] md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">

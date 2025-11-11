@@ -128,7 +128,7 @@ function CredencialView() {
     }
 
     return (
-        <div className="min-h-screen bg-tactical-dark p-[5px] md:p-4">
+        <div className="min-h-screen bg-tactical-dark p-[10px] md:p-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-4 text-center border-b border-tactical-border pb-3 relative"

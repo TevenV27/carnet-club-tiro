@@ -255,7 +255,7 @@ Revisa la consola del navegador para más detalles.
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-[5px] md:px-4 pt-[5px] md:pt-4 pb-[5px] md:pb-6 relative z-10 flex flex-col lg:overflow-hidden flex-1 lg:min-h-0">
+      <div className="max-w-7xl mx-auto px-[10px] md:px-4 pt-[10px] md:pt-4 pb-[10px] md:pb-6 relative z-10 flex flex-col lg:overflow-hidden flex-1 lg:min-h-0">
         {/* Header táctico */}
         <div className="mb-4 text-center border-b border-tactical-border pb-3 relative flex-shrink-0"
           style={{
@@ -279,8 +279,8 @@ Revisa la consola del navegador para más detalles.
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch lg:flex-1 lg:min-h-0">
           {/* Formulario */}
-          <div className="hud-border p-[5px] md:p-1 flex flex-col lg:overflow-hidden">
-            <div className="bg-black p-[5px] md:p-4 flex flex-col lg:flex-1 lg:overflow-hidden" style={{
+          <div className="hud-border p-[10px] md:p-1 flex flex-col lg:overflow-hidden">
+            <div className="bg-black p-[10px] md:p-4 flex flex-col lg:flex-1 lg:overflow-hidden" style={{
               background: '#0a0a0a',
               boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
             }}>
@@ -679,8 +679,8 @@ Revisa la consola del navegador para más detalles.
           </div>
 
           {/* Vista previa y descarga */}
-          <div className="hud-border p-[5px] md:p-1 flex flex-col ">
-            <div className="flex flex-col gap-2 bg-black p-[5px] md:p-4 lg:flex-1 " style={{
+          <div className="hud-border p-[10px] md:p-1 flex flex-col ">
+            <div className="flex flex-col gap-2 bg-black p-[10px] md:p-4 lg:flex-1 " style={{
               background: '#0a0a0a',
               boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
             }}>
