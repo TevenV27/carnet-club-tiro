@@ -88,10 +88,10 @@ function UsersView() {
     }
 
     return (
-        <div className="p-8 bg-tactical-dark min-h-full h-full text-tactical-brass">
+        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass">
             <section className="mb-8 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent pointer-events-none" />
-                <div className="relative z-10 border border-tactical-border p-6 bg-black/30 backdrop-blur-sm shadow-[0_0_25px_rgba(0,0,0,0.6)]">
+                <div className="relative z-10 border border-tactical-border p-[5px] md:p-6 bg-black/30 backdrop-blur-sm shadow-[0_0_25px_rgba(0,0,0,0.6)]">
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-1 bg-tactical-gold shadow-[0_0_20px_rgba(175,153,116,0.9)]" />
                         <div>
@@ -106,7 +106,7 @@ function UsersView() {
                 </div>
             </section>
             <section className="mb-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm px-5 py-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm px-[5px] py-[5px] md:px-5 md:py-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     <div>
                         <p className="text-xs font-tactical text-tactical-brass/80 uppercase tracking-[0.4em]">
                             Buscar operadores por nombre o cédula
@@ -144,7 +144,7 @@ function UsersView() {
                         return (
                             <article
                                 key={user.id}
-                                className="relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border border-tactical-border px-6 py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-[300px]"
+                                className="relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border border-tactical-border px-[5px] py-[5px] md:px-6 md:py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-[300px]"
                                 onDoubleClick={() => navigate(`/usuarios/${encodeURIComponent(cedula)}`)}
                                 title="Doble clic para ver el informe completo"
                             >

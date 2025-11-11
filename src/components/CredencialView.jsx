@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { searchCardByCedula } from '../services/cardService'
+import CarnetPreview from './CarnetPreview'
 
 function CredencialView() {
     const { cedula } = useParams()
@@ -112,8 +113,22 @@ function CredencialView() {
         return null
     }
 
+    const frontTransformStyle = {
+        transform: `perspective(1000px) rotateX(${frontCardTransform.rotateX}deg) rotateY(${frontCardTransform.rotateY}deg) scale3d(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
+        transition: 'transform 0.1s ease-out',
+        transformStyle: 'preserve-3d',
+        cursor: 'pointer'
+    }
+
+    const backTransformStyle = {
+        transform: `perspective(1000px) rotateX(${backCardTransform.rotateX}deg) rotateY(${backCardTransform.rotateY}deg) scale3d(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
+        transition: 'transform 0.1s ease-out',
+        transformStyle: 'preserve-3d',
+        cursor: 'pointer'
+    }
+
     return (
-        <div className="min-h-screen bg-tactical-dark p-4">
+        <div className="min-h-screen bg-tactical-dark p-[5px] md:p-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-4 text-center border-b border-tactical-border pb-3 relative"
@@ -207,34 +222,15 @@ function CredencialView() {
                                 <div>
                                     <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA FRONTAL</h3>
-                                    <div
-                                        className="flex justify-center mb-2 border border-tactical-border p-2"
-                                        style={{
-                                            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.8)',
-                                            perspective: '1000px'
-                                        }}
+                                    <CarnetPreview
+                                        src={card.frontCardUrl}
+                                        alt="Carnet Frontal"
+                                        placeholder="Sin imagen frontal"
+                                        interactive
+                                        imageStyle={frontTransformStyle}
                                         onMouseMove={(e) => handleMouseMove(e, 'front')}
                                         onMouseLeave={() => handleMouseLeave('front')}
-                                    >
-                                        <img
-                                            src={card.frontCardUrl}
-                                            alt="Carnet Frontal"
-                                            className="rounded"
-                                            style={{
-                                                width: '100%',
-                                                maxWidth: '250px',
-                                                height: 'auto',
-                                                aspectRatio: '650/1004',
-                                                objectFit: 'contain',
-                                                display: 'block',
-                                                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
-                                                transform: `perspective(1000px) rotateX(${frontCardTransform.rotateX}deg) rotateY(${frontCardTransform.rotateY}deg) scale3d(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
-                                                transition: 'transform 0.1s ease-out',
-                                                transformStyle: 'preserve-3d',
-                                                cursor: 'pointer'
-                                            }}
-                                        />
-                                    </div>
+                                    />
                                 </div>
                             )}
 
@@ -243,34 +239,15 @@ function CredencialView() {
                                 <div>
                                     <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA TRASERA</h3>
-                                    <div
-                                        className="flex justify-center mb-2 border border-tactical-border p-2"
-                                        style={{
-                                            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.8)',
-                                            perspective: '1000px'
-                                        }}
+                                    <CarnetPreview
+                                        src={card.backCardUrl}
+                                        alt="Carnet Trasero"
+                                        placeholder="Sin imagen trasera"
+                                        interactive
+                                        imageStyle={backTransformStyle}
                                         onMouseMove={(e) => handleMouseMove(e, 'back')}
                                         onMouseLeave={() => handleMouseLeave('back')}
-                                    >
-                                        <img
-                                            src={card.backCardUrl}
-                                            alt="Carnet Trasero"
-                                            className="rounded"
-                                            style={{
-                                                width: '100%',
-                                                maxWidth: '250px',
-                                                height: 'auto',
-                                                aspectRatio: '650/1004',
-                                                objectFit: 'contain',
-                                                display: 'block',
-                                                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
-                                                transform: `perspective(1000px) rotateX(${backCardTransform.rotateX}deg) rotateY(${backCardTransform.rotateY}deg) scale3d(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
-                                                transition: 'transform 0.1s ease-out',
-                                                transformStyle: 'preserve-3d',
-                                                cursor: 'pointer'
-                                            }}
-                                        />
-                                    </div>
+                                    />
                                 </div>
                             )}
                         </div>

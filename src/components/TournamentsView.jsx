@@ -191,7 +191,7 @@ function TournamentsView() {
             <article
                 key={torneo.id}
                 onDoubleClick={() => navigate(`/torneos/${torneo.id}`)}
-                className="relative border border-theme bg-surface px-6 py-5 rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.6)] transition-transform duration-200 cursor-pointer select-none hover:-translate-y-1"
+                className="relative border border-theme bg-surface px-[5px] md:px-6 py-[5px] md:py-5 rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.6)] transition-transform duration-200 cursor-pointer select-none hover:-translate-y-1"
                 title="Doble clic para ver detalles del torneo"
             >
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-tactical-gold/40 to-transparent" />
@@ -258,8 +258,8 @@ function TournamentsView() {
     }
 
     return (
-        <div className="p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
                         Centro de Torneos
@@ -277,7 +277,7 @@ function TournamentsView() {
                             setParticipantSearch('')
                             setIsCreateModalOpen(true)
                         }}
-                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
                     >
                         Crear torneo
                     </button>

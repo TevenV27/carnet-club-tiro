@@ -78,11 +78,11 @@ function TournamentDetailView() {
                 setTournament(data)
 
                 const initialScores = {}
-                ;(data.participantes || []).forEach((participant) => {
-                    initialScores[participant.cedula] = {
-                        ...(participant.activityScores || {})
-                    }
-                })
+                    ; (data.participantes || []).forEach((participant) => {
+                        initialScores[participant.cedula] = {
+                            ...(participant.activityScores || {})
+                        }
+                    })
                 setScores(initialScores)
             } catch (err) {
                 console.error('Error cargando torneo:', err)
@@ -327,8 +327,8 @@ function TournamentDetailView() {
     }
 
     return (
-        <div className="p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-            <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] gap-4">
+        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px]  shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
                         {tournament.nombre}
@@ -337,9 +337,8 @@ function TournamentDetailView() {
                         Inicio: {formatDateTime(tournament.fechaInicio)}
                     </p>
                     <p
-                        className={`text-[10px] font-tactical uppercase tracking-[0.45em] ${
-                            isCancelado ? 'text-red-400' : isFinalizado ? 'text-tactical-gold' : 'text-tactical-brass/70'
-                        }`}
+                        className={`text-[10px] font-tactical uppercase tracking-[0.45em] ${isCancelado ? 'text-red-400' : isFinalizado ? 'text-tactical-gold' : 'text-tactical-brass/70'
+                            }`}
                     >
                         Estado actual: {isCancelado ? 'Cancelado' : isFinalizado ? 'Finalizado' : 'En progreso'}
                     </p>
@@ -372,196 +371,198 @@ function TournamentDetailView() {
                 </div>
             </header>
 
-            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
-                <header className="px-6 py-4 border-b border-tactical-border/60">
-                    <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
-                        Registrar actividad
-                    </h2>
-                    <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
-                        Añade las misiones o pruebas que componen el torneo
-                    </p>
-                </header>
-
-                <form className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleAddActivity}>
-                    <div className="md:col-span-1">
-                        <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
-                            Nombre de la actividad
-                        </label>
-                        <input
-                            type="text"
-                            value={activityForm.nombre}
-                            onChange={(event) => setActivityForm((prev) => ({ ...prev, nombre: event.target.value }))}
-                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
-                            placeholder="Ej: Tiro de precisión"
-                        />
-                    </div>
-                    <div className="md:col-span-1">
-                        <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
-                            Descripción
-                        </label>
-                        <input
-                            type="text"
-                            value={activityForm.descripcion}
-                            onChange={(event) => setActivityForm((prev) => ({ ...prev, descripcion: event.target.value }))}
-                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
-                            placeholder="Detalle opcional"
-                        />
-                    </div>
-                    <div className="flex items-end justify-end">
-                        <div className="md:col-span-1 w-full">
-                            <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
-                                Puntaje máximo
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={activityForm.puntajeMaximo}
-                                onChange={(event) => setActivityForm((prev) => ({ ...prev, puntajeMaximo: event.target.value }))}
-                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
-                                placeholder="Ej: 100"
-                            />
-                        </div>
-                        <div className="flex items-end justify-end md:col-span-1">
-                        <button
-                            type="submit"
-                            disabled={addingActivity || tournamentClosed}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            {addingActivity ? 'Agregando...' : 'Agregar actividad'}
-                        </button>
-                        </div>
-                    </div>
-                </form>
-            </section>
-
-            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden space-y-4 p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
+                    <header className="px-6 py-4 border-b border-tactical-border/60">
                         <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
-                            Tabla de puntuaciones
+                            Registrar actividad
                         </h2>
                         <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
-                            Doble clic en un campo para editar el puntaje
+                            Añade las misiones o pruebas que componen el torneo
                         </p>
+                    </header>
+
+                    <form className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleAddActivity}>
+                        <div className="md:col-span-1">
+                            <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                                Nombre de la actividad
+                            </label>
+                            <input
+                                type="text"
+                                value={activityForm.nombre}
+                                onChange={(event) => setActivityForm((prev) => ({ ...prev, nombre: event.target.value }))}
+                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                placeholder="Ej: Tiro de precisión"
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                                Descripción
+                            </label>
+                            <input
+                                type="text"
+                                value={activityForm.descripcion}
+                                onChange={(event) => setActivityForm((prev) => ({ ...prev, descripcion: event.target.value }))}
+                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                placeholder="Detalle opcional"
+                            />
+                        </div>
+                        <div className="flex items-end justify-end">
+                            <div className="md:col-span-1 w-full">
+                                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                                    Puntaje máximo
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={activityForm.puntajeMaximo}
+                                    onChange={(event) => setActivityForm((prev) => ({ ...prev, puntajeMaximo: event.target.value }))}
+                                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                    placeholder="Ej: 100"
+                                />
+                            </div>
+                            <div className="flex items-end justify-end md:col-span-1">
+                                <button
+                                    type="submit"
+                                    disabled={addingActivity || tournamentClosed}
+                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {addingActivity ? 'Agregando...' : 'Agregar actividad'}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                                Tabla de puntuaciones
+                            </h2>
+                            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                                Doble clic en un campo para editar el puntaje
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleSaveScores}
+                            disabled={savingScores || tournamentClosed}
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            {savingScores ? 'Guardando...' : 'Guardar puntuaciones'}
+                        </button>
                     </div>
-                    <button
-                        onClick={handleSaveScores}
-                        disabled={savingScores || tournamentClosed}
-                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        {savingScores ? 'Guardando...' : 'Guardar puntuaciones'}
-                    </button>
-                </div>
-                <div className="overflow-x-auto border border-tactical-border/40">
-                    <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] uppercase tracking-[0.35em] text-tactical-brass bg-black/40">
-                        <thead className="bg-black/60 text-tactical-brass/70">
-                            <tr>
-                                <th className="px-4 py-3 text-left">Actividad</th>
-                                <th className="px-4 py-3 text-left">Descripción</th>
-                                <th className="px-4 py-3 text-left">Puntaje máximo</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-tactical-border/40">
-                            {activities.length === 0 ? (
+                    <div className="overflow-x-auto border border-tactical-border/40">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] uppercase tracking-[0.35em] text-tactical-brass bg-black/40">
+                            <thead className="bg-black/60 text-tactical-brass/70">
                                 <tr>
-                                    <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass/50 tracking-[0.45em]">
-                                        Aún no se han registrado actividades para este torneo.
-                                    </td>
+                                    <th className="px-4 py-3 text-left">Actividad</th>
+                                    <th className="px-4 py-3 text-left">Descripción</th>
+                                    <th className="px-4 py-3 text-left">Puntaje máximo</th>
                                 </tr>
-                            ) : (
-                                activities.map((activity) => (
-                                    <tr key={activity.id}>
-                                        <td className="px-4 py-3 text-tactical-gold">
-                                            {activity.nombre}
-                                        </td>
-                                        <td className="px-4 py-3 text-tactical-brass">
-                                            {activity.descripcion || 'Sin descripción'}
-                                        </td>
-                                        <td className="px-4 py-3 text-tactical-gold">
-                                            {activity.puntajeMaximo ?? 'N/D'}
+                            </thead>
+                            <tbody className="divide-y divide-tactical-border/40">
+                                {activities.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass/50 tracking-[0.45em]">
+                                            Aún no se han registrado actividades para este torneo.
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
-                        <thead className="bg-black/60 text-tactical-brass/70">
-                            <tr>
-                                <th className="px-4 py-3 text-left">#</th>
-                                <th className="px-4 py-3 text-left">Participante</th>
-                                {activities.map((activity) => (
-                                    <th key={activity.id} className="px-4 py-3 text-left">
-                                        {activity.nombre}
-                                    </th>
-                                ))}
-                                <th className="px-4 py-3 text-left">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-tactical-border/40">
-                            {participants.map((participant, index) => {
-                                const cedula = participant.cedula
-                                const participantScores = scores[cedula] || {}
-                                const total = calculateTotal(participantScores)
-                                const participantPhoto = participant.foto ?? userPhotos[cedula] ?? null
-
-                                return (
-                                    <tr key={cedula} className="hover:bg-black/50 transition-colors duration-150">
-                                        <td className="px-4 py-3 text-tactical-brass/60">
-                                            {index + 1}
-                                        </td>
-                                        <td className="px-4 py-3 text-tactical-gold">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 border border-tactical-border overflow-hidden">
-                                                    {participantPhoto ? (
-                                                        <img
-                                                            src={participantPhoto}
-                                                            alt={participant.nombre || cedula}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass/50 tracking-[0.4em]">
-                                                            Sin foto
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p>{participant.nombre}</p>
-                                                    <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
-                                                        {cedula}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        {activities.map((activity) => (
-                                            <td key={activity.id} className="px-4 py-3">
-                                                <input
-                                                    type="number"
-                                                    value={participantScores[activity.id] ?? ''}
-                                                    onChange={(event) =>
-                                                        handleScoreChange(cedula, activity.id, event.target.value)
-                                                    }
-                                                    className="w-24 bg-black/60 border border-tactical-border px-2 py-1 text-tactical-gold focus:outline-none focus:border-tactical-gold transition-colors duration-150 disabled:opacity-60"
-                                                    placeholder="0"
-                                                    disabled={tournamentClosed}
-                                                />
+                                ) : (
+                                    activities.map((activity) => (
+                                        <tr key={activity.id}>
+                                            <td className="px-4 py-3 text-tactical-gold">
+                                                {activity.nombre}
                                             </td>
-                                        ))}
-                                        <td className="px-4 py-3 text-tactical-gold text-lg">
-                                            {total}
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
+                                            <td className="px-4 py-3 text-tactical-brass">
+                                                {activity.descripcion || 'Sin descripción'}
+                                            </td>
+                                            <td className="px-4 py-3 text-tactical-gold">
+                                                {activity.puntajeMaximo ?? 'N/D'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
+                            <thead className="bg-black/60 text-tactical-brass/70">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">#</th>
+                                    <th className="px-4 py-3 text-left">Participante</th>
+                                    {activities.map((activity) => (
+                                        <th key={activity.id} className="px-4 py-3 text-left">
+                                            {activity.nombre}
+                                        </th>
+                                    ))}
+                                    <th className="px-4 py-3 text-left">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-tactical-border/40">
+                                {participants.map((participant, index) => {
+                                    const cedula = participant.cedula
+                                    const participantScores = scores[cedula] || {}
+                                    const total = calculateTotal(participantScores)
+                                    const participantPhoto = participant.foto ?? userPhotos[cedula] ?? null
+
+                                    return (
+                                        <tr key={cedula} className="hover:bg-black/50 transition-colors duration-150">
+                                            <td className="px-4 py-3 text-tactical-brass/60">
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-4 py-3 text-tactical-gold">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 border border-tactical-border overflow-hidden">
+                                                        {participantPhoto ? (
+                                                            <img
+                                                                src={participantPhoto}
+                                                                alt={participant.nombre || cedula}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass/50 tracking-[0.4em]">
+                                                                Sin foto
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p>{participant.nombre}</p>
+                                                        <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
+                                                            {cedula}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            {activities.map((activity) => (
+                                                <td key={activity.id} className="px-4 py-3">
+                                                    <input
+                                                        type="number"
+                                                        value={participantScores[activity.id] ?? ''}
+                                                        onChange={(event) =>
+                                                            handleScoreChange(cedula, activity.id, event.target.value)
+                                                        }
+                                                        className="w-24 bg-black/60 border border-tactical-border px-2 py-1 text-tactical-gold focus:outline-none focus:border-tactical-gold transition-colors duration-150 disabled:opacity-60"
+                                                        placeholder="0"
+                                                        disabled={tournamentClosed}
+                                                    />
+                                                </td>
+                                            ))}
+                                            <td className="px-4 py-3 text-tactical-gold text-lg">
+                                                {total}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
-            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-6 space-y-4">
+            <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[5px] md:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">

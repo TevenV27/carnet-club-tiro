@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getUserByCedula } from '../services/userService'
 import { searchCardByCedula } from '../services/cardService'
+import CarnetPreview from './CarnetPreview'
 
 const formatTimestamp = (value) => {
     if (!value) {
@@ -146,7 +147,7 @@ function UserDetailView() {
     }
 
     return (
-        <div className="p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+        <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.35em]">
@@ -165,7 +166,7 @@ function UserDetailView() {
             </div>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-6 space-y-6">
+                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-6">
                     <div>
                         <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em] mb-2">
                             Fotografía Operador
@@ -201,7 +202,7 @@ function UserDetailView() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-black/40 border border-tactical-border rounded-lg p-6">
+                <div className="lg:col-span-2 bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6">
                     <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em] mb-4">
                         Datos tácticos del operador
                     </p>
@@ -220,7 +221,7 @@ function UserDetailView() {
             </section>
 
             {card && (
-                <section className="bg-black/40 border border-tactical-border rounded-lg p-6 space-y-4">
+                <section className="bg-black/40 border border-tactical-border rounded-lg p-[5px] md:p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-tactical-brass/60 font-tactical uppercase tracking-[0.4em]">
                             Credencial Generada
@@ -235,38 +236,22 @@ function UserDetailView() {
                             <p className="text-[10px] text-tactical-brass/70 font-tactical uppercase tracking-[0.4em] mb-3">
                                 Cara frontal
                             </p>
-                            {card.frontCardBase64 ? (
-                                <div className="flex justify-center">
-                                    <img
-                                        src={card.frontCardBase64}
-                                        alt="Carnet frontal"
-                                        className="w-full max-w-xs rounded shadow-[0_0_20px_rgba(0,0,0,0.6)]"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="h-40 flex items-center justify-center text-[10px] text-tactical-brass/50 font-tactical uppercase tracking-[0.4em] border border-dashed border-tactical-border">
-                                    Sin imagen frontal
-                                </div>
-                            )}
+                            <CarnetPreview
+                                src={card.frontCardBase64}
+                                alt="Carnet frontal"
+                                placeholder="Sin imagen frontal"
+                            />
                         </div>
 
                         <div className="border border-tactical-border p-4 bg-black/60">
                             <p className="text-[10px] text-tactical-brass/70 font-tactical uppercase tracking-[0.4em] mb-3">
                                 Cara trasera
                             </p>
-                            {card.backCardBase64 ? (
-                                <div className="flex justify-center">
-                                    <img
-                                        src={card.backCardBase64}
-                                        alt="Carnet trasero"
-                                        className="w-full max-w-xs rounded shadow-[0_0_20px_rgba(0,0,0,0.6)]"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="h-40 flex items-center justify-center text-[10px] text-tactical-brass/50 font-tactical uppercase tracking-[0.4em] border border-dashed border-tactical-border">
-                                    Sin imagen trasera
-                                </div>
-                            )}
+                            <CarnetPreview
+                                src={card.backCardBase64}
+                                alt="Carnet trasero"
+                                placeholder="Sin imagen trasera"
+                            />
                         </div>
                     </div>
                 </section>

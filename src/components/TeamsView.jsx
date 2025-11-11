@@ -184,8 +184,8 @@ function TeamsView() {
   }
 
   return (
-    <div className="p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-      <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+    <div className="p-[5px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+      <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[5px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
         <div>
           <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
             Equipos registrados
@@ -208,7 +208,7 @@ function TeamsView() {
               setLogoPreview(null)
               setCreateModalOpen(true)
             }}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
           >
             Registrar equipo
           </button>
@@ -216,7 +216,7 @@ function TeamsView() {
       </header>
 
       <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
-        <header className="px-6 py-4 border-b border-tactical-border/60">
+        <header className="px-[5px] md:px-6 py-[5px] md:py-4 border-b border-tactical-border/60">
           <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
             Tabla de equipos
           </h2>

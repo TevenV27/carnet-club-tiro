@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { generateFrontCard, generateBackCard } from '../utils/cardGenerator'
 import { saveCard } from '../services/cardService'
 import '../App.css'
+import CarnetPreview from './CarnetPreview'
 
 function CreateCard({ onSignOut }) {
   const navigate = useNavigate()
@@ -202,6 +203,20 @@ Revisa la consola del navegador para más detalles.
     }
   }
 
+  const frontTransformStyle = {
+    transform: `perspective(1000px) rotateX(${frontCardTransform.rotateX}deg) rotateY(${frontCardTransform.rotateY}deg) scale3d(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
+    transition: 'transform 0.1s ease-out',
+    transformStyle: 'preserve-3d',
+    cursor: 'pointer'
+  }
+
+  const backTransformStyle = {
+    transform: `perspective(1000px) rotateX(${backCardTransform.rotateX}deg) rotateY(${backCardTransform.rotateY}deg) scale3d(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
+    transition: 'transform 0.1s ease-out',
+    transformStyle: 'preserve-3d',
+    cursor: 'pointer'
+  }
+
   return (
     <div className="min-h-screen lg:h-screen bg-tactical-dark relative flex flex-col lg:overflow-hidden">
 
@@ -240,7 +255,7 @@ Revisa la consola del navegador para más detalles.
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 pt-4 pb-6 relative z-10 flex flex-col lg:overflow-hidden flex-1 lg:min-h-0">
+      <div className="max-w-7xl mx-auto px-[5px] md:px-4 pt-[5px] md:pt-4 pb-[5px] md:pb-6 relative z-10 flex flex-col lg:overflow-hidden flex-1 lg:min-h-0">
         {/* Header táctico */}
         <div className="mb-4 text-center border-b border-tactical-border pb-3 relative flex-shrink-0"
           style={{
@@ -264,8 +279,8 @@ Revisa la consola del navegador para más detalles.
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch lg:flex-1 lg:min-h-0">
           {/* Formulario */}
-          <div className="hud-border p-1 flex flex-col lg:overflow-hidden">
-            <div className="bg-black p-4 flex flex-col lg:flex-1 lg:overflow-hidden" style={{
+          <div className="hud-border p-[5px] md:p-1 flex flex-col lg:overflow-hidden">
+            <div className="bg-black p-[5px] md:p-4 flex flex-col lg:flex-1 lg:overflow-hidden" style={{
               background: '#0a0a0a',
               boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
             }}>
@@ -664,8 +679,8 @@ Revisa la consola del navegador para más detalles.
           </div>
 
           {/* Vista previa y descarga */}
-          <div className="hud-border p-1 flex flex-col lg:overflow-hidden">
-            <div className="flex flex-col gap-2 bg-black p-4 lg:flex-1 lg:overflow-hidden" style={{
+          <div className="hud-border p-[5px] md:p-1 flex flex-col ">
+            <div className="flex flex-col gap-2 bg-black p-[5px] md:p-4 lg:flex-1 " style={{
               background: '#0a0a0a',
               boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
             }}>
@@ -677,42 +692,23 @@ Revisa la consola del navegador para más detalles.
                 }}>
                 &gt; MÓDULO DE VISTA PREVIA
               </h2>
-              <div className="lg:flex-1 lg:overflow-hidden">
+              <div className="lg:flex-1">
                 <div className="grid grid-cols-2 gap-4">
 
                   {frontCardUrl && (
                     <div>
                       <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
                         style={{ textShadow: 'none' }}>&gt; CARA FRONTAL</h3>
-                      <div
-                        className="flex justify-center mb-2 border border-tactical-border p-2"
-                        style={{
-                          boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.8)',
-                          perspective: '1000px'
-                        }}
+                      <CarnetPreview
+                        src={frontCardUrl}
+                        alt="Carnet Frontal"
+                        placeholder="Sin imagen frontal"
+                        interactive
+                        imageStyle={frontTransformStyle}
                         onMouseMove={(e) => handleMouseMove(e, 'front')}
                         onMouseLeave={() => handleMouseLeave('front')}
-                      >
-                        <img
-                          src={frontCardUrl}
-                          alt="Carnet Frontal"
-                          className="rounded"
-                          style={{
-                            width: '100%',
-                            maxWidth: '200px',
-                            height: 'auto',
-                            aspectRatio: '650/1004',
-                            objectFit: 'contain',
-                            display: 'block',
-                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
-                            transform: `perspective(1000px) rotateX(${frontCardTransform.rotateX}deg) rotateY(${frontCardTransform.rotateY}deg) scale3d(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${frontCardTransform.rotateX !== 0 || frontCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
-                            transition: 'transform 0.1s ease-out',
-                            transformStyle: 'preserve-3d',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      </div>
-                      <div className="flex gap-2">
+                      />
+                      <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(frontCardUrl, 'carnet-frontal.png')}
                           className="w-full bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
@@ -731,35 +727,16 @@ Revisa la consola del navegador para más detalles.
                     <div>
                       <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
                         style={{ textShadow: 'none' }}>&gt; CARA TRASERA</h3>
-                      <div
-                        className="flex justify-center mb-2 border border-tactical-border p-2"
-                        style={{
-                          boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.8)',
-                          perspective: '1000px'
-                        }}
+                      <CarnetPreview
+                        src={backCardUrl}
+                        alt="Carnet Trasero"
+                        placeholder="Sin imagen trasera"
+                        interactive
+                        imageStyle={backTransformStyle}
                         onMouseMove={(e) => handleMouseMove(e, 'back')}
                         onMouseLeave={() => handleMouseLeave('back')}
-                      >
-                        <img
-                          src={backCardUrl}
-                          alt="Carnet Trasero"
-                          className="rounded"
-                          style={{
-                            width: '100%',
-                            maxWidth: '200px',
-                            height: 'auto',
-                            aspectRatio: '650/1004',
-                            objectFit: 'contain',
-                            display: 'block',
-                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
-                            transform: `perspective(1000px) rotateX(${backCardTransform.rotateX}deg) rotateY(${backCardTransform.rotateY}deg) scale3d(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, ${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '1.12' : '1'}, 1) translateZ(${backCardTransform.rotateX !== 0 || backCardTransform.rotateY !== 0 ? '25px' : '0px'})`,
-                            transition: 'transform 0.1s ease-out',
-                            transformStyle: 'preserve-3d',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      </div>
-                      <div className="flex gap-2">
+                      />
+                      <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(backCardUrl, 'carnet-trasero.png')}
                           className="w-full bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
