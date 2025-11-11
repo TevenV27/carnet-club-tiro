@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '../firebase/config'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
+import logoImage from '../assets/logo.png'
 
 function Login() {
     const navigate = useNavigate()
@@ -9,6 +11,7 @@ function Login() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const { theme, toggleTheme } = useTheme()
 
     const handleLogin = async (e) => {
         e.preventDefault()
@@ -16,15 +19,13 @@ function Login() {
         setLoading(true)
 
         try {
-            // Si el usuario no ingresó un @, agregar automáticamente el dominio
             let emailToUse = email.trim()
             if (!emailToUse.includes('@')) {
-                emailToUse = emailToUse + '@campo-tiro-valle.com'
+                emailToUse = `${emailToUse}@campo-tiro-valle.com`
             }
 
             await signInWithEmailAndPassword(auth, emailToUse, password)
-            console.log('Usuario autenticado exitosamente')
-            navigate('/crear-carnet')
+            navigate('/usuarios')
         } catch (error) {
             console.error('Error en autenticación:', error)
             if (error.code === 'auth/user-not-found') {
@@ -44,124 +45,124 @@ function Login() {
     }
 
     return (
-        <div className="min-h-screen bg-tactical-dark flex items-center justify-center p-8 relative">
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-app">
+            <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, var(--login-grid-color) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+            <div className="absolute inset-0" style={{ background: 'var(--login-overlay)' }} />
 
-            <div className="max-w-md w-full relative z-10">
-                {/* HUD Border superior */}
-                <div className="hud-border mb-0 p-1">
-                    <div className="bg-tactical-gray p-8" style={{
-                        background: 'linear-gradient(135deg, rgba(20, 15, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
-                        boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
-                    }}>
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-semibold text-tactical-gold mb-2 font-tactical tracking-wider"
-                                style={{
-                                    textShadow: 'none',
-                                    letterSpacing: '0.15em',
-                                    fontWeight: '600'
-                                }}>
-                                [CLASIFICADO]
-                            </h1>
-                            <h2 className="text-2xl font-medium text-tactical-brass mb-2 font-tactical tracking-wider"
-                                style={{
-                                    textShadow: 'none',
-                                    letterSpacing: '0.1em'
-                                }}>
-                                SISTEMA DE IDENTIFICACIÓN
+
+            <div className="relative w-full max-w-5xl mx-auto px-6 lg:px-12">
+                <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] bg-surface border border-theme shadow-[0_0_55px_rgba(0,0,0,0.35)] backdrop-blur-xl overflow-hidden">
+                    <section className="relative hidden lg:flex flex-col justify-between p-10 border-r border-theme text-theme-secondary" style={{ background: 'var(--panel-gradient)' }}>
+                        <div className="space-y-6 text-center">
+                            <div className="flex justify-center">
+                                <img
+                                    src={logoImage}
+                                    alt="Club de Tiro del Valle"
+                                    className="h-20 w-auto"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-[11px] uppercase tracking-[0.45em] text-tactical-brass/60">Control táctico</p>
+                                <h1 className="mt-4 text-4xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                                    Club de Tiro del Valle
+                                </h1>
+                                <p className="mt-3 text-[12px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                                    Sistema de identificación y credenciales
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.4em]">
+                                <span className="text-tactical-brass/50">Nivel de seguridad</span>
+                                <span className="text-tactical-gold">Alpha</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.4em]">
+                                <span className="text-tactical-brass/50">Estado del sistema</span>
+                                <span className="flex items-center gap-2 text-emerald-400">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    Operativo
+                                </span>
+                            </div>
+                            <div className="pt-4 border-t border-tactical-border/40">
+                                <p className="text-[11px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                                    Credenciales requeridas para acceso autorizado.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="relative p-8 md:p-12 bg-surface text-theme-primary">
+                        <div className="absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-transparent via-tactical-gold/30 to-transparent" />
+                        <div className="mb-10">
+                            <h2 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                                Inicio de sesión
                             </h2>
-                            <p className="text-tactical-brass text-xs font-tactical mt-4" style={{ letterSpacing: '0.15em' }}>
-                                CLUB DE TIRO DEPORTIVO DEL VALLE
-                            </p>
-                            <p className="text-tactical-brass text-xs font-tactical mt-1" style={{ letterSpacing: '0.1em' }}>
-                                OPERACIONES ESPECIALES
+                            <p className="mt-2 text-[12px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                                Autenticación autorizada
                             </p>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div>
-                                <label className="block text-tactical-brass mb-2 font-tactical text-xs uppercase tracking-wider opacity-80"
-                                    style={{ textShadow: 'none' }}>
-                                    &gt; USUARIO
+                                <label className="block text-[11px] uppercase tracking-[0.45em] text-tactical-brass/50 mb-3">
+                                    Identificación operativa
                                 </label>
-                                <input
-                                    type="text"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical"
-                                    placeholder="clubtirovalle2025"
-                                    required
-                                    style={{
-                                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                                        background: '#0a0a0a'
-                                    }}
-                                    disabled={loading}
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-surface border border-theme focus:border-tactical-gold/80 text-theme-secondary font-tactical uppercase tracking-[0.35em] px-4 py-3 transition-colors duration-200"
+                                        placeholder="usuario"
+                                        required
+                                        disabled={loading}
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-tactical-brass mb-2 font-tactical text-xs uppercase tracking-wider opacity-80"
-                                    style={{ textShadow: 'none' }}>
-                                    &gt; CONTRASEÑA
+                                <label className="block text-[11px] uppercase tracking-[0.45em] text-tactical-brass/50 mb-3">
+                                    Clave de acceso
                                 </label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-black text-tactical-gold rounded-none border-2 border-tactical-brass focus:border-tactical-gold focus:outline-none font-tactical"
+                                    className="w-full bg-surface border border-theme focus:border-tactical-gold/80 text-theme-secondary font-tactical uppercase tracking-[0.35em] px-4 py-3 transition-colors duration-200"
                                     placeholder="••••••••"
                                     required
-                                    style={{
-                                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 5px rgba(212, 175, 55, 0.2)',
-                                        background: '#000000'
-                                    }}
                                     disabled={loading}
                                 />
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-black border-2 border-red-500 text-red-400 font-tactical text-xs"
-                                    style={{
-                                        boxShadow: '0 0 10px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.8)',
-                                        textShadow: '0 0 5px rgba(255, 0, 0, 0.8)'
-                                    }}>
-                                    &gt; ERROR: {error}
+                                <div className="border border-red-600/80 bg-red-900/20 text-red-400 px-4 py-3 text-[11px] uppercase tracking-[0.4em]">
+                                    {error}
                                 </div>
                             )}
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-4 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-sm uppercase tracking-wider transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full text-tactical-gold font-tactical text-sm uppercase tracking-[0.45em] border border-theme hover:border-tactical-gold hover:bg-surface-hover transition-all duration-200 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 style={{
-                                    boxShadow: 'none',
-                                    textShadow: 'none',
-                                    letterSpacing: '0.1em'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!loading) {
-                                        e.target.style.backgroundColor = 'rgba(26, 26, 26, 0.5)'
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!loading) {
-                                        e.target.style.backgroundColor = 'transparent'
-                                    }
+                                    background: 'linear-gradient(90deg, rgba(var(--color-text-secondary), 0.16) 0%, rgba(var(--color-border), 0.28) 50%, rgba(var(--color-text-secondary), 0.16) 100%)'
                                 }}
                             >
-                                {loading ? '[AUTENTICANDO...]' : '[INICIAR SESIÓN]'}
+                                {loading ? 'Autenticando...' : 'Ingresar al sistema'}
                             </button>
                         </form>
 
-                        <div className="mt-6 text-center">
+                        <div className="mt-10 pt-5 border-t border-tactical-border/40 text-center">
                             <button
                                 onClick={() => navigate('/buscar-carnet')}
-                                className="text-tactical-brass hover:text-tactical-gold font-tactical text-xs transition-colors uppercase tracking-wider opacity-70"
-                                style={{ textShadow: 'none' }}
+                                className="text-theme-secondary hover:text-tactical-gold font-tactical text-[11px] uppercase tracking-[0.45em] transition-colors"
                             >
-                                &gt; Buscar credencial existente
+                                Buscar credencial existente
                             </button>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>

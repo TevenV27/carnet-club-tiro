@@ -6,10 +6,9 @@ import {
     where,
     getDocs,
     doc,
-    getDoc,
-    updateDoc,
-    setDoc
+    updateDoc
 } from 'firebase/firestore'
+import { upsertUserRecord } from './userService'
 
 // Comprimir imagen Blob a base64 con calidad reducida
 const compressImage = (blob, maxWidth = 1200, quality = 0.75) => {
@@ -136,6 +135,11 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         const querySnapshot = await getDocs(q)
 
         let docRef
+        let resultDoc
+        let cardId
+        const baseUserData = {
+            ...restCardData
+        }
 
         if (!querySnapshot.empty) {
             // Si ya existe, actualizar el documento existente
@@ -152,7 +156,8 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
 
             await updateDoc(docRef, updatedDoc)
             console.log('Carnet actualizado exitosamente. ID:', existingDoc.id, '(ya existía con esta cédula)')
-            return { id: existingDoc.id, ...updatedDoc, _wasUpdated: true }
+            resultDoc = updatedDoc
+            cardId = existingDoc.id
         } else {
             // Si no existe, crear un nuevo documento
             console.log('No se encontró carnet existente, creando nuevo...')
@@ -168,7 +173,22 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
 
             docRef = await addDoc(collection(db, 'carnets'), cardDoc)
             console.log('Documento creado exitosamente con ID:', docRef.id, '(nuevo carnet)')
-            return { id: docRef.id, ...cardDoc, _wasUpdated: false }
+            resultDoc = cardDoc
+            cardId = docRef.id
+        }
+
+        const userSyncResult = await upsertUserRecord({
+            userBaseData: baseUserData,
+            fotoBase64,
+            userId,
+            carnetId: cardId
+        })
+
+        return {
+            id: cardId,
+            ...resultDoc,
+            _wasUpdated: !querySnapshot.empty,
+            _userRecordCreated: userSyncResult?.created ?? null
         }
     } catch (error) {
         console.error('Error guardando carnet:', error)

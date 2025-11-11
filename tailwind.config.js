@@ -1,3 +1,11 @@
+const withOpacityValue = (variable) => ({ opacityValue } = {}) => {
+  if (opacityValue === undefined) {
+    return `rgb(var(${variable}) / 1)`
+  }
+
+  return `rgb(var(${variable}) / ${opacityValue})`
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,21 +15,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        'card-gold': '#D4AF37',
-        'card-dark': '#1a1a1a',
-        'tactical-dark': '#000000',
-        'tactical-darker': '#000000',
-        'tactical-gold': '#D4AF37',
-        'tactical-brass': '#af9974',
-        'tactical-gray': '#0a0a0a',
-        'tactical-border': '#2a2a2a',
-        'terminal-green': '#D4AF37',
-        'terminal-dark-green': '#af9974',
-        'terminal-bg': '#000000',
-        'terminal-bg-dark': '#0a0a0a',
+        'card-gold': withOpacityValue('--color-accent'),
+        'card-dark': withOpacityValue('--surface-bg-rgb'),
+        'tactical-dark': withOpacityValue('--surface-bg-rgb'),
+        'tactical-darker': withOpacityValue('--surface-active-bg-rgb'),
+        'tactical-gold': withOpacityValue('--color-accent'),
+        'tactical-brass': withOpacityValue('--color-text-secondary'),
+        'tactical-gray': withOpacityValue('--surface-hover-bg-rgb'),
+        'tactical-border': withOpacityValue('--color-border'),
+        'terminal-green': withOpacityValue('--color-accent'),
+        'terminal-dark-green': withOpacityValue('--color-text-secondary'),
+        'terminal-bg': withOpacityValue('--surface-bg-rgb'),
+        'terminal-bg-dark': withOpacityValue('--surface-hover-bg-rgb'),
       },
       fontFamily: {
-        'tactical': ['Courier New', 'monospace'],
+        'tactical': ['"Barlow Semi Condensed"', '"Barlow Condensed"', '"Red Hat Mono"', '"Courier New"', 'monospace'],
       },
       boxShadow: {
         'tactical': '0 0 10px rgba(212, 175, 55, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5)',

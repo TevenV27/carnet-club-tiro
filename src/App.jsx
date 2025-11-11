@@ -3,10 +3,18 @@ import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from './firebase/config'
 import Login from './components/Login'
-import CreateCard from './components/CreateCard'
 import SearchCard from './components/SearchCard'
 import CredencialView from './components/CredencialView'
 import ProtectedRoute from './components/ProtectedRoute'
+import SidebarLayout from './components/SidebarLayout'
+import UsersView from './components/UsersView'
+import UserDetailView from './components/UserDetailView'
+import TeamsView from './components/TeamsView'
+import TournamentsView from './components/TournamentsView'
+import TournamentDetailView from './components/TournamentDetailView'
+import RankingView from './components/RankingView'
+import GeneratorView from './components/GeneratorView'
+import TeamDetailView from './components/TeamDetailView'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -43,16 +51,25 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
-          path="/crear-carnet"
           element={
             <ProtectedRoute>
-              <CreateCard onSignOut={handleSignOut} />
+              <SidebarLayout onSignOut={handleSignOut} />
             </ProtectedRoute>
           }
-        />
-        <Route path="/buscar-carnet" element={<SearchCard />} />
-        <Route path="/credencial/:cedula" element={<CredencialView />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        >
+          <Route index element={<Navigate to="usuarios" replace />} />
+          <Route path="usuarios" element={<UsersView />} />
+          <Route path="usuarios/:cedula" element={<UserDetailView />} />
+          <Route path="equipos" element={<TeamsView />} />
+          <Route path="equipos/:teamId" element={<TeamDetailView />} />
+          <Route path="torneos" element={<TournamentsView />} />
+          <Route path="torneos/:torneoId" element={<TournamentDetailView />} />
+          <Route path="ranking" element={<RankingView />} />
+          <Route path="generador" element={<GeneratorView />} />
+          <Route path="buscar-carnet" element={<SearchCard />} />
+          <Route path="credencial/:cedula" element={<CredencialView />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
