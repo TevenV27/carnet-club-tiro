@@ -8,6 +8,7 @@ import {
     Timestamp,
     updateDoc
 } from 'firebase/firestore'
+import { logAction } from './logService'
 
 const teamsCollection = collection(db, 'equipos')
 
@@ -77,6 +78,15 @@ export const createTeam = async ({ nombre, departamento, ciudad, logoBase64, cap
         updatedAt: Timestamp.fromDate(now)
     })
 
+    // Registrar log
+    await logAction(
+        'crear',
+        'equipos',
+        docRef.id,
+        `Equipo creado: ${nombre.trim()}`,
+        { nombre: nombre.trim(), capitan: capitan.nombre }
+    )
+
     return normalizeTeamDoc(await getDoc(docRef))
 }
 
@@ -86,13 +96,25 @@ export const updateTeamMembers = async (teamId, miembros) => {
     }
 
     const docRef = doc(db, 'equipos', teamId)
+    const snapshot = await getDoc(docRef)
+    const teamData = snapshot.exists() ? snapshot.data() : null
+    
     await updateDoc(docRef, {
         miembros: miembros || [],
         updatedAt: Timestamp.fromDate(new Date())
     })
 
-    const snapshot = await getDoc(docRef)
-    return normalizeTeamDoc(snapshot)
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'equipos',
+        teamId,
+        `Miembros del equipo actualizados: ${teamData?.nombre || teamId}`,
+        { nombre: teamData?.nombre, miembrosCount: miembros?.length || 0 }
+    )
+
+    const updatedSnapshot = await getDoc(docRef)
+    return normalizeTeamDoc(updatedSnapshot)
 }
 
 export const updateTeamInfo = async (teamId, { nombre, departamento, ciudad, logoBase64, capitan }) => {
@@ -101,6 +123,8 @@ export const updateTeamInfo = async (teamId, { nombre, departamento, ciudad, log
     }
 
     const docRef = doc(db, 'equipos', teamId)
+    const snapshot = await getDoc(docRef)
+    const teamData = snapshot.exists() ? snapshot.data() : null
 
     const payload = {
         updatedAt: Timestamp.fromDate(new Date())
@@ -130,7 +154,16 @@ export const updateTeamInfo = async (teamId, { nombre, departamento, ciudad, log
 
     await updateDoc(docRef, payload)
 
-    const snapshot = await getDoc(docRef)
-    return normalizeTeamDoc(snapshot)
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'equipos',
+        teamId,
+        `Equipo actualizado: ${nombre || teamData?.nombre || teamId}`,
+        { nombre: nombre || teamData?.nombre }
+    )
+
+    const updatedSnapshot = await getDoc(docRef)
+    return normalizeTeamDoc(updatedSnapshot)
 }
 

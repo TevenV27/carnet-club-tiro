@@ -106,18 +106,67 @@ function UserDetailView() {
             createdAt,
             updatedAt,
             userId,
+            // Campos a excluir
+            bbs,
+            equipoLogo,
+            rango,
+            precision,
+            habilidades,
+            team, // Excluir campo "team"
             ...rest
         } = user
 
-        return Object.entries(rest).map(([key, value]) => {
-            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())
-            const formattedValue = formatValue(value)
+        // Orden de importancia y contexto
+        const fieldOrder = [
+            // Información personal básica
+            'nombre',
+            'cedula',
+            'contacto',
+            'contactoEmergencia',
+            'rh',
+            // Información del carnet
+            'numeroMembresia',
+            'emision',
+            'vigencia',
+            'identificador',
+            // Información operativa
+            'nivel',
+            'especialidad',
+            'disciplina',
+            // Información del equipo
+            'equipoTactico',
+            'rolEnEquipo',
+            // Información de armas
+            'pistola',
+            'fusil',
+            // Información del club
+            'nombreClub'
+        ]
 
-            return {
-                label,
-                value: formattedValue
+        // Crear mapa de campos ordenados
+        const orderedFields = []
+        const remainingFields = new Map()
+
+        // Agregar campos en el orden especificado
+        fieldOrder.forEach(key => {
+            if (rest.hasOwnProperty(key)) {
+                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())
+                const formattedValue = formatValue(rest[key])
+                orderedFields.push({ key, label, value: formattedValue })
             }
         })
+
+        // Agregar campos restantes que no están en la lista de orden
+        Object.entries(rest).forEach(([key, value]) => {
+            if (!fieldOrder.includes(key)) {
+                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())
+                const formattedValue = formatValue(value)
+                remainingFields.set(key, { key, label, value: formattedValue })
+            }
+        })
+
+        // Combinar campos ordenados con los restantes
+        return [...orderedFields, ...Array.from(remainingFields.values())]
     }, [user])
 
     if (loading) {

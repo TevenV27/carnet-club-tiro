@@ -75,7 +75,7 @@ function TeamDetailView() {
     const normalizedTeamName = (team.nombre || '').trim().toLowerCase()
 
     const usuariosDelEquipo = users.filter((user) => {
-      const userTeam = (user.team || '').trim().toLowerCase()
+      const userTeam = (user.equipoTactico || '').trim().toLowerCase()
       return normalizedTeamName && userTeam === normalizedTeamName
     })
 

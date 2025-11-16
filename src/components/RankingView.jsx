@@ -134,12 +134,12 @@ function RankingView() {
                 </p>
             </header>
 
-            <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+            <section className="flex flex-col gap-6">
+                <div className="flex gap-3 bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     {topOperators.map((operator, idx) => (
                         <div
                             key={getCedula(operator)}
-                            className="bg-black/50 border border-tactical-border rounded-lg p-5 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex flex-col gap-4"
+                            className="bg-red/50 border border-tactical-border rounded-lg p-5 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex flex-col gap-4 w-full"
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.5em]">

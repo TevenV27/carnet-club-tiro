@@ -331,11 +331,11 @@ export const generateFrontCard = async (formData) => {
     ctx.fillStyle = '#b08449'
     ctx.font = 'bold 60px Arial'
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, 'MIEMBRO OFICIAL', CARD_WIDTH / 2, padding + 40, 65, 'Arial', '#b08449')
+    drawTextWithShadow(ctx, 'MIEMBRO OFICIAL', CARD_WIDTH / 2, padding + 60, 65, 'Arial', '#b08449')
 
     // Nombre del club - más grande
     ctx.font = 'bold 24px Arial'
-    drawTextWithShadow(ctx, formData.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE', CARD_WIDTH / 2, padding + 90, 28, 'Arial', '#b08449')
+    drawTextWithShadow(ctx, formData.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE', CARD_WIDTH / 2, padding + 110, 28, 'Arial', '#b08449')
 
     // Central Logo Section - Logo MUCHO más grande
     // Logo más grande para ocupar más espacio
@@ -373,10 +373,23 @@ export const generateFrontCard = async (formData) => {
 
     // Member Information Section - Letras más grandes con MÁS separación del logo
     // Nombre del miembro - MUCHO más grande y en color #af9974
+    // Ajustar tamaño de fuente si el nombre es muy largo
     const memberInfoY = logoY + maxLogoHeight + 50  // Más separación (antes 35)
-    ctx.font = 'bold 60px Arial'
+    const nombreText = formData.nombre.toUpperCase() || 'NOMBRE'
+    const maxNombreWidth = CARD_WIDTH - (padding * 2) - 20  // Ancho disponible menos padding y margen
+    let nombreFontSize = 60  // Tamaño inicial
+
+    // Ajustar tamaño de fuente si el nombre es muy largo
+    ctx.font = `bold ${nombreFontSize}px Arial`
+    let textMetrics = ctx.measureText(nombreText)
+    while (textMetrics.width > maxNombreWidth && nombreFontSize > 30) {
+        nombreFontSize -= 2
+        ctx.font = `bold ${nombreFontSize}px Arial`
+        textMetrics = ctx.measureText(nombreText)
+    }
+
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, formData.nombre.toUpperCase() || 'NOMBRE', CARD_WIDTH / 2, memberInfoY, 60, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, nombreText, CARD_WIDTH / 2, memberInfoY, nombreFontSize, 'Arial', '#af9974')
 
     // Nivel/Operador - tamaño mediano más grande
     ctx.font = 'bold 28px Arial'
@@ -396,14 +409,35 @@ export const generateFrontCard = async (formData) => {
     ctx.textAlign = 'left'
     ctx.fillStyle = GOLD_COLOR
 
-    // Columna derecha - RH, CONTACTO y CÉDULA
+    // Columna izquierda - EMISIÓN, VIGENCIA y RH
+    ctx.textAlign = 'left'
+
+    // EMISIÓN (primera)
+    ctx.font = 'bold 26px Arial'
+    drawTextWithShadow(ctx, 'EMISIÓN:', padding + 10, bottomY, 26)
+    ctx.font = 'bold 28px Arial'
+    drawTextWithShadow(ctx, formData.emision || 'MM/YYYY', padding + 10, bottomY + 35, 28, 'Arial', '#af9974')
+
+    // VIGENCIA
+    ctx.font = 'bold 26px Arial'
+    drawTextWithShadow(ctx, 'VIGENCIA:', padding + 10, bottomY + 85, 26)
+    ctx.font = 'bold 28px Arial'
+    drawTextWithShadow(ctx, formData.vigencia || 'T-XX', padding + 10, bottomY + 120, 28, 'Arial', '#af9974')
+
+    // RH (último dato del lado izquierdo, debajo de VIGENCIA)
+    ctx.font = 'bold 26px Arial'
+    drawTextWithShadow(ctx, 'RH:', padding + 10, bottomY + 170, 26)
+    ctx.font = 'bold 28px Arial'
+    drawTextWithShadow(ctx, formData.rh || '---', padding + 10, bottomY + 205, 28, 'Arial', '#af9974')
+
+    // Columna derecha - CÉDULA, CONTACTO y EMERGENCIA
     ctx.textAlign = 'right'
 
-    // RH
+    // CÉDULA (primera)
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'RH:', CARD_WIDTH - padding - 10, bottomY, 26)
+    drawTextWithShadow(ctx, 'CÉDULA:', CARD_WIDTH - padding - 10, bottomY, 26)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.rh || '---', CARD_WIDTH - padding - 10, bottomY + 35, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.cedula || '---', CARD_WIDTH - padding - 10, bottomY + 35, 28, 'Arial', '#af9974')
 
     // CONTACTO
     ctx.font = 'bold 26px Arial'
@@ -411,26 +445,11 @@ export const generateFrontCard = async (formData) => {
     ctx.font = 'bold 28px Arial'
     drawTextWithShadow(ctx, formData.contacto || '---', CARD_WIDTH - padding - 10, bottomY + 120, 28, 'Arial', '#af9974')
 
-    // CÉDULA (la más baja, hasta el final)
+    // CONTACTO DE EMERGENCIA (último)
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'CÉDULA:', CARD_WIDTH - padding - 10, bottomY + 170, 26)
+    drawTextWithShadow(ctx, 'EMERGENCIA:', CARD_WIDTH - padding - 10, bottomY + 170, 26)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.cedula || '---', CARD_WIDTH - padding - 10, bottomY + 205, 28, 'Arial', '#af9974')
-
-    // Columna izquierda - EMISIÓN y VIGENCIA (juntas en la parte inferior)
-    ctx.textAlign = 'left'
-
-    // EMISIÓN (primera, en la parte inferior, justo antes de VIGENCIA)
-    ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'EMISIÓN:', padding + 10, bottomY + 85, 26)
-    ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.emision || 'MM/YYYY', padding + 10, bottomY + 120, 28, 'Arial', '#af9974')
-
-    // VIGENCIA (segunda, último dato del lado izquierdo, alineado con CÉDULA, hasta el final)
-    ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'VIGENCIA:', padding + 10, bottomY + 170, 26)
-    ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.vigencia || 'T-XX', padding + 10, bottomY + 205, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.contactoEmergencia || '---', CARD_WIDTH - padding - 10, bottomY + 205, 28, 'Arial', '#af9974')
 
     // Restaurar el contexto (quitar el clip) antes del granulado y el borde
     ctx.restore()
@@ -492,14 +511,14 @@ export const generateBackCard = async (formData) => {
     roundRect(ctx, borderOffset, borderOffset, borderWidth, borderHeight, Math.max(0, borderCornerRadius))
     ctx.stroke()
 
-    // Top Section - Identificador superior (centrado)
-    ctx.fillStyle = GOLD_COLOR
+    // Top Section - Identificador superior (centrado, más abajo para dar espacio arriba)
+    ctx.fillStyle = '#b08449'  // Mismo color que "MIEMBRO OFICIAL"
     ctx.font = 'bold 48px Arial'
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, formData.identificador.toUpperCase() || 'IDENTIFICADOR', CARD_WIDTH / 2, padding + 35, 48)
+    drawTextWithShadow(ctx, formData.identificador.toUpperCase() || 'IDENTIFICADOR', CARD_WIDTH / 2, padding + 55, 48, 'Arial', '#b08449')
 
     // Línea divisoria debajo del identificador
-    const lineIdentificadorY = padding + 70
+    const lineIdentificadorY = padding + 90
     ctx.strokeStyle = '#af9974'
     ctx.lineWidth = 1.5
     ctx.beginPath()
@@ -523,7 +542,7 @@ export const generateBackCard = async (formData) => {
     const photoHeight = Math.floor(CARD_HEIGHT * 0.35)  // Más larga = ~351px
     const photoWidth = Math.floor(CARD_WIDTH * 0.40)  // Menos ancha = 260px
     const photoX = padding + 10
-    const photoY = lineIdentificadorY + 35  // Más margen después de la línea divisoria
+    const photoY = lineIdentificadorY + 25  // Margen después de la línea divisoria (ajustado)
 
     // Radio para border radius
     const borderRadius = 8
@@ -639,8 +658,13 @@ export const generateBackCard = async (formData) => {
     ctx.fillStyle = GOLD_COLOR
     drawTextWithShadow(ctx, 'ESPECIALIDAD', infoX, infoY, 26)
 
-    // Línea después de ESPECIALIDAD
-    const lineEspY = infoY + 40
+    // Valor de ESPECIALIDAD
+    ctx.font = 'bold 28px Arial'
+    ctx.fillStyle = '#af9974'
+    drawTextWithShadow(ctx, formData.especialidad.toUpperCase() || 'ESPECIALIDAD', infoX, infoY + 50, 28, 'Arial', '#af9974')
+
+    // Línea divisoria después del valor de ESPECIALIDAD
+    const lineEspY = infoY + 90
     ctx.strokeStyle = '#af9974'
     ctx.lineWidth = 1.5
     ctx.beginPath()
@@ -648,28 +672,19 @@ export const generateBackCard = async (formData) => {
     ctx.lineTo(CARD_WIDTH - padding - 5, lineEspY)
     ctx.stroke()
 
-    // Valor de ESPECIALIDAD
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, formData.especialidad.toUpperCase() || 'ESPECIALIDAD', infoX, lineEspY + 50, 28, 'Arial', '#af9974')
-
-    // Línea después del valor de ESPECIALIDAD
-    const lineEspValY = lineEspY + 70
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(infoX, lineEspValY)
-    ctx.lineTo(CARD_WIDTH - padding - 5, lineEspValY)
-    ctx.stroke()
-
     // NIVEL (con más padding)
-    infoY = lineEspValY + 35  // Más padding entre secciones
+    infoY = lineEspY + 35  // Más padding entre secciones
     ctx.font = 'bold 26px Arial'
     ctx.fillStyle = GOLD_COLOR
     drawTextWithShadow(ctx, 'NIVEL', infoX, infoY, 26)
 
-    // Línea después de NIVEL
-    const lineNivelY = infoY + 40
+    // Valor de NIVEL
+    ctx.font = 'bold 28px Arial'
+    ctx.fillStyle = '#af9974'
+    drawTextWithShadow(ctx, formData.nivel.toUpperCase() || 'NIVEL', infoX, infoY + 50, 28, 'Arial', '#af9974')
+
+    // Línea divisoria después del valor de NIVEL
+    const lineNivelY = infoY + 90
     ctx.strokeStyle = '#af9974'
     ctx.lineWidth = 1.5
     ctx.beginPath()
@@ -677,36 +692,27 @@ export const generateBackCard = async (formData) => {
     ctx.lineTo(CARD_WIDTH - padding - 5, lineNivelY)
     ctx.stroke()
 
-    // Valor de NIVEL
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, formData.nivel.toUpperCase() || 'NIVEL', infoX, lineNivelY + 50, 28, 'Arial', '#af9974')
-
-    // Línea después del valor de NIVEL
-    const lineNivelValY = lineNivelY + 70
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(infoX, lineNivelValY)
-    ctx.lineTo(CARD_WIDTH - padding - 5, lineNivelValY)
-    ctx.stroke()
-
-    // EQUIPO TÁCTICO (con más padding)
-    infoY = lineNivelValY + 35  // Más padding entre secciones
+    // DISCIPLINA (con más padding después de NIVEL)
+    infoY = lineNivelY + 35  // Más padding entre secciones
     ctx.font = 'bold 26px Arial'
     ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'EQUIPO TÁCTICO', infoX, infoY, 26)
+    drawTextWithShadow(ctx, 'DISCIPLINA', infoX, infoY, 26)
 
-    // Línea después de EQUIPO TÁCTICO
-    const lineEquipoY = infoY + 40
+    // Valor de DISCIPLINA
+    ctx.font = 'bold 28px Arial'
+    ctx.fillStyle = '#af9974'
+    drawTextWithShadow(ctx, 'AIRSOFT', infoX, infoY + 50, 28, 'Arial', '#af9974')
+
+    // Línea divisoria después del valor de DISCIPLINA
+    const lineDisciplinaY = infoY + 90
     ctx.strokeStyle = '#af9974'
     ctx.lineWidth = 1.5
     ctx.beginPath()
-    ctx.moveTo(infoX, lineEquipoY)
+    ctx.moveTo(infoX, lineDisciplinaY)
+    ctx.lineTo(CARD_WIDTH - padding - 5, lineDisciplinaY)
     ctx.stroke()
 
-
-    // Línea divisoria después de la foto (antes de armas) - con más padding
+    // Línea divisoria después de la foto (antes de EQUIPO TÁCTICO) - con más padding
     const weaponsY = photoY + photoHeight + 30  // Más padding
     ctx.strokeStyle = '#af9974'
     ctx.lineWidth = 1.5
@@ -715,12 +721,20 @@ export const generateBackCard = async (formData) => {
     ctx.lineTo(CARD_WIDTH - padding - 5, weaponsY)
     ctx.stroke()
 
-    // Mid-Section - Armas (debajo de la línea, a la izquierda)
-    const weaponsTextY = weaponsY + 40  // Más padding arriba del texto (después de la línea)
+    // EQUIPO TÁCTICO - Título de la sección de armas
+    const equipoTacticoY = weaponsY + 40  // Más padding arriba del título (después de la línea)
     ctx.font = 'bold 26px Arial'
+    ctx.fillStyle = GOLD_COLOR
+    drawTextWithShadow(ctx, 'EQUIPO TÁCTICO', photoX, equipoTacticoY, 26)
+
+    // PISTOLA (valor del equipo táctico)
+    const weaponsTextY = equipoTacticoY + 50  // Padding después del título
+    ctx.font = 'bold 28px Arial'
     ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, `PISTOLA: ${formData.pistola.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY, 26, 'Arial', '#af9974')
-    drawTextWithShadow(ctx, `FUSIL: ${formData.fusil.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY + 40, 26, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, `PISTOLA: ${formData.pistola.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY, 28, 'Arial', '#af9974')
+
+    // FUSIL (valor del equipo táctico)
+    drawTextWithShadow(ctx, `FUSIL: ${formData.fusil.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY + 40, 28, 'Arial', '#af9974')
 
     // Línea divisoria después de armas
     const line1Y = weaponsTextY + 75  // Más padding
@@ -731,54 +745,66 @@ export const generateBackCard = async (formData) => {
     ctx.lineTo(CARD_WIDTH - padding - 5, line1Y)
     ctx.stroke()
 
-    // Lower Mid-Section - Stats Grid (3 columnas, 2 filas) - mejor distribuido
-    const tableY = line1Y + 40  // Más padding arriba del texto (después de la línea)
-    const tableX = photoX
-    const colSpacing = 150
+    // Lower Mid-Section - Equipo y Rol (lado a lado)
+    const teamY = line1Y + 40  // Más padding arriba del texto (después de la línea)
+    const teamX = photoX
+    const rolX = CARD_WIDTH - padding - 5  // Alineado a la derecha
 
-    // Encabezados (fila superior) - en dorado
+    // EQUIPO (izquierda)
+    ctx.textAlign = 'left'
     ctx.font = 'bold 26px Arial'
     ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'BBS 0.28', tableX, tableY, 26)
-    drawTextWithShadow(ctx, 'RANGO', tableX + colSpacing, tableY, 26)
-    drawTextWithShadow(ctx, 'PRECISION', tableX + colSpacing * 2, tableY, 26)
-
-    // Valores (fila inferior) - en color #af9974
+    drawTextWithShadow(ctx, 'EQUIPO', teamX, teamY, 26)
     ctx.font = 'bold 28px Arial'
     ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, formData.bbs || '0.0', tableX, tableY + 40, 28, 'Arial', '#af9974')
-    drawTextWithShadow(ctx, formData.rango || '0M', tableX + colSpacing, tableY + 40, 28, 'Arial', '#af9974')
-    drawTextWithShadow(ctx, formData.precision || 'AAA', tableX + colSpacing * 2, tableY + 40, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, (formData.equipoTactico || 'N/A').toUpperCase(), teamX, teamY + 40, 28, 'Arial', '#af9974')
 
-    // Línea divisoria después de estadísticas
-    const line2Y = tableY + 75  // Más padding
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(photoX, line2Y)
-    ctx.lineTo(CARD_WIDTH - padding - 5, line2Y)
-    ctx.stroke()
-
-    // Bottom Section - Habilidades (a la izquierda, mejor distribuido)
-    const skillsY = line2Y + 40  // Más padding arriba del texto (después de la línea)
+    // ROL EN EL EQUIPO (derecha, nivelado con EQUIPO)
+    ctx.textAlign = 'right'
     ctx.font = 'bold 26px Arial'
     ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'HABILIDADES', photoX, skillsY, 26)
-
-    if (formData.habilidades) {
-        const skills = formData.habilidades.split(',').map(s => s.trim().toUpperCase())
-        ctx.font = 'bold 26px Arial'
-        ctx.fillStyle = '#af9974'
-        skills.forEach((skill, index) => {
-            drawTextWithShadow(ctx, skill, photoX, skillsY + 40 + (index * 38), 26, 'Arial', '#af9974')
-        })
-    } else {
-        ctx.font = 'bold 26px Arial'
-        ctx.fillStyle = '#af9974'
-        drawTextWithShadow(ctx, 'N/A', photoX, skillsY + 40, 26, 'Arial', '#af9974')
-    }
+    drawTextWithShadow(ctx, 'ROL', rolX, teamY, 26)
+    ctx.font = 'bold 28px Arial'
+    ctx.fillStyle = '#af9974'
+    drawTextWithShadow(ctx, (formData.rolEnEquipo || 'N/A').toUpperCase(), rolX, teamY + 40, 28, 'Arial', '#af9974')
 
     // QR Code (abajo a la derecha, mejor posicionado)
+    // Calcular posición del QR primero para nivelar el logo
+    const qrSize = 100
+    const qrPadding = 5  // Padding interno (reducido)
+    const qrBorderWidth = 2  // Ancho del borde
+    const qrX = CARD_WIDTH - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
+    const qrY = CARD_HEIGHT - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
+
+    // Logo del equipo (nivelado con el QR)
+    if (formData.equipoLogo) {
+        try {
+            const logoImg = await loadImage(formData.equipoLogo)
+            const logoSize = 120  // Tamaño más grande del logo
+            const logoX = teamX
+
+            // Nivelar el logo con el QR (misma altura Y, centrado verticalmente)
+            const logoAspectRatio = logoImg.width / logoImg.height
+            let logoWidth = logoSize
+            let logoHeight = logoSize / logoAspectRatio
+
+            // Si la altura calculada excede el tamaño, ajustar por altura
+            if (logoHeight > logoSize) {
+                logoHeight = logoSize
+                logoWidth = logoSize * logoAspectRatio
+            }
+
+            // Centrar verticalmente el logo con el QR
+            const logoY = qrY + (qrSize / 2) - (logoHeight / 2)
+
+            // Alinear el logo a la izquierda
+            ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight)
+        } catch (error) {
+            console.error('Error cargando logo del equipo:', error)
+        }
+    }
+
+    // Generar y dibujar el QR Code
     try {
         // Generar URL para el QR code que redirige a la vista de credencial
         // Intentar obtener la URL base desde el entorno o usar window.location.origin
@@ -795,22 +821,46 @@ export const generateBackCard = async (formData) => {
             : `/credencial/${formData.cedula}`
 
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 95,
-            margin: 1,
+            width: 200,
+            margin: 2,
             color: {
                 dark: '#000000',
-                light: '#FFFFFF'
-            }
+                light: '#D4C5A9'  // Beige/arena claro para el fondo interno del QR
+            },
+            errorCorrectionLevel: 'M'
         })
 
         const qrImg = await loadImage(qrDataUrl)
-        const qrSize = 95
-        const qrX = CARD_WIDTH - qrSize - padding - 5
-        const qrY = CARD_HEIGHT - qrSize - padding - 5
 
-        // Fondo blanco para el QR
-        ctx.fillStyle = '#FFFFFF'
-        ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8)
+        // Sombra sutil para dar profundidad
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
+        ctx.shadowBlur = 8
+        ctx.shadowOffsetX = 2
+        ctx.shadowOffsetY = 2
+
+        // Fondo beige/arena con borde redondeado para el QR
+        const qrBgX = qrX - qrPadding - qrBorderWidth
+        const qrBgY = qrY - qrPadding - qrBorderWidth
+        const qrBgSize = qrSize + (qrPadding * 2) + (qrBorderWidth * 2)
+
+        // Fondo beige/arena claro (similar al color #af9974 pero más claro)
+        ctx.fillStyle = '#D4C5A9'  // Beige/arena claro con buen contraste
+        roundRect(ctx, qrBgX, qrBgY, qrBgSize, qrBgSize, 8)
+        ctx.fill()
+
+        // Borde dorado
+        ctx.strokeStyle = GOLD_COLOR
+        ctx.lineWidth = qrBorderWidth
+        roundRect(ctx, qrBgX, qrBgY, qrBgSize, qrBgSize, 8)
+        ctx.stroke()
+
+        // Resetear sombra
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+
+        // Dibujar el QR code
         ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize)
     } catch (error) {
         console.error('Error generando QR:', error)

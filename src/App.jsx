@@ -15,6 +15,13 @@ import TournamentDetailView from './components/TournamentDetailView'
 import RankingView from './components/RankingView'
 import GeneratorView from './components/GeneratorView'
 import TeamDetailView from './components/TeamDetailView'
+import RolesView from './components/RolesView'
+import LevelsView from './components/LevelsView'
+import ScoresView from './components/ScoresView'
+import SpecialtiesView from './components/SpecialtiesView'
+import VigenciasView from './components/VigenciasView'
+import LogsView from './components/LogsView'
+import LogDetailView from './components/LogDetailView'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -65,6 +72,13 @@ function App() {
           <Route path="torneos" element={<TournamentsView />} />
           <Route path="torneos/:torneoId" element={<TournamentDetailView />} />
           <Route path="ranking" element={<RankingView />} />
+          <Route path="gestion/niveles" element={<LevelsView />} />
+          <Route path="gestion/roles" element={<RolesView />} />
+          <Route path="gestion/puntajes" element={<ScoresView />} />
+          <Route path="gestion/especialidades" element={<SpecialtiesView />} />
+          <Route path="gestion/vigencias" element={<VigenciasView />} />
+          <Route path="logs" element={<LogsView />} />
+          <Route path="logs/:date" element={<LogDetailView />} />
           <Route path="generador" element={<GeneratorView />} />
           <Route path="buscar-carnet" element={<SearchCard />} />
           <Route path="credencial/:cedula" element={<CredencialView />} />

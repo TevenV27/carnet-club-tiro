@@ -93,27 +93,128 @@ function SidebarLayout({ onSignOut }) {
                         </summary>
                         <nav className="px-4 pb-4">
                             <ul className="space-y-2">
-                                {menus.map((menu) => (
-                                    <li key={menu.id}>
-                                        <NavLink
-                                            to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
-                                            className={({ isActive }) =>
-                                                [
-                                                    'block rounded px-4 py-3 font-tactical text-xs uppercase tracking-[0.3em] transition-colors duración-150 border border-transparent text-theme-secondary',
-                                                    isActive
-                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
-                                                ].join(' ')
-                                            }
-                                            onClick={() => {
-                                                handleMenuClick(menu.path)
-                                                setMobileMenuOpen(false)
-                                            }}
-                                        >
-                                            {menu.label}
-                                        </NavLink>
-                                    </li>
-                                ))}
+                                {menus.map((menu) => {
+                                    if (menu.id === 'gestion') {
+                                        return (
+                                            <li key={menu.id}>
+                                                <div className="space-y-1">
+                                                    <span className="block rounded px-4 py-2 font-tactical text-xs uppercase tracking-[0.3em] text-theme-secondary border border-dashed border-theme/40">
+                                                        Gestión
+                                                    </span>
+                                                    <div className="ml-4 space-y-1">
+                                                        <NavLink
+                                                            to="/gestion/niveles"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                            onClick={() => {
+                                                                handleMenuClick('gestion/niveles')
+                                                                setMobileMenuOpen(false)
+                                                            }}
+                                                        >
+                                                            Niveles
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/roles"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                            onClick={() => {
+                                                                handleMenuClick('gestion/roles')
+                                                                setMobileMenuOpen(false)
+                                                            }}
+                                                        >
+                                                            Roles
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/especialidades"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                            onClick={() => {
+                                                                handleMenuClick('gestion/especialidades')
+                                                                setMobileMenuOpen(false)
+                                                            }}
+                                                        >
+                                                            Especialidades
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/puntajes"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                            onClick={() => {
+                                                                handleMenuClick('gestion/puntajes')
+                                                                setMobileMenuOpen(false)
+                                                            }}
+                                                        >
+                                                            Puntajes
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/vigencias"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                            onClick={() => {
+                                                                handleMenuClick('gestion/vigencias')
+                                                                setMobileMenuOpen(false)
+                                                            }}
+                                                        >
+                                                            Vigencias
+                                                        </NavLink>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        )
+                                    }
+
+                                    return (
+                                        <li key={menu.id}>
+                                            <NavLink
+                                                to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
+                                                className={({ isActive }) =>
+                                                    [
+                                                        'block rounded px-4 py-3 font-tactical text-xs uppercase tracking-[0.3em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                        isActive
+                                                            ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                    ].join(' ')
+                                                }
+                                                onClick={() => {
+                                                    handleMenuClick(menu.path)
+                                                    setMobileMenuOpen(false)
+                                                }}
+                                            >
+                                                {menu.label}
+                                            </NavLink>
+                                        </li>
+                                    )
+                                })}
                             </ul>
                         </nav>
                     </details>
@@ -139,27 +240,131 @@ function SidebarLayout({ onSignOut }) {
                         <div className="px-4 py-4">
                             <p className="text-[10px] uppercase text-theme-muted mb-2">Navegación</p>
                             <ul className="space-y-1.5">
-                                {menus.map((menu) => (
-                                    <li key={menu.id}>
-                                        <NavLink
-                                            to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
-                                            className={({ isActive }) =>
-                                                [
-                                                    'group flex items-center gap-2 rounded px-3 py-2 font-tactical text-xs uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
-                                                    isActive
-                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
-                                                ].join(' ')
-                                            }
-                                            onClick={() => handleMenuClick(menu.path)}
-                                        >
-                                            <span className="h-6 w-[2px] rounded-full bg-tactical-gold/50 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
-                                            <span className="flex-1 font-semibold tracking-[0.2em] text-[11px] whitespace-normal break-words">
-                                                {menu.label}
-                                            </span>
-                                        </NavLink>
-                                    </li>
-                                ))}
+                                {menus.map((menu) => {
+                                    if (menu.id === 'gestion') {
+                                        const isGestionActive = location.pathname.startsWith('/gestion')
+                                        return (
+                                            <li key={menu.id}>
+                                                <div className="relative group">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleMenuClick('gestion/niveles')}
+                                                        className={[
+                                                            'group flex items-center gap-2 w-full text-left rounded px-3 py-2 font-tactical text-xs uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                            isGestionActive
+                                                                ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                        ].join(' ')}
+                                                    >
+                                                        <span className="h-6 w-[2px] rounded-full bg-tactical-gold/50 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
+                                                        <span className="flex-1 font-semibold tracking-[0.2em] text-[11px] whitespace-normal break-words">
+                                                            Gestión
+                                                        </span>
+                                                    </button>
+
+                                                    <div className={`mt-1 ml-6 space-y-1 overflow-hidden transition-all duration-500 ease-in-out ${
+                                                        isGestionActive 
+                                                            ? 'max-h-[500px] opacity-100' 
+                                                            : 'max-h-0 opacity-0 group-hover:max-h-[500px] group-hover:opacity-100'
+                                                    }`}>
+                                                        <NavLink
+                                                            to="/gestion/niveles"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                        >
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
+                                                            <span className="flex-1 tracking-[0.2em]">Niveles</span>
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/roles"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                        >
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
+                                                            <span className="flex-1 tracking-[0.2em]">Roles</span>
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/especialidades"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                        >
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
+                                                            <span className="flex-1 tracking-[0.2em]">Especialidades</span>
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/puntajes"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                        >
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
+                                                            <span className="flex-1 tracking-[0.2em]">Puntajes</span>
+                                                        </NavLink>
+                                                        <NavLink
+                                                            to="/gestion/vigencias"
+                                                            className={({ isActive }) =>
+                                                                [
+                                                                    'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    isActive
+                                                                        ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                ].join(' ')
+                                                            }
+                                                        >
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
+                                                            <span className="flex-1 tracking-[0.2em]">Vigencias</span>
+                                                        </NavLink>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        )
+                                    }
+
+                                    return (
+                                        <li key={menu.id}>
+                                            <NavLink
+                                                to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
+                                                className={({ isActive }) =>
+                                                    [
+                                                        'group flex items-center gap-2 rounded px-3 py-2 font-tactical text-xs uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                        isActive
+                                                            ? 'border-tactical-gold text-tactical-gold bg-surface-active'
+                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                    ].join(' ')
+                                                }
+                                                onClick={() => handleMenuClick(menu.path)}
+                                            >
+                                                <span className="h-6 w-[2px] rounded-full bg-tactical-gold/50 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
+                                                <span className="flex-1 font-semibold tracking-[0.2em] text-[11px] whitespace-normal break-words">
+                                                    {menu.label}
+                                                </span>
+                                            </NavLink>
+                                        </li>
+                                    )
+                                })}
                             </ul>
                         </div>
                     </nav>

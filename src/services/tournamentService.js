@@ -9,6 +9,7 @@ import {
     Timestamp,
     updateDoc
 } from 'firebase/firestore'
+import { logAction } from './logService'
 
 const tournamentsCollection = collection(db, 'torneos')
 
@@ -98,6 +99,15 @@ export const createTournament = async ({ nombre, fechaInicio, participantes }) =
         createdAt: now,
         updatedAt: now
     })
+
+    // Registrar log
+    await logAction(
+        'crear',
+        'torneos',
+        docRef.id,
+        `Torneo creado: ${nombre}`,
+        { nombre, fechaInicio: fecha.toDate() }
+    )
 
     const snapshot = await getDoc(docRef)
     return normalizeTournament(snapshot)
@@ -225,6 +235,17 @@ export const updateTournamentInfo = async (tournamentId, { nombre, fechaInicio, 
     }
 
     await updateDoc(docRef, updates)
+    
+    // Registrar log
+    const tournamentData = snapshot.data()
+    await logAction(
+        'actualizar',
+        'torneos',
+        tournamentId,
+        `Torneo actualizado: ${nombre || tournamentData.nombre || tournamentId}`,
+        { nombre: nombre || tournamentData.nombre }
+    )
+    
     const updatedSnapshot = await getDoc(docRef)
     return normalizeTournament(updatedSnapshot)
 }
@@ -270,10 +291,22 @@ export const cancelTournament = async (tournamentId) => {
     }
 
     const docRef = doc(db, 'torneos', tournamentId)
+    const snapshot = await getDoc(docRef)
+    const tournamentData = snapshot.exists() ? snapshot.data() : null
+    
     await updateDoc(docRef, {
         estado: 'cancelado',
         updatedAt: new Date()
     })
+
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'torneos',
+        tournamentId,
+        `Torneo cancelado: ${tournamentData?.nombre || tournamentId}`,
+        { nombre: tournamentData?.nombre }
+    )
 
     const updatedSnapshot = await getDoc(docRef)
     return normalizeTournament(updatedSnapshot)
@@ -284,7 +317,20 @@ export const deleteTournament = async (tournamentId) => {
         throw new Error('Se requiere el ID del torneo para eliminarlo.')
     }
 
-    await deleteDoc(doc(db, 'torneos', tournamentId))
+    const docRef = doc(db, 'torneos', tournamentId)
+    const snapshot = await getDoc(docRef)
+    const tournamentData = snapshot.exists() ? snapshot.data() : null
+    
+    await deleteDoc(docRef)
+
+    // Registrar log
+    await logAction(
+        'eliminar',
+        'torneos',
+        tournamentId,
+        `Torneo eliminado: ${tournamentData?.nombre || tournamentId}`,
+        { nombre: tournamentData?.nombre }
+    )
 }
 
 export const finalizeTournament = async (tournamentId) => {
@@ -293,10 +339,22 @@ export const finalizeTournament = async (tournamentId) => {
     }
 
     const docRef = doc(db, 'torneos', tournamentId)
+    const snapshot = await getDoc(docRef)
+    const tournamentData = snapshot.exists() ? snapshot.data() : null
+    
     await updateDoc(docRef, {
         estado: 'finalizado',
         updatedAt: new Date()
     })
+
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'torneos',
+        tournamentId,
+        `Torneo finalizado: ${tournamentData?.nombre || tournamentId}`,
+        { nombre: tournamentData?.nombre }
+    )
 
     const updatedSnapshot = await getDoc(docRef)
     return normalizeTournament(updatedSnapshot)

@@ -28,6 +28,11 @@ const DEFAULT_MENUS = [
         path: 'ranking'
     },
     {
+        id: 'gestion',
+        label: 'Gestión',
+        path: 'gestion/niveles'
+    },
+    {
         id: 'generador',
         label: 'Generador de Carnets',
         path: 'generador'

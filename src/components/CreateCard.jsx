@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { auth } from '../firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { generateFrontCard, generateBackCard } from '../utils/cardGenerator'
-import { saveCard } from '../services/cardService'
+import { saveCard, getNextMembershipNumber } from '../services/cardService'
+import { getVigencias } from '../services/vigenciasService'
+import { getSpecialties } from '../services/specialtiesService'
+import { getTeams } from '../services/teamService'
+import { getLevels } from '../services/levelsService'
 import '../App.css'
 import CarnetPreview from './CarnetPreview'
 
@@ -20,6 +24,30 @@ function CreateCard({ onSignOut }) {
     })
     return () => unsubscribe()
   }, [navigate])
+
+  // Cargar vigencias, especialidades, equipos y niveles al montar
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingData(true)
+        const [vigenciasData, especialidadesData, equiposData, nivelesData] = await Promise.all([
+          getVigencias(),
+          getSpecialties(),
+          getTeams(),
+          getLevels()
+        ])
+        setVigencias(vigenciasData)
+        setEspecialidades(especialidadesData)
+        setEquipos(equiposData)
+        setNiveles(nivelesData)
+      } catch (error) {
+        console.error('Error cargando datos:', error)
+      } finally {
+        setLoadingData(false)
+      }
+    }
+    loadData()
+  }, [])
   const [formData, setFormData] = useState({
     // Datos del frente
     nombre: '',
@@ -27,23 +55,28 @@ function CreateCard({ onSignOut }) {
     numeroMembresia: '',
     emision: '',
     vigencia: '',
-    nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE',
+    nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo, no se muestra en input
     rh: '',
     contacto: '',
+    contactoEmergencia: '',
     cedula: '',
 
     // Datos del reverso
     identificador: '',
     especialidad: '',
     equipoTactico: '',
+    equipoLogo: null, // Logo del equipo seleccionado
+    rolEnEquipo: '',
     pistola: '',
     fusil: '',
-    bbs: '',
-    rango: '',
-    precision: '',
-    habilidades: '',
     foto: null,
   })
+
+  const [vigencias, setVigencias] = useState([])
+  const [especialidades, setEspecialidades] = useState([])
+  const [equipos, setEquipos] = useState([])
+  const [niveles, setNiveles] = useState([])
+  const [loadingData, setLoadingData] = useState(true)
 
   const [frontCardUrl, setFrontCardUrl] = useState(null)
   const [backCardUrl, setBackCardUrl] = useState(null)
@@ -54,10 +87,21 @@ function CreateCard({ onSignOut }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // Si se selecciona un equipo, cargar su logo
+    if (name === 'equipoTactico') {
+      const equipoSeleccionado = equipos.find(eq => eq.nombre === value)
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        equipoLogo: equipoSeleccionado?.logo || null
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handlePhotoChange = (e) => {
@@ -74,14 +118,43 @@ function CreateCard({ onSignOut }) {
 
   const handleGenerate = async () => {
     try {
+      // Auto-calcular número de membresía si no existe
+      if (!formData.numeroMembresia) {
+        const nextMembership = await getNextMembershipNumber()
+        setFormData(prev => ({ ...prev, numeroMembresia: nextMembership }))
+      }
+
+      // Auto-calcular fecha de emisión (MM/YYYY)
+      if (!formData.emision) {
+        const now = new Date()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const year = now.getFullYear()
+        const emision = `${month}/${year}`
+        setFormData(prev => ({ ...prev, emision }))
+      }
+
+      // Preparar datos con valores automáticos
+      const dataToGenerate = {
+        ...formData,
+        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
+        numeroMembresia: formData.numeroMembresia || await getNextMembershipNumber(),
+        emision: formData.emision || (() => {
+          const now = new Date()
+          const month = String(now.getMonth() + 1).padStart(2, '0')
+          const year = now.getFullYear()
+          return `${month}/${year}`
+        })(),
+        // equipoLogo ya está en formData desde que se seleccionó el equipo
+      }
+
       // Generar tarjeta frontal
-      const frontBlob = await generateFrontCard(formData)
+      const frontBlob = await generateFrontCard(dataToGenerate)
       const frontUrl = URL.createObjectURL(frontBlob)
       setFrontCardUrl(frontUrl)
       setFrontCardBlob(frontBlob)
 
       // Generar tarjeta trasera
-      const backBlob = await generateBackCard(formData)
+      const backBlob = await generateBackCard(dataToGenerate)
       const backUrl = URL.createObjectURL(backBlob)
       setBackCardUrl(backUrl)
       setBackCardBlob(backBlob)
@@ -118,8 +191,21 @@ function CreateCard({ onSignOut }) {
       const token = await user.getIdToken()
       console.log('Token de autenticación obtenido:', token ? 'Sí' : 'No')
 
+      // Asegurar que los valores automáticos estén presentes
+      const dataToSave = {
+        ...formData,
+        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
+        numeroMembresia: formData.numeroMembresia || await getNextMembershipNumber(),
+        emision: formData.emision || (() => {
+          const now = new Date()
+          const month = String(now.getMonth() + 1).padStart(2, '0')
+          const year = now.getFullYear()
+          return `${month}/${year}`
+        })()
+      }
+
       // Guardar en Firebase (actualizará si ya existe, creará si es nuevo)
-      const result = await saveCard(formData, frontCardBlob, backCardBlob, user.uid)
+      const result = await saveCard(dataToSave, frontCardBlob, backCardBlob, user.uid)
 
       // El servicio retorna _wasUpdated para indicar si fue actualización
       if (result._wasUpdated) {
@@ -220,485 +306,297 @@ Revisa la consola del navegador para más detalles.
   return (
     <div className="min-h-screen lg:h-screen bg-tactical-dark relative flex flex-col lg:overflow-hidden">
 
-      {/* Barra superior de navegación */}
-      <div className="bg-black border-b border-tactical-border py-3 px-8 relative z-10 flex-shrink-0"
-        style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.5)' }}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <button
-            onClick={() => navigate('/buscar-carnet')}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-brass font-tactical text-xs uppercase tracking-wider transition-all duration-200"
-            style={{
-              boxShadow: 'none',
-              textShadow: 'none'
-            }}
-          >
-            [BUSCAR CARNET]
-          </button>
-
-          {user && (
-            <div className="text-tactical-brass font-tactical text-xs uppercase tracking-wider opacity-70"
-              style={{ textShadow: 'none' }}>
-              {user.email}
-            </div>
-          )}
-
-          <button
-            onClick={onSignOut}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-brass font-tactical text-xs uppercase tracking-wider transition-all duration-200"
-            style={{
-              boxShadow: 'none',
-              textShadow: 'none'
-            }}
-          >
-            [SALIR]
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-[10px] md:px-4 pt-[10px] md:pt-4 pb-[10px] md:pb-6 relative z-10 flex flex-col lg:overflow-hidden flex-1 lg:min-h-0">
-        {/* Header táctico */}
-        <div className="mb-4 text-center border-b border-tactical-border pb-3 relative flex-shrink-0"
-          style={{
-            borderStyle: 'solid',
-            borderWidth: '1px',
-            boxShadow: 'none'
-          }}>
-          <h1 className="text-2xl font-bold text-tactical-gold mb-1 font-tactical tracking-wider"
-            style={{
-              textShadow: 'none',
-              letterSpacing: '0.1em',
-              fontWeight: '600'
-            }}>
-            [CLASIFICADO] GENERADOR DE CARNETS
+      <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+        {/* Header */}
+        <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+          <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+            Generador de Carnets
           </h1>
-          <p className="text-tactical-brass text-xs font-tactical uppercase tracking-wider opacity-80"
-            style={{ letterSpacing: '0.08em', textShadow: 'none' }}>
-            CLUB DE TIRO DEPORTIVO DEL VALLE - OPERACIONES ESPECIALES
+          <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
+            Crea y gestiona los carnets de identificación de los operadores
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch lg:flex-1 lg:min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Formulario */}
-          <div className="hud-border p-[10px] md:p-1 flex flex-col lg:overflow-hidden">
-            <div className="bg-black p-[10px] md:p-4 flex flex-col lg:flex-1 lg:overflow-hidden" style={{
-              background: '#0a0a0a',
-              boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
-            }}>
-              <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider flex-shrink-0"
-                style={{
-                  textShadow: 'none',
-                  letterSpacing: '0.08em',
-                  fontWeight: '500'
-                }}>
-                &gt; MÓDULO DE ENTRADA DE DATOS
+          <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4 flex flex-col max-h-[calc(100vh-200px)]">
+            <div className="flex-shrink-0">
+              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em] mb-2">
+                Datos del Carnet
               </h2>
-
-              <div className="space-y-2 lg:flex-1 lg:overflow-y-auto" style={{ paddingRight: '12px' }}>
-                {/* Sección Frente */}
-                <div className="border-b border-tactical-border pb-2 mb-2">
-                  <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical uppercase tracking-wider"
-                    style={{ textShadow: 'none' }}>
-                    &gt; DATOS CARA FRONTAL
-                  </h3>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-gold mb-2 font-tactical text-xs uppercase tracking-wider"
-                      style={{ textShadow: 'none' }}>
-                      &gt; NOMBRE COMPLETO
-                    </label>
-                    <input
-                      type="text"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: JUAN TENORIO"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; CÉDULA</label>
-                    <input
-                      type="text"
-                      name="cedula"
-                      value={formData.cedula}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: 1234567890"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; CONTACTO</label>
-                    <input
-                      type="text"
-                      name="contacto"
-                      value={formData.contacto}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: 3001234567"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; RH</label>
-                    <input
-                      type="text"
-                      name="rh"
-                      value={formData.rh}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: O+"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-
-
-
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; NIVEL/OPERADOR</label>
-                    <input
-                      type="text"
-                      name="nivel"
-                      value={formData.nivel}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: OPERADOR NIVEL 3"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; NÚMERO DE MEMBRESÍA</label>
-                    <input
-                      type="text"
-                      name="numeroMembresia"
-                      value={formData.numeroMembresia}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: CTDV-0125"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div>
-                      <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>
-                        &gt; EMISIÓN (MM/YYYY)</label>
-                      <input
-                        type="text"
-                        name="emision"
-                        value={formData.emision}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                        placeholder="EJ: 11/2025"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                          background: '#0a0a0a'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>
-                        &gt; VIGENCIA</label>
-                      <input
-                        type="text"
-                        name="vigencia"
-                        value={formData.vigencia}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                        placeholder="EJ: T-01"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                          background: '#0a0a0a'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; NOMBRE DEL CLUB</label>
-                    <input
-                      type="text"
-                      name="nombreClub"
-                      value={formData.nombreClub}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Sección Reverso */}
-                <div className="border-b border-tactical-border pb-2 mb-2">
-                  <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical uppercase tracking-wider"
-                    style={{ textShadow: 'none' }}>
-                    &gt; DATOS CARA TRASERA
-                  </h3>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; IDENTIFICADOR</label>
-                    <input
-                      type="text"
-                      name="identificador"
-                      value={formData.identificador}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: RAVEN-09"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; FOTO DEL MIEMBRO</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; ESPECIALIDAD</label>
-                    <input
-                      type="text"
-                      name="especialidad"
-                      value={formData.especialidad}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: FUSILERO"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  {/* <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; EQUIPO TÁCTICO</label>
-                    <input
-                      type="text"
-                      name="equipoTactico"
-                      value={formData.equipoTactico}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div> */}
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; PISTOLA</label>
-                    <input
-                      type="text"
-                      name="pistola"
-                      value={formData.pistola}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: GLOCK 17"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; FUSIL</label>
-                    <input
-                      type="text"
-                      name="fusil"
-                      value={formData.fusil}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: AR15 BLACK RAIN"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    <div>
-                      <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>
-                        &gt; BBS 0.28</label>
-                      <input
-                        type="text"
-                        name="bbs"
-                        value={formData.bbs}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                        placeholder="EJ: 9.2"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                          background: '#0a0a0a'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>
-                        &gt; RANGO</label>
-                      <input
-                        type="text"
-                        name="rango"
-                        value={formData.rango}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                        placeholder="EJ: 25M"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                          background: '#0a0a0a'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>
-                        &gt; PRECISIÓN</label>
-                      <input
-                        type="text"
-                        name="precision"
-                        value={formData.precision}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                        placeholder="EJ: AAA"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                          background: '#0a0a0a'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-2">
-                    <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
-                      style={{ textShadow: 'none' }}>
-                      &gt; HABILIDADES (SEPARADAS POR COMAS)</label>
-                    <input
-                      type="text"
-                      name="habilidades"
-                      value={formData.habilidades}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-1.5 bg-tactical-gray text-tactical-brass rounded-none border border-tactical-border focus:border-tactical-gold focus:outline-none font-tactical text-sm"
-                      placeholder="EJ: INSTRUCTOR DE TIRO, PARAMEDICO, ESTRATEGA"
-                      style={{
-                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                        background: '#0a0a0a'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleGenerate}
-                  className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
-                  style={{
-                    boxShadow: 'none',
-                    textShadow: 'none',
-                    letterSpacing: '0.1em'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(26, 26, 26, 0.5)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent'
-                  }}
-                >
-                  [GENERAR CARNET]
-                </button>
-              </div>
+              <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                Completa la información para generar el carnet
+              </p>
             </div>
-          </div>
+
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+              {/* Sección Frente */}
+              <div className="border-b border-tactical-border pb-4 mb-4">
+                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.3em] mb-4">
+                  Datos Cara Frontal
+                </h3>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Nombre Completo
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: JUAN TENORIO"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Cédula
+                  </label>
+                  <input
+                    type="text"
+                    name="cedula"
+                    value={formData.cedula}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: 1234567890"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Contacto
+                  </label>
+                  <input
+                    type="text"
+                    name="contacto"
+                    value={formData.contacto}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: 3001234567"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Contacto de Emergencia
+                  </label>
+                  <input
+                    type="text"
+                    name="contactoEmergencia"
+                    value={formData.contactoEmergencia}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: 3009876543"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    RH
+                  </label>
+                  <input
+                    type="text"
+                    name="rh"
+                    value={formData.rh}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: O+"
+                  />
+                </div>
+
+
+
+
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Nivel/Operador
+                  </label>
+                  <select
+                    name="nivel"
+                    value={formData.nivel}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={loadingData}
+                  >
+                    <option value="">Seleccione un nivel</option>
+                    {niveles.map((nivel) => (
+                      <option key={nivel.id} value={nivel.nombre}>
+                        {nivel.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Vigencia
+                  </label>
+                  <select
+                    name="vigencia"
+                    value={formData.vigencia}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={loadingData}
+                  >
+                    <option value="">Seleccione una vigencia</option>
+                    {vigencias.map((vigencia) => (
+                      <option key={vigencia.id} value={vigencia.nombre}>
+                        {vigencia.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Sección Reverso */}
+              <div className="border-b border-tactical-border pb-4 mb-4">
+                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.3em] mb-4">
+                  Datos Cara Trasera
+                </h3>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Identificador
+                  </label>
+                  <input
+                    type="text"
+                    name="identificador"
+                    value={formData.identificador}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: RAVEN-09"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Foto del Miembro
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-tactical file:uppercase file:tracking-[0.3em] file:bg-tactical-gray file:text-tactical-brass file:border file:border-tactical-border hover:file:bg-tactical-gray/80"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Especialidad
+                  </label>
+                  <select
+                    name="especialidad"
+                    value={formData.especialidad}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={loadingData}
+                  >
+                    <option value="">Seleccione una especialidad</option>
+                    {especialidades.map((especialidad) => (
+                      <option key={especialidad.id} value={especialidad.nombre}>
+                        {especialidad.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Equipo Táctico
+                  </label>
+                  <select
+                    name="equipoTactico"
+                    value={formData.equipoTactico}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={loadingData}
+                  >
+                    <option value="">Seleccione un equipo</option>
+                    {equipos.map((equipo) => (
+                      <option key={equipo.id} value={equipo.nombre}>
+                        {equipo.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Rol en el Equipo
+                  </label>
+                  <select
+                    name="rolEnEquipo"
+                    value={formData.rolEnEquipo}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={!formData.equipoTactico}
+                  >
+                    <option value="">Seleccione un rol</option>
+                    <option value="Capitán">Capitán</option>
+                    <option value="Operador">Operador</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Pistola
+                  </label>
+                  <input
+                    type="text"
+                    name="pistola"
+                    value={formData.pistola}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: GLOCK 17"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                    Fusil
+                  </label>
+                  <input
+                    type="text"
+                    name="fusil"
+                    value={formData.fusil}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: AR15 BLACK RAIN"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleGenerate}
+                className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
+              >
+                Generar Carnet
+              </button>
+            </div>
+          </section>
 
           {/* Vista previa y descarga */}
-          <div className="hud-border p-[10px] md:p-1 flex flex-col ">
-            <div className="flex flex-col gap-2 bg-black p-[10px] md:p-4 lg:flex-1 " style={{
-              background: '#0a0a0a',
-              boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
-            }}>
-              <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider flex-shrink-0"
-                style={{
-                  textShadow: 'none',
-                  letterSpacing: '0.08em',
-                  fontWeight: '500'
-                }}>
-                &gt; MÓDULO DE VISTA PREVIA
+          <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
+            <div>
+              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em] mb-2">
+                Vista Previa
               </h2>
+              <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                Visualiza las caras del carnet generado
+              </p>
+            </div>
+            <div className="flex flex-col gap-4">
               <div className="lg:flex-1">
                 <div className="grid grid-cols-2 gap-4">
 
                   {frontCardUrl && (
                     <div>
-                      <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>&gt; CARA FRONTAL</h3>
+                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.3em]">
+                        Cara Frontal
+                      </h3>
                       <CarnetPreview
                         src={frontCardUrl}
                         alt="Carnet Frontal"
@@ -711,13 +609,9 @@ Revisa la consola del navegador para más detalles.
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(frontCardUrl, 'carnet-frontal.png')}
-                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
-                          style={{
-                            boxShadow: 'none',
-                            textShadow: 'none'
-                          }}
+                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
                         >
-                          [DESCARGAR]
+                          Descargar
                         </button>
                       </div>
                     </div>
@@ -725,8 +619,9 @@ Revisa la consola del navegador para más detalles.
 
                   {backCardUrl && (
                     <div>
-                      <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
-                        style={{ textShadow: 'none' }}>&gt; CARA TRASERA</h3>
+                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.3em]">
+                        Cara Trasera
+                      </h3>
                       <CarnetPreview
                         src={backCardUrl}
                         alt="Carnet Trasero"
@@ -739,45 +634,36 @@ Revisa la consola del navegador para más detalles.
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(backCardUrl, 'carnet-trasero.png')}
-                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
-                          style={{
-                            boxShadow: 'none',
-                            textShadow: 'none'
-                          }}
+                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
                         >
-                          [DESCARGAR]
+                          Descargar
                         </button>
                       </div>
                     </div>
                   )}
 
                   {frontCardUrl && backCardUrl && (
-                    <div className="w-full mt-2 col-span-2">
+                    <div className="w-full mt-4 col-span-2">
                       <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          boxShadow: 'none',
-                          textShadow: 'none',
-                          letterSpacing: '0.08em'
-                        }}
+                        className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {saving ? '[GUARDANDO...]' : '[GUARDAR EN BASE DE DATOS]'}
+                        {saving ? 'Guardando...' : 'Guardar en Base de Datos'}
                       </button>
                     </div>
                   )}
 
                   {!frontCardUrl && !backCardUrl && (
-                    <div className="col-span-2 text-tactical-brass text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8" style={{ borderColor: '#af9974' }}>
-                      <p className="text-lg mb-2">[ESTADO: ESPERANDO ENTRADA]</p>
-                      <p className="text-sm">Complete el formulario y haga clic en [GENERAR CARNET] para ver la vista previa</p>
+                    <div className="col-span-2 text-tactical-brass/60 text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8">
+                      <p className="text-sm mb-2 uppercase tracking-[0.3em]">Estado: Esperando entrada</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em]">Complete el formulario y haga clic en "Generar Carnet" para ver la vista previa</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

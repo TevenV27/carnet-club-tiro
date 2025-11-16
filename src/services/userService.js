@@ -10,6 +10,7 @@ import {
     where,
     increment
 } from 'firebase/firestore'
+import { logAction } from './logService'
 
 export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carnetId }) => {
     if (!userBaseData?.cedula) {
@@ -38,6 +39,15 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
             createdAt: existingData.createdAt || now
         }, { merge: true })
 
+        // Registrar log
+        await logAction(
+            'actualizar',
+            'usuarios',
+            userDocRef.id,
+            `Usuario actualizado: ${userBaseData.nombre || userBaseData.cedula}`,
+            { cedula: userBaseData.cedula, nombre: userBaseData.nombre }
+        )
+
         console.log('Usuario actualizado en colección usuarios. Cédula:', userBaseData.cedula)
         return { created: false, id: userDocRef.id }
     }
@@ -46,6 +56,15 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
         ...payload,
         createdAt: now
     })
+
+    // Registrar log
+    await logAction(
+        'crear',
+        'usuarios',
+        userDocRef.id,
+        `Usuario creado: ${userBaseData.nombre || userBaseData.cedula}`,
+        { cedula: userBaseData.cedula, nombre: userBaseData.nombre }
+    )
 
     console.log('Usuario creado en colección usuarios. Cédula:', userBaseData.cedula)
     return { created: true, id: userDocRef.id }
@@ -106,6 +125,15 @@ export const updateUserPoints = async (cedula, points) => {
         updatedAt: now
     }, { merge: true })
 
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'usuarios',
+        userDocRef.id,
+        `Puntos actualizados para usuario: ${cedula} (${points} puntos)`,
+        { cedula, puntos: points }
+    )
+
     return { cedula, puntos: Number.isFinite(points) ? points : 0 }
 }
 
@@ -126,6 +154,15 @@ export const incrementUserPoints = async (cedula, delta) => {
         rankingUpdatedAt: now,
         updatedAt: now
     }, { merge: true })
+
+    // Registrar log
+    await logAction(
+        'actualizar',
+        'usuarios',
+        userDocRef.id,
+        `Puntos incrementados para usuario: ${cedula} (${delta > 0 ? '+' : ''}${delta} puntos)`,
+        { cedula, delta }
+    )
 
     return { cedula, delta }
 }

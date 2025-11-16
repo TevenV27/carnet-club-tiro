@@ -9,6 +9,7 @@ import {
     updateTournamentParticipantScores
 } from '../services/tournamentService'
 import { incrementUserPoints, getAllUsers } from '../services/userService'
+import { getScores } from '../services/scoresService'
 
 const formatDateTime = (value) => {
     if (!value) {
@@ -45,6 +46,52 @@ function TournamentDetailView() {
     const [uploadingEvidence, setUploadingEvidence] = useState(false)
     const [evidenceError, setEvidenceError] = useState(null)
     const [updatingStatus, setUpdatingStatus] = useState(false)
+    const [scoresConfig, setScoresConfig] = useState({
+        primerPuesto: 50,
+        segundoPuesto: 30,
+        tercerPuesto: 20,
+        participacion: 10,
+        noAsistencia: -10
+    })
+
+    // Cargar configuración de puntajes desde la BD
+    useEffect(() => {
+        const loadScoresConfig = async () => {
+            try {
+                const scoresData = await getScores()
+                const config = {
+                    primerPuesto: 50,
+                    segundoPuesto: 30,
+                    tercerPuesto: 20,
+                    participacion: 10,
+                    noAsistencia: -10
+                }
+
+                // Buscar cada tipo de puntaje por nombre
+                scoresData.forEach((score) => {
+                    const nombreUpper = score.nombre.toUpperCase()
+                    if (nombreUpper.includes('PRIMER PUESTO')) {
+                        config.primerPuesto = Number(score.valor) || 50
+                    } else if (nombreUpper.includes('SEGUNDO PUESTO')) {
+                        config.segundoPuesto = Number(score.valor) || 30
+                    } else if (nombreUpper.includes('TERCER PUESTO')) {
+                        config.tercerPuesto = Number(score.valor) || 20
+                    } else if (nombreUpper.includes('PARTICIPACIÓN') || nombreUpper.includes('PARTICIPACION')) {
+                        config.participacion = Number(score.valor) || 10
+                    } else if (nombreUpper.includes('NO ASISTENCIA') || nombreUpper.includes('NOASISTENCIA')) {
+                        config.noAsistencia = Number(score.valor) || -10
+                    }
+                })
+
+                setScoresConfig(config)
+            } catch (error) {
+                console.error('Error cargando configuración de puntajes:', error)
+                // Mantener valores por defecto si hay error
+            }
+        }
+
+        loadScoresConfig()
+    }, [])
 
     useEffect(() => {
         let isMounted = true
@@ -109,6 +156,30 @@ function TournamentDetailView() {
     const isFinalizado = tournament?.estado === 'finalizado'
     const isCancelado = tournament?.estado === 'cancelado'
     const tournamentClosed = isFinalizado || isCancelado
+
+    // Calcular posiciones del torneo basadas en los puntos del torneo
+    const tournamentRankings = useMemo(() => {
+        if (!participants || participants.length === 0) {
+            return []
+        }
+
+        const rankings = participants.map((participant) => {
+            const cedula = participant.cedula
+            const participantScores = scores[cedula] || participant.activityScores || {}
+            const total = calculateTotal(participantScores)
+            return {
+                cedula,
+                nombre: participant.nombre,
+                foto: participant.foto ?? userPhotos[cedula] ?? null,
+                total
+            }
+        })
+
+        // Ordenar por puntos descendente
+        rankings.sort((a, b) => b.total - a.total)
+
+        return rankings
+    }, [participants, scores, userPhotos])
 
     const fileToDataUrl = (file) => {
         return new Promise((resolve, reject) => {
@@ -233,30 +304,23 @@ function TournamentDetailView() {
                 const cedula = participant.cedula
                 const participantScores = scores[cedula] || {}
                 const total = calculateTotal(participantScores)
-                const prevApplied = participant.rankingAppliedScore || 0
-                const delta = total - prevApplied
 
                 participantUpdates[cedula] = {
                     activityScores: participantScores,
                     newAppliedScore: total,
-                    rankingDelta: delta
+                    rankingDelta: 0
                 }
             })
 
             const updatedTournament = await updateTournamentParticipantScores(torneoId, participantUpdates)
             setTournament(updatedTournament)
 
-            // Sincronizar ranking
-            const updates = Object.values(participantUpdates)
-            await Promise.all(
-                participants.map((participant) => {
-                    const update = participantUpdates[participant.cedula]
-                    if (!update || update.rankingDelta === 0) {
-                        return Promise.resolve()
-                    }
-                    return incrementUserPoints(participant.cedula, update.rankingDelta)
-                })
-            )
+            // Actualizar los scores locales con los datos guardados para que la tabla de posiciones se actualice
+            const updatedScores = {}
+            updatedTournament.participantes.forEach((participant) => {
+                updatedScores[participant.cedula] = participant.activityScores || {}
+            })
+            setScores(updatedScores)
         } catch (err) {
             console.error('Error guardando puntuaciones:', err)
             setError(err.message || 'No se pudieron guardar las puntuaciones. Intenta nuevamente.')
@@ -270,7 +334,7 @@ function TournamentDetailView() {
 
         const confirmationMessage =
             nextStatus === 'finalizado'
-                ? '¿Deseas marcar este torneo como FINALIZADO?'
+                ? '¿Deseas marcar este torneo como FINALIZADO? Esto asignará puntos al ranking general según las posiciones.'
                 : '¿Deseas CANCELAR este torneo?'
 
         const confirmed = window.confirm(confirmationMessage)
@@ -280,6 +344,59 @@ function TournamentDetailView() {
             setUpdatingStatus(true)
             let updatedTournament
             if (nextStatus === 'finalizado') {
+                // Calcular posiciones del torneo antes de finalizar
+                const tournamentParticipants = participants.map((participant) => {
+                    const cedula = participant.cedula
+                    const participantScores = scores[cedula] || participant.activityScores || {}
+                    const total = calculateTotal(participantScores)
+                    return {
+                        cedula,
+                        nombre: participant.nombre,
+                        foto: participant.foto,
+                        total
+                    }
+                })
+
+                // Ordenar por puntos descendente
+                tournamentParticipants.sort((a, b) => b.total - a.total)
+
+                // Separar participantes: los que participaron (puntos > 0) y los que no (puntos = 0)
+                const participantsWithPoints = tournamentParticipants.filter((p) => p.total > 0)
+                const participantsWithoutPoints = tournamentParticipants.filter((p) => p.total === 0)
+
+                // Asignar puntos al ranking general según posiciones
+                // Usar valores de la configuración cargada desde la BD
+                const pointsToAssign = {}
+                participantsWithPoints.forEach((participant, index) => {
+                    let positionPoints = 0
+                    if (index === 0) {
+                        // Primer puesto: puntos desde BD
+                        positionPoints = scoresConfig.primerPuesto
+                    } else if (index === 1) {
+                        // Segundo puesto: puntos desde BD
+                        positionPoints = scoresConfig.segundoPuesto
+                    } else if (index === 2) {
+                        // Tercer puesto: puntos desde BD
+                        positionPoints = scoresConfig.tercerPuesto
+                    }
+                    // Todos los participantes con puntos > 0 reciben puntos por participación desde BD
+                    const participationPoints = scoresConfig.participacion
+                    // Total = puntos por posición + puntos por participación
+                    pointsToAssign[participant.cedula] = positionPoints + participationPoints
+                })
+
+                // A los participantes sin puntos (no participaron) se les resta puntos desde BD
+                participantsWithoutPoints.forEach((participant) => {
+                    pointsToAssign[participant.cedula] = scoresConfig.noAsistencia
+                })
+
+                // Aplicar puntos al ranking general
+                await Promise.all(
+                    Object.entries(pointsToAssign).map(([cedula, points]) =>
+                        incrementUserPoints(cedula, points)
+                    )
+                )
+
                 updatedTournament = await finalizeTournament(tournament.id)
             } else {
                 updatedTournament = await cancelTournament(tournament.id)
@@ -343,7 +460,7 @@ function TournamentDetailView() {
                         Estado actual: {isCancelado ? 'Cancelado' : isFinalizado ? 'Finalizado' : 'En progreso'}
                     </p>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
                     {!tournamentClosed && (
                         <>
                             <button
@@ -371,7 +488,7 @@ function TournamentDetailView() {
                 </div>
             </header>
 
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section className="flex flex-col gap-6">
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <header className="px-6 py-4 border-b border-tactical-border/60">
                         <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
@@ -407,7 +524,7 @@ function TournamentDetailView() {
                                 placeholder="Detalle opcional"
                             />
                         </div>
-                        <div className="flex items-end justify-end">
+                        <div className="flex items-end justify-end gap-4">
                             <div className="md:col-span-1 w-full">
                                 <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
                                     Puntaje máximo
@@ -425,7 +542,7 @@ function TournamentDetailView() {
                                 <button
                                     type="submit"
                                     disabled={addingActivity || tournamentClosed}
-                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {addingActivity ? 'Agregando...' : 'Agregar actividad'}
                                 </button>
@@ -504,7 +621,7 @@ function TournamentDetailView() {
                             <tbody className="divide-y divide-tactical-border/40">
                                 {participants.map((participant, index) => {
                                     const cedula = participant.cedula
-                                    const participantScores = scores[cedula] || {}
+                                    const participantScores = scores[cedula] || participant.activityScores || {}
                                     const total = calculateTotal(participantScores)
                                     const participantPhoto = participant.foto ?? userPhotos[cedula] ?? null
 
@@ -556,6 +673,75 @@ function TournamentDetailView() {
                                         </tr>
                                     )
                                 })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
+                    <div>
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                            Posiciones del Torneo
+                        </h2>
+                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                            Clasificación según puntos acumulados en este torneo
+                        </p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
+                            <thead className="bg-black/60 text-tactical-brass/70">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">Posición</th>
+                                    <th className="px-4 py-3 text-left">Participante</th>
+                                    <th className="px-4 py-3 text-left">Puntos del Torneo</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-tactical-border/40">
+                                {tournamentRankings.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass/50 tracking-[0.45em]">
+                                            No hay participantes en este torneo.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    tournamentRankings.map((ranking, index) => {
+                                        const participantPhoto = ranking.foto
+
+                                        return (
+                                            <tr key={ranking.cedula} className="hover:bg-black/50 transition-colors duration-150">
+                                                <td className="px-4 py-3 text-tactical-gold">
+                                                    {index + 1}
+                                                </td>
+                                                <td className="px-4 py-3 text-tactical-gold">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 border border-tactical-border overflow-hidden">
+                                                            {participantPhoto ? (
+                                                                <img
+                                                                    src={participantPhoto}
+                                                                    alt={ranking.nombre || ranking.cedula}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass/50 tracking-[0.4em]">
+                                                                    Sin foto
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p>{ranking.nombre}</p>
+                                                            <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
+                                                                {ranking.cedula}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-tactical-gold text-lg">
+                                                    {ranking.total}
+                                                </td>
+                                            </tr>
+                                        )
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>

@@ -9,6 +9,7 @@ import {
     updateDoc
 } from 'firebase/firestore'
 import { upsertUserRecord } from './userService'
+import { logAction } from './logService'
 
 // Comprimir imagen Blob a base64 con calidad reducida
 const compressImage = (blob, maxWidth = 1200, quality = 0.75) => {
@@ -78,34 +79,38 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         }
 
         console.log('Guardando carnet para usuario:', userId)
-        // Comprimir y convertir imágenes a base64 (calidad 0.75 y ancho máximo 1200px para reducir tamaño)
-        let frontCardBase64 = await compressImage(frontCardBlob, 1200, 0.75)
-        let backCardBase64 = await compressImage(backCardBlob, 1200, 0.75)
+        // Comprimir y convertir imágenes a base64 con compresión más agresiva
+        // Empezar con calidad más baja y tamaño más pequeño para evitar exceder el límite de 1MB
+        let frontCardBase64 = await compressImage(frontCardBlob, 800, 0.5)
+        let backCardBase64 = await compressImage(backCardBlob, 800, 0.5)
 
-        // Verificar tamaño de las imágenes comprimidas (Firestore tiene límite de ~1MB por campo)
-        const frontSize = frontCardBase64.length
-        const backSize = backCardBase64.length
+        // Verificar tamaño de las imágenes comprimidas y reducir progresivamente si es necesario
+        let frontSize = frontCardBase64.length
+        let backSize = backCardBase64.length
+        let maxWidth = 800
+        let quality = 0.5
 
-        if (frontSize > 900000 || backSize > 900000) {
-            console.warn('Imagen muy grande después de compresión, reduciendo calidad...')
-            // Intentar con menor calidad si aún es muy grande
-            if (frontSize > 900000) {
-                frontCardBase64 = await compressImage(frontCardBlob, 1000, 0.6)
+        // Reducir progresivamente hasta que ambas imágenes sean menores a 400KB cada una
+        while ((frontSize > 400000 || backSize > 400000) && quality > 0.2) {
+            console.warn(`Imágenes muy grandes (${Math.round(frontSize/1024)}KB, ${Math.round(backSize/1024)}KB), reduciendo calidad...`)
+            quality -= 0.1
+            maxWidth -= 50
+            
+            if (frontSize > 400000) {
+                frontCardBase64 = await compressImage(frontCardBlob, maxWidth, quality)
+                frontSize = frontCardBase64.length
             }
-            if (backSize > 900000) {
-                backCardBase64 = await compressImage(backCardBlob, 1000, 0.6)
+            if (backSize > 400000) {
+                backCardBase64 = await compressImage(backCardBlob, maxWidth, quality)
+                backSize = backCardBase64.length
             }
         }
 
         // Convertir foto a base64 si existe (es un objeto File)
         let fotoBase64 = null
         if (cardData.foto && cardData.foto instanceof File) {
-            // Comprimir la foto también si es grande
-            if (cardData.foto.size > 500000) {
-                fotoBase64 = await compressImage(cardData.foto, 800, 0.7)
-            } else {
-                fotoBase64 = await blobToBase64(cardData.foto)
-            }
+            // Comprimir la foto con mayor compresión
+            fotoBase64 = await compressImage(cardData.foto, 600, 0.6)
         } else if (typeof cardData.foto === 'string') {
             // Si ya es base64, mantenerlo
             fotoBase64 = cardData.foto
@@ -123,6 +128,27 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             userId,
             createdAt: new Date(),
             updatedAt: new Date()
+        }
+
+        // Verificar tamaño total del documento antes de guardar
+        const docSize = JSON.stringify(cardDoc).length
+        console.log(`Tamaño del documento: ${Math.round(docSize/1024)}KB`)
+        
+        if (docSize > 1000000) { // 1MB = 1,000,000 bytes (con margen de seguridad)
+            console.warn('Documento aún muy grande, aplicando compresión adicional...')
+            // Reducir aún más la calidad
+            frontCardBase64 = await compressImage(frontCardBlob, 700, 0.4)
+            backCardBase64 = await compressImage(backCardBlob, 700, 0.4)
+            if (fotoBase64 && cardData.foto instanceof File) {
+                fotoBase64 = await compressImage(cardData.foto, 500, 0.5)
+            }
+            
+            cardDoc.frontCardBase64 = frontCardBase64
+            cardDoc.backCardBase64 = backCardBase64
+            cardDoc.foto = fotoBase64
+            
+            const newDocSize = JSON.stringify(cardDoc).length
+            console.log(`Nuevo tamaño del documento: ${Math.round(newDocSize/1024)}KB`)
         }
 
         console.log('Intentando guardar documento en Firestore...')
@@ -155,6 +181,16 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             }
 
             await updateDoc(docRef, updatedDoc)
+            
+            // Registrar log
+            await logAction(
+                'actualizar',
+                'carnets',
+                existingDoc.id,
+                `Carnet actualizado: ${cardData.numeroMembresia || cardData.cedula}`,
+                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia }
+            )
+            
             console.log('Carnet actualizado exitosamente. ID:', existingDoc.id, '(ya existía con esta cédula)')
             resultDoc = updatedDoc
             cardId = existingDoc.id
@@ -172,6 +208,16 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             })
 
             docRef = await addDoc(collection(db, 'carnets'), cardDoc)
+            
+            // Registrar log
+            await logAction(
+                'crear',
+                'carnets',
+                docRef.id,
+                `Carnet creado: ${cardData.numeroMembresia || cardData.cedula}`,
+                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia }
+            )
+            
             console.log('Documento creado exitosamente con ID:', docRef.id, '(nuevo carnet)')
             resultDoc = cardDoc
             cardId = docRef.id
@@ -229,5 +275,46 @@ export const getUserCards = async (userId) => {
     } catch (error) {
         console.error('Error obteniendo carnets:', error)
         throw error
+    }
+}
+
+// Generar el siguiente número de membresía automáticamente (CTV-1001, CTV-1002, etc.)
+export const getNextMembershipNumber = async () => {
+    try {
+        const snapshot = await getDocs(collection(db, 'carnets'))
+        
+        let maxNumber = 1000 // Empezamos en 1000 para que el primer número sea CTV-1001
+        
+        snapshot.docs.forEach((doc) => {
+            const data = doc.data()
+            const numeroMembresia = data.numeroMembresia || ''
+            
+            // Extraer el número del formato CTV-XXXX
+            const match = numeroMembresia.match(/CTV-(\d+)/i)
+            if (match) {
+                const number = parseInt(match[1], 10)
+                // Solo considerar números válidos entre 1001 y 9999
+                // Ignorar números fuera de este rango (posibles errores o datos antiguos)
+                if (!isNaN(number) && number >= 1001 && number <= 9999 && number > maxNumber) {
+                    maxNumber = number
+                }
+            }
+        })
+        
+        // El siguiente número será maxNumber + 1
+        // Si no se encontró ningún número válido, maxNumber seguirá siendo 1000, y el siguiente será 1001
+        const nextNumber = maxNumber + 1
+        
+        // Asegurar que el número no exceda 9999
+        if (nextNumber > 9999) {
+            console.warn('Se alcanzó el límite máximo de números de membresía (9999)')
+            return 'CTV-9999'
+        }
+        
+        return `CTV-${nextNumber.toString().padStart(4, '0')}`
+    } catch (error) {
+        console.error('Error generando número de membresía:', error)
+        // Si hay error, retornar el primer número por defecto
+        return 'CTV-1001'
     }
 }
