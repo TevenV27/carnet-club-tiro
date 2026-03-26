@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAllUsers, updateUserPoints } from '../../services/userService'
+import { useAuthProfile } from '../../context/AuthProfileContext'
 
 const getCedula = (user) => user.cedula || user.id
 
@@ -12,6 +13,7 @@ const formatNumber = (value) => {
 }
 
 function RankingView() {
+    const { canEdit } = useAuthProfile()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -199,7 +201,9 @@ function RankingView() {
                                     <th className="px-4 py-3 text-left">Operador</th>
                                     <th className="px-4 py-3 text-left">Nivel</th>
                                     <th className="px-4 py-3 text-left">Puntos</th>
-                                    <th className="px-4 py-3 text-left">Actualizar puntuación</th>
+                                    {canEdit ? (
+                                        <th className="px-4 py-3 text-left">Actualizar puntuación</th>
+                                    ) : null}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-tactical-border/40">
@@ -209,9 +213,13 @@ function RankingView() {
                                     return (
                                         <tr
                                             key={cedula}
-                                            className="hover:bg-black/50 transition-colors duration-150 cursor-pointer select-none"
-                                            onDoubleClick={() => navigate(`/usuarios/${encodeURIComponent(cedula)}`)}
-                                            title="Doble clic para ver perfil detallado"
+                                            className={`hover:bg-black/50 transition-colors duration-150 select-none ${canEdit ? 'cursor-pointer' : ''}`}
+                                            onDoubleClick={() => {
+                                                if (canEdit) {
+                                                    navigate(`/usuarios/${encodeURIComponent(cedula)}`)
+                                                }
+                                            }}
+                                            title={canEdit ? 'Doble clic para ver perfil detallado' : undefined}
                                         >
                                             <td className="px-4 py-3 text-tactical-gold">{index + 1}</td>
                                             <td className="px-4 py-3">
@@ -241,23 +249,25 @@ function RankingView() {
                                                 {user.nivel || 'Operador'}
                                             </td>
                                             <td className="px-4 py-3 text-tactical-gold">{formatNumber(user.puntos ?? 0)}</td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="number"
-                                                        className="w-24 bg-black/60 border border-tactical-border px-2 py-1 text-tactical-brass focus:outline-none focus:border-tactical-gold transition-colors duration-150"
-                                                        value={pointsDraft[cedula] ?? ''}
-                                                        onChange={(event) => handlePointsChange(cedula, event.target.value)}
-                                                    />
-                                                    <button
-                                                        onClick={() => handleUpdatePoints(user)}
-                                                        disabled={isSaving}
-                                                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-4 border border-tactical-border hover:border-tactical-gold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                                                    >
-                                                        {isSaving ? 'Guardando...' : 'Actualizar'}
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            {canEdit ? (
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="number"
+                                                            className="w-24 bg-black/60 border border-tactical-border px-2 py-1 text-tactical-brass focus:outline-none focus:border-tactical-gold transition-colors duration-150"
+                                                            value={pointsDraft[cedula] ?? ''}
+                                                            onChange={(event) => handlePointsChange(cedula, event.target.value)}
+                                                        />
+                                                        <button
+                                                            onClick={() => handleUpdatePoints(user)}
+                                                            disabled={isSaving}
+                                                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-4 border border-tactical-border hover:border-tactical-gold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                                        >
+                                                            {isSaving ? 'Guardando...' : 'Actualizar'}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            ) : null}
                                         </tr>
                                     )
                                 })}

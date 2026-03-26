@@ -6,6 +6,7 @@ import {
     getTournaments
 } from '../../services/tournamentService'
 import Modal from '../../components/ui/Modal'
+import { useAuthProfile } from '../../context/AuthProfileContext'
 
 const formatDate = (timestamp) => {
     if (!timestamp) {
@@ -24,6 +25,7 @@ const formatDate = (timestamp) => {
 }
 
 function TournamentsView() {
+    const { canEdit } = useAuthProfile()
     const [tournaments, setTournaments] = useState([])
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -268,20 +270,22 @@ function TournamentsView() {
                         Gestiona competiciones, participantes y puntuaciones tácticas
                     </p>
                 </div>
-                <div className="flex justify-end">
-                    <button
-                        onClick={() => {
-                            setFormError(null)
-                            setFormData({ nombre: '', fechaInicio: '' })
-                            setSelectedParticipants([])
-                            setParticipantSearch('')
-                            setIsCreateModalOpen(true)
-                        }}
-                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
-                    >
-                        Crear torneo
-                    </button>
-                </div>
+                {canEdit ? (
+                    <div className="flex justify-end">
+                        <button
+                            onClick={() => {
+                                setFormError(null)
+                                setFormData({ nombre: '', fechaInicio: '' })
+                                setSelectedParticipants([])
+                                setParticipantSearch('')
+                                setIsCreateModalOpen(true)
+                            }}
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
+                        >
+                            Crear torneo
+                        </button>
+                    </div>
+                ) : null}
             </header>
 
             <section className="space-y-6">
@@ -317,7 +321,7 @@ function TournamentsView() {
 
             </section>
 
-            {isCreateModalOpen && (
+            {canEdit && isCreateModalOpen && (
                 <Modal
                     title="Crear nuevo torneo"
                     onClose={() => {

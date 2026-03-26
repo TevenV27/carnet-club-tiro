@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthProfile } from '../../context/AuthProfileContext'
 import Modal from '../../components/ui/Modal'
 import { getTeams, createTeam } from '../../services/teamService'
 import { getAllUsers } from '../../services/userService'
@@ -13,6 +14,7 @@ const fileToBase64 = (file) =>
   })
 
 function TeamsView() {
+  const { canEdit } = useAuthProfile()
   const [teams, setTeams] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -194,25 +196,27 @@ function TeamsView() {
             Administración de escuadras y capitanes
           </p>
         </div>
-        <div className="flex justify-end">
-          <button
-            onClick={() => {
-              setFormError(null)
-              setFormData({
-                nombre: '',
-                departamento: '',
-                ciudad: ''
-              })
-              setSelectedCaptainCedula('')
-              setCaptainSearch('')
-              setLogoPreview(null)
-              setCreateModalOpen(true)
-            }}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
-          >
-            Registrar equipo
-          </button>
-        </div>
+        {canEdit ? (
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setFormError(null)
+                setFormData({
+                  nombre: '',
+                  departamento: '',
+                  ciudad: ''
+                })
+                setSelectedCaptainCedula('')
+                setCaptainSearch('')
+                setLogoPreview(null)
+                setCreateModalOpen(true)
+              }}
+              className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
+            >
+              Registrar equipo
+            </button>
+          </div>
+        ) : null}
       </header>
 
       <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
@@ -276,7 +280,7 @@ function TeamsView() {
         </div>
       </section>
 
-      {createModalOpen && (
+      {canEdit && createModalOpen && (
         <Modal
           title="Registrar nuevo equipo"
           onClose={() => {

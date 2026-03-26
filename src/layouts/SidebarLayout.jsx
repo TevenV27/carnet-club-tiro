@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { getMenus } from '../services/menuService'
+import { useAuthProfile } from '../context/AuthProfileContext'
 
 function SidebarLayout({ onSignOut }) {
+    const { isAdmin } = useAuthProfile()
     const [menus, setMenus] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -42,6 +44,22 @@ function SidebarLayout({ onSignOut }) {
     useEffect(() => {
         setMobileMenuOpen(false)
     }, [location.pathname])
+
+    const appendPerfilIfMissing = (list) =>
+        list.some((m) => m.id === 'perfil')
+            ? list
+            : [...list, { id: 'perfil', label: 'Mi perfil', path: 'perfil' }]
+
+    const visibleMenus = useMemo(() => {
+        if (isAdmin) {
+            const has = menus.some((m) => m.id === 'administracion')
+            const base = has ? menus : [...menus, { id: 'administracion', label: 'Administración', path: 'administracion' }]
+            return appendPerfilIfMissing(base)
+        }
+        return appendPerfilIfMissing(
+            menus.filter((m) => ['equipos', 'torneos', 'ranking'].includes(m.id))
+        )
+    }, [menus, isAdmin])
 
     const handleMenuClick = (path) => {
         const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -93,7 +111,7 @@ function SidebarLayout({ onSignOut }) {
                         </summary>
                         <nav className="px-4 pb-4">
                             <ul className="space-y-2">
-                                {menus.map((menu) => {
+                                {visibleMenus.map((menu) => {
                                     if (menu.id === 'gestion') {
                                         return (
                                             <li key={menu.id}>
@@ -240,7 +258,7 @@ function SidebarLayout({ onSignOut }) {
                         <div className="px-4 py-4">
                             <p className="text-[10px] uppercase text-theme-muted mb-2">Navegación</p>
                             <ul className="space-y-1.5">
-                                {menus.map((menu) => {
+                                {visibleMenus.map((menu) => {
                                     if (menu.id === 'gestion') {
                                         const isGestionActive = location.pathname.startsWith('/gestion')
                                         return (

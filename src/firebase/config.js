@@ -21,5 +21,9 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
+/** App secundaria: crear cuentas de operador sin cerrar la sesión del administrador */
+const secondaryApp = initializeApp(firebaseConfig, 'SecondaryOperatorAuth')
+export const secondaryAuth = getAuth(secondaryApp)
+
 export default app
 

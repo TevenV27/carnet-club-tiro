@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useAuthProfile } from '../../context/AuthProfileContext'
 import Modal from '../../components/ui/Modal'
 import { getTeamById, updateTeamInfo } from '../../services/teamService'
 import { getAllUsers } from '../../services/userService'
@@ -15,6 +16,7 @@ const fileToBase64 = (file) =>
 function TeamDetailView() {
   const { teamId } = useParams()
   const navigate = useNavigate()
+  const { canEdit, profile } = useAuthProfile()
 
   const [team, setTeam] = useState(null)
   const [users, setUsers] = useState([])
@@ -122,6 +124,16 @@ function TeamDetailView() {
       return nombre.includes(term) || cedula.includes(term)
     })
   }, [captainSearch, miembrosConDatos])
+
+  /** Operador con rol capitán del equipo: puede editar logo y reasignar capitán (mismas acciones que un admin en esta vista). */
+  const isCaptainOfThisTeam = useMemo(() => {
+    if (!team || !profile) return false
+    const my = String(profile.cedula || profile.id || '').trim()
+    const cap = String(team.capitanCedula || '').trim()
+    return Boolean(my && cap && my === cap)
+  }, [team, profile])
+
+  const canManageThisTeam = canEdit || isCaptainOfThisTeam
 
   const handleOpenEditModal = () => {
     if (!team) return
@@ -248,12 +260,14 @@ function TeamDetailView() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleOpenEditModal}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
-          >
-            Editar equipo
-          </button>
+          {canManageThisTeam ? (
+            <button
+              onClick={handleOpenEditModal}
+              className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
+            >
+              Editar equipo
+            </button>
+          ) : null}
           <button
             onClick={() => navigate('/equipos')}
             className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
@@ -297,9 +311,13 @@ function TeamDetailView() {
                 miembrosConDatos.map((miembro) => (
                   <tr
                     key={miembro.cedula}
-                    className="hover:bg-black/50 transition-colors duration-150 cursor-pointer"
-                    onDoubleClick={() => navigate(`/usuarios/${encodeURIComponent(miembro.cedula)}`)}
-                    title="Doble clic para ver perfil del operador"
+                    className={`hover:bg-black/50 transition-colors duration-150 ${canEdit ? 'cursor-pointer' : ''}`}
+                    onDoubleClick={() => {
+                      if (canEdit) {
+                        navigate(`/usuarios/${encodeURIComponent(miembro.cedula)}`)
+                      }
+                    }}
+                    title={canEdit ? 'Doble clic para ver perfil del operador' : undefined}
                   >
                     <td className="px-4 py-3">
                       <div className="w-12 h-12 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">
@@ -322,7 +340,7 @@ function TeamDetailView() {
         </div>
       </section>
 
-      {editModalOpen && (
+      {canManageThisTeam && editModalOpen && (
         <Modal
           title="Editar información del equipo"
           onClose={() => {

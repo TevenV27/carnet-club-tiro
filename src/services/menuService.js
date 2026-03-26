@@ -36,6 +36,11 @@ const DEFAULT_MENUS = [
         id: 'generador',
         label: 'Generador de Carnets',
         path: 'generador'
+    },
+    {
+        id: 'perfil',
+        label: 'Mi perfil',
+        path: 'perfil'
     }
 ]
 

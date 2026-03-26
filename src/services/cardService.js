@@ -5,10 +5,13 @@ import {
     query,
     where,
     getDocs,
+    getDoc,
     doc,
-    updateDoc
+    updateDoc,
+    setDoc
 } from 'firebase/firestore'
 import { upsertUserRecord } from './userService'
+import { createOperatorFirebaseUser } from './operatorAuthService'
 import { logAction } from './logService'
 
 // Comprimir imagen Blob a base64 con calidad reducida
@@ -223,6 +226,11 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             cardId = docRef.id
         }
 
+        const usuarioRef = doc(db, 'usuarios', cardData.cedula)
+        const usuarioAntes = await getDoc(usuarioRef)
+        const yaTieneAuth =
+            usuarioAntes.exists() && Boolean(usuarioAntes.data()?.authUid)
+
         const userSyncResult = await upsertUserRecord({
             userBaseData: baseUserData,
             fotoBase64,
@@ -230,11 +238,51 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             carnetId: cardId
         })
 
+        const emailNorm = String(cardData.email ?? '')
+            .trim()
+            .toLowerCase()
+        const emailValido = emailNorm.includes('@')
+
+        /** Antes solo se creaba Auth si el doc usuarios era nuevo; muchos casos ya tenían doc sin authUid. */
+        let authCreation = null
+        if (emailValido && !yaTieneAuth) {
+            try {
+                const authRes = await createOperatorFirebaseUser(
+                    emailNorm,
+                    String(cardData.cedula).trim()
+                )
+                if (authRes.uid) {
+                    await setDoc(
+                        usuarioRef,
+                        { authUid: authRes.uid, updatedAt: new Date() },
+                        { merge: true }
+                    )
+                    authCreation = { ok: true, uid: authRes.uid }
+                } else if (authRes.skipped) {
+                    authCreation = { ok: false, reason: authRes.reason || 'skipped' }
+                    console.warn(
+                        'Auth: no se creó cuenta (email posiblemente ya en uso).',
+                        authRes
+                    )
+                }
+            } catch (authErr) {
+                console.error('No se pudo crear la cuenta de acceso del operador:', authErr)
+                authCreation = {
+                    ok: false,
+                    error: authErr?.message || String(authErr),
+                    code: authErr?.code
+                }
+            }
+        }
+
         return {
             id: cardId,
             ...resultDoc,
             _wasUpdated: !querySnapshot.empty,
-            _userRecordCreated: userSyncResult?.created ?? null
+            _userRecordCreated: userSyncResult?.created ?? null,
+            _authCreation: authCreation,
+            _authSkippedAlreadyLinked: yaTieneAuth,
+            _authSkippedNoEmail: !emailValido
         }
     } catch (error) {
         console.error('Error guardando carnet:', error)

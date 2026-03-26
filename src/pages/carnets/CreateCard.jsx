@@ -4,6 +4,7 @@ import { auth } from '../../firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { generateFrontCard, generateBackCard } from '../../utils/cardGenerator'
 import { saveCard, getNextMembershipNumber, searchCardByCedula } from '../../services/cardService'
+import { getUserByCedula } from '../../services/userService'
 import { getVigencias } from '../../services/vigenciasService'
 import { getSpecialties } from '../../services/specialtiesService'
 import { getTeams } from '../../services/teamService'
@@ -69,6 +70,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     contacto: '',
     contactoEmergencia: '',
     cedula: '',
+    email: '',
 
     // Datos del reverso
     identificador: '',
@@ -109,7 +111,10 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       setEditLoading(true)
       setEditError(null)
       try {
-        const cardData = await searchCardByCedula(editCedula)
+        const [cardData, userRow] = await Promise.all([
+          searchCardByCedula(editCedula),
+          getUserByCedula(editCedula)
+        ])
         if (cancelled) return
         if (!cardData) {
           setEditError('No se encontró un carnet registrado para esta cédula.')
@@ -117,6 +122,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
         }
 
         const equipoSeleccionado = equipos.find((eq) => eq.nombre === cardData.equipoTactico)
+        const emailFrom = cardData.email || userRow?.email || ''
 
         setFormData((prev) => ({
           ...prev,
@@ -130,6 +136,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
           contacto: cardData.contacto ?? '',
           contactoEmergencia: cardData.contactoEmergencia ?? '',
           cedula: cardData.cedula ?? editCedula,
+          email: emailFrom,
           identificador: cardData.identificador ?? '',
           especialidad: cardData.especialidad ?? '',
           equipoTactico: cardData.equipoTactico ?? '',
@@ -262,6 +269,14 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       return
     }
 
+    if (!isEditMode) {
+      const em = formData.email.trim()
+      if (!em || !em.includes('@')) {
+        alert('Ingresa un correo electrónico completo para el nuevo operador.')
+        return
+      }
+    }
+
     // Verificar autenticación
     if (!user || !user.uid) {
       alert('Error: No estás autenticado. Por favor, inicia sesión nuevamente.')
@@ -299,6 +314,16 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
         alert('Carnet actualizado exitosamente (ya existía un carnet con esta cédula)')
       } else {
         alert('Carnet guardado exitosamente')
+      }
+
+      if (result._authCreation && result._authCreation.ok === false) {
+        const ac = result._authCreation
+        const detalle = ac.error || (ac.reason === 'email-already-in-use'
+          ? 'Ese correo ya está registrado en Authentication.'
+          : 'Revisa la consola o que Email/Password esté activo en Firebase.')
+        alert(
+          `El carnet se guardó, pero no se pudo crear la cuenta de acceso del operador.\n\n${detalle}`
+        )
       }
 
       if (returnPath) {
@@ -486,6 +511,26 @@ Revisa la consola del navegador para más detalles.
                     className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="EJ: 1234567890"
                   />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Correo electrónico (acceso al sistema){!isEditMode ? ' *' : ''}
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    autoComplete="email"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 font-tactical tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="operador@ejemplo.com"
+                  />
+                  {!isEditMode ? (
+                    <p className="text-[9px] text-tactical-brass/80 mt-1 uppercase tracking-[0.08em]">
+                      Se creará la cuenta con este correo; la contraseña será la cédula (mín. 6 caracteres en Firebase).
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="mb-4">

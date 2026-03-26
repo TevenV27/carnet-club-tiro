@@ -10,6 +10,7 @@ import {
 } from '../../services/tournamentService'
 import { incrementUserPoints, getAllUsers } from '../../services/userService'
 import { getScores } from '../../services/scoresService'
+import { useAuthProfile } from '../../context/AuthProfileContext'
 
 const formatDateTime = (value) => {
     if (!value) {
@@ -33,6 +34,7 @@ const calculateTotal = (scores = {}) =>
 function TournamentDetailView() {
     const { torneoId } = useParams()
     const navigate = useNavigate()
+    const { canEdit } = useAuthProfile()
 
     const [tournament, setTournament] = useState(null)
     const [scores, setScores] = useState({})
@@ -461,7 +463,7 @@ function TournamentDetailView() {
                     </p>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
-                    {!tournamentClosed && (
+                    {canEdit && !tournamentClosed && (
                         <>
                             <button
                                 onClick={() => handleUpdateStatus('finalizado')}
@@ -489,67 +491,69 @@ function TournamentDetailView() {
             </header>
 
             <section className="flex flex-col gap-6">
-                <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
-                    <header className="px-6 py-4 border-b border-tactical-border/60">
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
-                            Registrar actividad
-                        </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
-                            Añade las misiones o pruebas que componen el torneo
-                        </p>
-                    </header>
+                {canEdit ? (
+                    <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
+                        <header className="px-6 py-4 border-b border-tactical-border/60">
+                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
+                                Registrar actividad
+                            </h2>
+                            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
+                                Añade las misiones o pruebas que componen el torneo
+                            </p>
+                        </header>
 
-                    <form className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleAddActivity}>
-                        <div className="md:col-span-1">
-                            <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
-                                Nombre de la actividad
-                            </label>
-                            <input
-                                type="text"
-                                value={activityForm.nombre}
-                                onChange={(event) => setActivityForm((prev) => ({ ...prev, nombre: event.target.value }))}
-                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
-                                placeholder="Ej: Tiro de precisión"
-                            />
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
-                                Descripción
-                            </label>
-                            <input
-                                type="text"
-                                value={activityForm.descripcion}
-                                onChange={(event) => setActivityForm((prev) => ({ ...prev, descripcion: event.target.value }))}
-                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
-                                placeholder="Detalle opcional"
-                            />
-                        </div>
-                        <div className="flex items-end justify-end gap-4">
-                            <div className="md:col-span-1 w-full">
+                        <form className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleAddActivity}>
+                            <div className="md:col-span-1">
                                 <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
-                                    Puntaje máximo
+                                    Nombre de la actividad
                                 </label>
                                 <input
-                                    type="number"
-                                    min="1"
-                                    value={activityForm.puntajeMaximo}
-                                    onChange={(event) => setActivityForm((prev) => ({ ...prev, puntajeMaximo: event.target.value }))}
+                                    type="text"
+                                    value={activityForm.nombre}
+                                    onChange={(event) => setActivityForm((prev) => ({ ...prev, nombre: event.target.value }))}
                                     className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
-                                    placeholder="Ej: 100"
+                                    placeholder="Ej: Tiro de precisión"
                                 />
                             </div>
-                            <div className="flex items-end justify-end md:col-span-1">
-                                <button
-                                    type="submit"
-                                    disabled={addingActivity || tournamentClosed}
-                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                    {addingActivity ? 'Agregando...' : 'Agregar actividad'}
-                                </button>
+                            <div className="md:col-span-1">
+                                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                                    Descripción
+                                </label>
+                                <input
+                                    type="text"
+                                    value={activityForm.descripcion}
+                                    onChange={(event) => setActivityForm((prev) => ({ ...prev, descripcion: event.target.value }))}
+                                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                                    placeholder="Detalle opcional"
+                                />
                             </div>
-                        </div>
-                    </form>
-                </div>
+                            <div className="flex items-end justify-end gap-4">
+                                <div className="md:col-span-1 w-full">
+                                    <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                                        Puntaje máximo
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={activityForm.puntajeMaximo}
+                                        onChange={(event) => setActivityForm((prev) => ({ ...prev, puntajeMaximo: event.target.value }))}
+                                        className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                                        placeholder="Ej: 100"
+                                    />
+                                </div>
+                                <div className="flex items-end justify-end md:col-span-1">
+                                    <button
+                                        type="submit"
+                                        disabled={addingActivity || tournamentClosed}
+                                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {addingActivity ? 'Agregando...' : 'Agregar actividad'}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                ) : null}
 
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -558,16 +562,20 @@ function TournamentDetailView() {
                                 Tabla de puntuaciones
                             </h2>
                             <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
-                                Doble clic en un campo para editar el puntaje
+                                {canEdit
+                                    ? 'Doble clic en un campo para editar el puntaje'
+                                    : 'Visualización de puntuaciones (solo lectura)'}
                             </p>
                         </div>
-                        <button
-                            onClick={handleSaveScores}
-                            disabled={savingScores || tournamentClosed}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            {savingScores ? 'Guardando...' : 'Guardar puntuaciones'}
-                        </button>
+                        {canEdit ? (
+                            <button
+                                onClick={handleSaveScores}
+                                disabled={savingScores || tournamentClosed}
+                                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {savingScores ? 'Guardando...' : 'Guardar puntuaciones'}
+                            </button>
+                        ) : null}
                     </div>
                     <div className="overflow-x-auto border border-tactical-border/40">
                         <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
@@ -663,7 +671,7 @@ function TournamentDetailView() {
                                                         }
                                                         className="w-24 bg-black/60 border border-tactical-border px-2 py-1 text-tactical-gold focus:outline-none focus:border-tactical-gold transition-colors duration-150 disabled:opacity-60"
                                                         placeholder="0"
-                                                        disabled={tournamentClosed}
+                                                        disabled={!canEdit || tournamentClosed}
                                                     />
                                                 </td>
                                             ))}
@@ -775,25 +783,27 @@ function TournamentDetailView() {
                             </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                            <label className="inline-flex items-center gap-3 bg-black/40 border border-tactical-border px-4 py-2 cursor-pointer hover:border-tactical-gold transition-colors duración-150">
-                                <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-gold">
-                                    Seleccionar imágenes
-                                </span>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleEvidenceUpload}
-                                    className="hidden"
-                                />
-                            </label>
-                            {uploadingEvidence && (
-                                <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-brass">
-                                    Subiendo evidencias...
-                                </span>
-                            )}
-                        </div>
+                        {canEdit ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <label className="inline-flex items-center gap-3 bg-black/40 border border-tactical-border px-4 py-2 cursor-pointer hover:border-tactical-gold transition-colors duración-150">
+                                    <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-gold">
+                                        Seleccionar imágenes
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleEvidenceUpload}
+                                        className="hidden"
+                                    />
+                                </label>
+                                {uploadingEvidence && (
+                                    <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-brass">
+                                        Subiendo evidencias...
+                                    </span>
+                                )}
+                            </div>
+                        ) : null}
 
                         <div className="grid grid-cols-[repeat(auto-fit,_minmax(160px,_1fr))] gap-4">
                             {galleryItems.length === 0 ? (
