@@ -197,7 +197,7 @@ function UserDetailView() {
 
     return (
         <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.06em]">
                         Informe Operador
@@ -208,19 +208,20 @@ function UserDetailView() {
                 </div>
                 <button
                     onClick={() => navigate('/usuarios')}
-                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
+                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200 w-full sm:w-auto"
                 >
                     Regresar al panel
                 </button>
             </div>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-6">
-                    <div>
-                        <p className="text-xs text-tactical-brass/90 font-tactical uppercase tracking-[0.08em] mb-2">
-                            Fotografía Operador
-                        </p>
-                        <div className="border border-tactical-border overflow-hidden aspect-[3/4] flex items-center justify-center bg-black">
+                <div className="lg:col-span-1 bg-black/50 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
+                    <p className="text-xs text-tactical-brass/90 font-tactical uppercase tracking-[0.08em]">
+                        Operador
+                    </p>
+
+                    <div className="grid grid-cols-[auto,_1fr] gap-4 items-start">
+                        <div className="border border-tactical-border overflow-hidden bg-black w-24 h-32 sm:w-28 sm:h-36 flex items-center justify-center">
                             {user.foto ? (
                                 <img
                                     src={user.foto}
@@ -228,26 +229,26 @@ function UserDetailView() {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="text-tactical-brass/90 text-xs font-tactical uppercase tracking-[0.12em] text-center px-4">
-                                    Sin fotografía registrada
+                                <div className="text-tactical-brass/90 text-[10px] font-tactical uppercase tracking-[0.12em] text-center px-2">
+                                    Sin foto
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    <div className="space-y-2 text-[11px] font-tactical uppercase tracking-[0.05em]">
-                        <p>
-                            <span className="text-tactical-gold">Registrado:</span> {formatTimestamp(user.createdAt)}
-                        </p>
-                        <p>
-                            <span className="text-tactical-gold">Actualizado:</span> {formatTimestamp(user.updatedAt)}
-                        </p>
-                        <p>
-                            <span className="text-tactical-gold">Carnet ID:</span> {user.carnetId || 'N/D'}
-                        </p>
-                        <p>
-                            <span className="text-tactical-gold">Última sincronización:</span> {formatTimestamp(user.carnetUpdatedAt)}
-                        </p>
+                        <div className="min-w-0 space-y-2 text-[10px] sm:text-[11px] font-tactical uppercase tracking-[0.05em]">
+                            <p className="text-tactical-gold text-sm sm:text-base tracking-[0.06em] break-words">
+                                {user.nombre || 'Sin nombre'}
+                            </p>
+                            <p className="text-tactical-brass/90 break-words">
+                                <span className="text-tactical-gold">Registrado:</span> {formatTimestamp(user.createdAt)}
+                            </p>
+                            <p className="text-tactical-brass/90 break-words">
+                                <span className="text-tactical-gold">Actualizado:</span> {formatTimestamp(user.updatedAt)}
+                            </p>
+                            <p className="text-tactical-brass/90 break-words">
+                                <span className="text-tactical-gold">Última sincronización:</span> {formatTimestamp(user.carnetUpdatedAt)}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -255,14 +256,14 @@ function UserDetailView() {
                     <p className="text-xs text-tactical-brass/90 font-tactical uppercase tracking-[0.08em] mb-4">
                         Datos tácticos del operador
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                         {dataEntries.map(({ label, value }) => (
                             <div
                                 key={label}
-                                className="border border-tactical-border/40 rounded-md px-4 py-3 bg-black/30 text-[11px] font-tactical uppercase tracking-[0.05em]"
+                                className="border border-tactical-border/40 rounded-md px-3 py-2 sm:px-4 sm:py-3 bg-black/30 text-[10px] sm:text-[11px] font-tactical uppercase tracking-[0.05em] min-w-0"
                             >
-                                <p className="text-tactical-brass/90 text-[9px] mb-1">{label}</p>
-                                <p className="text-tactical-gold">{value || 'N/D'}</p>
+                                <p className="text-tactical-brass/90 text-[9px] mb-1 truncate">{label}</p>
+                                <p className="text-tactical-gold break-words">{value || 'N/D'}</p>
                             </div>
                         ))}
                     </div>

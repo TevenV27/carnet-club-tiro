@@ -114,23 +114,23 @@ function LogDetailView() {
     }
 
     return (
-        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+        <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-3 md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-3 md:space-y-4">
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-1 bg-tactical-gold shadow-[0_0_20px_rgba(175,153,116,0.9)]" />
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                             <button
                                 onClick={() => navigate('/logs')}
-                                className="text-tactical-gold hover:text-tactical-gold transition-colors font-tactical text-xs uppercase tracking-[0.05em] border border-tactical-border/60 px-3 py-1 hover:border-tactical-gold bg-black/40"
+                                className="text-tactical-gold hover:text-tactical-gold transition-colors font-tactical text-[10px] sm:text-xs uppercase tracking-[0.05em] border border-tactical-border/60 px-3 py-1 hover:border-tactical-gold bg-black/40"
                             >
                                 ← Volver
                             </button>
                         </div>
-                        <h1 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
                             Logs - {formatDate(date)}
                         </h1>
-                        <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
+                        <p className="text-[10px] sm:text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
                             Registro detallado | Auditoría | {date}
                         </p>
                     </div>
@@ -142,7 +142,7 @@ function LogDetailView() {
                     No hay registros de actividad para este día.
                 </div>
             ) : (
-                <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
+                <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-3 md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
@@ -154,10 +154,10 @@ function LogDetailView() {
                         </div>
                     </div>
 
-                    <div className="bg-black/60 border border-tactical-border/60 p-4 md:p-6 font-mono text-[11px] uppercase tracking-[0.04em] overflow-x-auto">
+                    <div className="bg-black/60 border border-tactical-border/60 p-3 md:p-6 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.04em] overflow-x-auto">
                         <div className="space-y-2">
                             {logs.map((log) => (
-                                <div key={log.id} className="flex items-start gap-3 flex-wrap border-b border-tactical-border/20 pb-2 last:border-0">
+                                <div key={log.id} className="flex items-start gap-2 sm:gap-3 flex-wrap border-b border-tactical-border/20 pb-2 last:border-0">
                                     <span className="text-tactical-brass/90 flex-shrink-0 font-tactical">
                                         [{formatTime(log.timestamp)}]
                                     </span>
@@ -167,14 +167,14 @@ function LogDetailView() {
                                     <span className="text-tactical-brass flex-shrink-0 font-tactical">
                                         [{log.collection}]
                                     </span>
-                                    <span className="text-tactical-gold flex-1 font-tactical">
+                                    <span className="text-tactical-gold flex-1 font-tactical normal-case tracking-normal break-words">
                                         {log.description}
                                     </span>
-                                    <span className="text-tactical-brass flex-shrink-0 font-tactical text-[10px]">
+                                    <span className="text-tactical-brass flex-shrink-0 font-tactical text-[9px] sm:text-[10px]">
                                         Usuario: {log.userName || log.userEmail || 'N/A'}
                                     </span>
                                     {log.documentId && (
-                                        <span className="text-tactical-brass/75 text-[10px] flex-shrink-0 font-tactical">
+                                        <span className="text-tactical-brass/75 text-[9px] sm:text-[10px] flex-shrink-0 font-tactical">
                                             ID: {log.documentId.substring(0, 8)}...
                                         </span>
                                     )}

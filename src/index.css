@@ -73,6 +73,13 @@
 
 }
 
+/* Compactar tipografía global en móvil (Tailwind usa rem) */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
 @layer utilities {
   .bg-app {
     background: var(--app-background);

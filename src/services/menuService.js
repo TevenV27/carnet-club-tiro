@@ -38,6 +38,11 @@ const DEFAULT_MENUS = [
         path: 'generador'
     },
     {
+        id: 'logs',
+        label: 'Logs',
+        path: 'logs'
+    },
+    {
         id: 'perfil',
         label: 'Mi perfil',
         path: 'perfil'

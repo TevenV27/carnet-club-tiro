@@ -76,15 +76,15 @@ function LogsView() {
     }
 
     return (
-        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
-            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
+        <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
+            <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-3 md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-3 md:space-y-4">
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-1 bg-tactical-gold shadow-[0_0_20px_rgba(175,153,116,0.9)]" />
                     <div>
-                        <h1 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
                             Registro de Actividades
                         </h1>
-                        <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
+                        <p className="text-[10px] sm:text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
                             Auditoría | Historial | Acceso Restringido
                         </p>
                     </div>
@@ -96,7 +96,7 @@ function LogsView() {
                     No hay registros de actividad aún.
                 </div>
             ) : (
-                <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
+                <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-3 md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
@@ -109,12 +109,12 @@ function LogsView() {
                     </div>
 
                     <div className="overflow-x-auto border border-tactical-border/40">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
                             <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Fecha</th>
-                                    <th className="px-4 py-3 text-left">Actividades</th>
-                                    <th className="px-4 py-3 text-left">Última Actividad</th>
+                                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left">Fecha</th>
+                                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left">Actividades</th>
+                                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left">Última</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-tactical-border/40">
@@ -124,20 +124,20 @@ function LogsView() {
                                         onDoubleClick={() => handleRowDoubleClick(day.dateKey)}
                                         className="hover:bg-black/50 cursor-pointer transition-colors duration-150"
                                     >
-                                        <td className="px-4 py-3">
+                                        <td className="px-3 py-2 sm:px-4 sm:py-3">
                                             <div className="text-tactical-gold font-semibold">
                                                 {formatDate(day.dateKey)}
                                             </div>
-                                            <div className="text-[10px] text-tactical-brass/90 tracking-[0.05em] mt-1">
+                                            <div className="text-[9px] sm:text-[10px] text-tactical-brass/90 tracking-[0.05em] mt-1">
                                                 {day.dateKey}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-3 py-2 sm:px-4 sm:py-3">
                                             <span className="inline-flex items-center px-3 py-1 border border-tactical-border/60 bg-tactical-gold/20 text-tactical-gold text-[10px] tracking-[0.05em]">
                                                 {day.count} {day.count === 1 ? 'actividad' : 'actividades'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-tactical-brass">
+                                        <td className="px-3 py-2 sm:px-4 sm:py-3 text-tactical-brass whitespace-nowrap">
                                             {day.lastActivity?.toDate
                                                 ? day.lastActivity.toDate().toLocaleTimeString('es-ES', {
                                                       hour: '2-digit',

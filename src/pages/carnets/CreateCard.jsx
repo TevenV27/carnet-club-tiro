@@ -789,7 +789,7 @@ Revisa la consola del navegador para más detalles.
             </div>
             <div className="flex flex-col gap-4">
               <div className="lg:flex-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                   {frontCardUrl && (
                     <div>
@@ -842,7 +842,7 @@ Revisa la consola del navegador para más detalles.
                   )}
 
                   {frontCardUrl && backCardUrl && (
-                    <div className="w-full mt-4 col-span-2">
+                    <div className="w-full mt-4 lg:col-span-2">
                       <button
                         onClick={handleSave}
                         disabled={saving}
@@ -854,7 +854,7 @@ Revisa la consola del navegador para más detalles.
                   )}
 
                   {!frontCardUrl && !backCardUrl && (
-                    <div className="col-span-2 text-tactical-brass/90 text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8">
+                    <div className="lg:col-span-2 text-tactical-brass/90 text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8">
                       <p className="text-sm mb-2 uppercase tracking-[0.05em]">Estado: Esperando entrada</p>
                       <p className="text-[10px] uppercase tracking-[0.05em]">Complete el formulario y haga clic en "Generar Carnet" para ver la vista previa</p>
                     </div>

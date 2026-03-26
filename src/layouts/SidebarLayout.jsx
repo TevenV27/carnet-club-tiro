@@ -50,11 +50,16 @@ function SidebarLayout({ onSignOut }) {
             ? list
             : [...list, { id: 'perfil', label: 'Mi perfil', path: 'perfil' }]
 
+    const appendLogsIfMissing = (list) =>
+        list.some((m) => m.id === 'logs')
+            ? list
+            : [...list, { id: 'logs', label: 'Logs', path: 'logs' }]
+
     const visibleMenus = useMemo(() => {
         if (isAdmin) {
             const has = menus.some((m) => m.id === 'administracion')
             const base = has ? menus : [...menus, { id: 'administracion', label: 'Administración', path: 'administracion' }]
-            return appendPerfilIfMissing(base)
+            return appendLogsIfMissing(appendPerfilIfMissing(base))
         }
         return appendPerfilIfMissing(
             menus.filter((m) => ['equipos', 'torneos', 'ranking'].includes(m.id))
