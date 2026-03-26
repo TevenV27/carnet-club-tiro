@@ -110,7 +110,7 @@ function SidebarLayout({ onSignOut }) {
             {mobileMenuOpen && (
                 <div className="md:hidden bg-sidebar border-b border-theme">
                     <details open className="border-t border-theme/40">
-                        <summary className="flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-theme-secondary cursor-pointer select-none">
+                        <summary className="flex items-center justify-between px-4 py-3 text-[10px] sm:text-[11px] uppercase tracking-[0.06em] text-theme-secondary cursor-pointer select-none">
                             Módulos
                             <span className="text-theme-muted">▼</span>
                         </summary>
@@ -121,7 +121,7 @@ function SidebarLayout({ onSignOut }) {
                                         return (
                                             <li key={menu.id}>
                                                 <div className="space-y-1">
-                                                    <span className="block rounded px-4 py-2 font-tactical text-xs uppercase tracking-[0.05em] text-theme-secondary border border-dashed border-theme/40">
+                                                    <span className="block rounded px-4 py-2 font-tactical text-[10px] sm:text-xs uppercase tracking-[0.05em] text-theme-secondary border border-dashed border-theme/40">
                                                         Gestión
                                                     </span>
                                                     <div className="ml-4 space-y-1">
@@ -129,7 +129,7 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/niveles"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                                         : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
@@ -146,7 +146,7 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/roles"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                                         : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
@@ -163,7 +163,7 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/especialidades"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                                         : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
@@ -180,7 +180,7 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/puntajes"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                                         : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
@@ -197,7 +197,7 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/vigencias"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                                         : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
@@ -222,7 +222,7 @@ function SidebarLayout({ onSignOut }) {
                                                 to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
                                                 className={({ isActive }) =>
                                                     [
-                                                        'block rounded px-4 py-3 font-tactical text-xs uppercase tracking-[0.05em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                        'block rounded px-4 py-3 font-tactical text-[10px] sm:text-xs uppercase tracking-[0.05em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                         isActive
                                                             ? 'border-tactical-gold text-tactical-gold bg-surface-active'
                                                             : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'

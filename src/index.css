@@ -76,7 +76,31 @@
 /* Compactar tipografía global en móvil (Tailwind usa rem) */
 @media (max-width: 640px) {
   html {
-    font-size: 14px;
+    font-size: 12px;
+  }
+
+  body {
+    font-size: 12px;
+  }
+
+  /* Forzar controles a heredar tamaño (muchos navegadores suben font-size en inputs) */
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 0.9em !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Tablas: muchas usan text-[11px] fijo; compactar en móvil */
+  table,
+  thead,
+  tbody,
+  tfoot,
+  th,
+  td {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
   }
 }
 
