@@ -61,6 +61,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/credencial/:cedula" element={<CredencialView />} />
         <Route
           element={
             <ProtectedRoute>
@@ -84,7 +85,6 @@ function App() {
             <Route path="logs" element={<LogsView />} />
             <Route path="logs/:date" element={<LogDetailView />} />
             <Route path="buscar-carnet" element={<SearchCard />} />
-            <Route path="credencial/:cedula" element={<CredencialView />} />
             <Route path="administracion" element={<AdministracionView />} />
             <Route path="generador" element={<GeneratorView />} />
           </Route>

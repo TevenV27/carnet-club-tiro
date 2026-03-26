@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { searchCardByCedula } from '../../services/cardService'
 import CarnetPreview from '../../components/carnet/CarnetPreview'
 
 function CredencialView() {
     const { cedula } = useParams()
-    const navigate = useNavigate()
     const [card, setCard] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
@@ -93,16 +92,6 @@ function CredencialView() {
                     }}>
                         <h2 className="text-2xl font-bold text-red-500 mb-4 font-tactical uppercase tracking-normal">[ERROR]</h2>
                         <p className="text-tactical-brass mb-6 font-tactical">{error}</p>
-                        <button
-                            onClick={() => navigate('/buscar-carnet')}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
-                            style={{
-                                boxShadow: 'none',
-                                textShadow: 'none'
-                            }}
-                        >
-                            [VOLVER A BÚSQUEDA]
-                        </button>
                     </div>
                 </div>
             </div>
@@ -252,18 +241,6 @@ function CredencialView() {
                             )}
                         </div>
 
-                        <div className="mt-4 text-center">
-                            <button
-                                onClick={() => navigate('/buscar-carnet')}
-                                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
-                                style={{
-                                    boxShadow: 'none',
-                                    textShadow: 'none'
-                                }}
-                            >
-                                [VOLVER A BÚSQUEDA]
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

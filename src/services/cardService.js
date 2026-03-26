@@ -11,7 +11,12 @@ import {
     setDoc
 } from 'firebase/firestore'
 import { upsertUserRecord } from './userService'
-import { createOperatorFirebaseUser } from './operatorAuthService'
+import {
+    createOperatorFirebaseUser,
+    updateOperatorFirebaseEmail,
+    recreateOperatorAuthAfterDeletion,
+    noOperatorAuthAccountsForEmails
+} from './operatorAuthService'
 import { logAction } from './logService'
 
 // Comprimir imagen Blob a base64 con calidad reducida
@@ -163,6 +168,68 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         const q = query(collection(db, 'carnets'), where('cedula', '==', cardData.cedula))
         const querySnapshot = await getDocs(q)
 
+        const usuarioRef = doc(db, 'usuarios', cardData.cedula)
+        const usuarioAntes = await getDoc(usuarioRef)
+        const yaTieneAuth =
+            usuarioAntes.exists() && Boolean(usuarioAntes.data()?.authUid)
+
+        const emailNorm = String(cardData.email ?? '')
+            .trim()
+            .toLowerCase()
+        const emailValido = emailNorm.includes('@')
+        const userEmailNorm = usuarioAntes.exists() && usuarioAntes.data()?.email
+            ? String(usuarioAntes.data().email).trim().toLowerCase()
+            : ''
+        const carnetEmailNorm = !querySnapshot.empty && querySnapshot.docs[0].data()?.email
+            ? String(querySnapshot.docs[0].data().email).trim().toLowerCase()
+            : ''
+        // Mismo orden que CreateCard al cargar: email del carnet, si no el de usuarios
+        const priorEmailNorm = carnetEmailNorm || userEmailNorm
+        const emailChanged =
+            emailValido && Boolean(priorEmailNorm) && emailNorm !== priorEmailNorm
+
+        if (yaTieneAuth && emailChanged) {
+            const authUid = usuarioAntes.data()?.authUid
+            const oldCandidates = [carnetEmailNorm, userEmailNorm].filter(Boolean)
+            const authEmailRes = await updateOperatorFirebaseEmail({
+                oldEmailCandidates: oldCandidates,
+                newEmail: emailNorm,
+                cedula: String(cardData.cedula).trim(),
+                expectedAuthUid: authUid
+            })
+            if (!authEmailRes.ok) {
+                const canRecreate =
+                    authEmailRes.onlyUserNotFound ||
+                    (await noOperatorAuthAccountsForEmails(oldCandidates, emailNorm))
+                if (canRecreate) {
+                    const rec = await recreateOperatorAuthAfterDeletion({
+                        newEmail: emailNorm,
+                        cedula: String(cardData.cedula).trim()
+                    })
+                    if (rec.ok && rec.uid) {
+                        await setDoc(
+                            usuarioRef,
+                            { authUid: rec.uid, updatedAt: new Date() },
+                            { merge: true }
+                        )
+                    } else {
+                        throw new Error(
+                            rec.friendlyMessage ||
+                                authEmailRes.friendlyMessage ||
+                                authEmailRes.error ||
+                                'No se pudo sincronizar el correo con Authentication.'
+                        )
+                    }
+                } else {
+                    throw new Error(
+                        authEmailRes.friendlyMessage ||
+                            authEmailRes.error ||
+                            'No se pudo actualizar el correo en Authentication.'
+                    )
+                }
+            }
+        }
+
         let docRef
         let resultDoc
         let cardId
@@ -229,22 +296,12 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
             cardId = docRef.id
         }
 
-        const usuarioRef = doc(db, 'usuarios', cardData.cedula)
-        const usuarioAntes = await getDoc(usuarioRef)
-        const yaTieneAuth =
-            usuarioAntes.exists() && Boolean(usuarioAntes.data()?.authUid)
-
         const userSyncResult = await upsertUserRecord({
             userBaseData: baseUserData,
             fotoBase64,
             userId,
             carnetId: cardId
         })
-
-        const emailNorm = String(cardData.email ?? '')
-            .trim()
-            .toLowerCase()
-        const emailValido = emailNorm.includes('@')
 
         /** Antes solo se creaba Auth si el doc usuarios era nuevo; muchos casos ya tenían doc sin authUid. */
         let authCreation = null

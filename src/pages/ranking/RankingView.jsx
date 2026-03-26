@@ -139,48 +139,48 @@ function RankingView() {
             <section className="flex flex-col gap-6">
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.5)] overflow-x-auto">
                     <div className="flex gap-3 min-w-max">
-                    {topOperators.map((operator, idx) => (
-                        <div
-                            key={getCedula(operator)}
-                            className="bg-red/50 border border-tactical-border rounded-lg p-3 sm:p-5 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex flex-col gap-3 sm:gap-4 w-[260px] sm:w-full"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] sm:text-sm font-tactical text-tactical-gold uppercase tracking-[0.12em]">
-                                    Top {idx + 1}
-                                </span>
-                                <span className="text-[10px] sm:text-xs font-tactical text-tactical-brass/90 uppercase tracking-[0.08em]">
-                                    {operator.nivel || 'Operador'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 sm:w-16 sm:h-16 border border-tactical-border overflow-hidden flex-shrink-0">
-                                    {operator.foto ? (
-                                        <img
-                                            src={operator.foto}
-                                            alt={operator.nombre || getCedula(operator)}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.12em]">
-                                            Sin foto
-                                        </div>
-                                    )}
+                        {topOperators.map((operator, idx) => (
+                            <div
+                                key={getCedula(operator)}
+                                className="bg-red/50 border border-tactical-border rounded-lg p-3 sm:p-5 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex flex-col gap-3 sm:gap-4 w-[260px] sm:w-full"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] sm:text-sm font-tactical text-tactical-gold uppercase tracking-[0.12em]">
+                                        Top {idx + 1}
+                                    </span>
+                                    <span className="text-[10px] sm:text-xs font-tactical text-tactical-brass/90 uppercase tracking-[0.08em]">
+                                        {operator.nivel || 'Operador'}
+                                    </span>
                                 </div>
-                                <div className="space-y-1 font-tactical uppercase">
-                                    <p className="text-tactical-gold text-[11px] sm:text-sm tracking-[0.06em]">
-                                        {operator.nombre || 'Operador sin nombre'}
-                                    </p>
-                                    <p className="text-[9px] sm:text-[10px] text-tactical-brass/90 tracking-[0.08em]">
-                                        Cédula: {getCedula(operator)}
-                                    </p>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 border border-tactical-border overflow-hidden flex-shrink-0">
+                                        {operator.foto ? (
+                                            <img
+                                                src={operator.foto}
+                                                alt={operator.nombre || getCedula(operator)}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.12em]">
+                                                Sin foto
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1 font-tactical uppercase">
+                                        <p className="text-tactical-gold text-[11px] sm:text-sm tracking-[0.06em]">
+                                            {operator.nombre || 'Operador sin nombre'}
+                                        </p>
+                                        <p className="text-[9px] sm:text-[10px] text-tactical-brass/90 tracking-[0.08em]">
+                                            Cédula: {getCedula(operator)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between font-tactical uppercase tracking-[0.08em]">
+                                    <span className="text-[10px] sm:text-[11px] text-tactical-brass/90">Puntos</span>
+                                    <span className="text-base sm:text-lg text-tactical-gold">{formatNumber(operator.puntos ?? 0)}</span>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-between font-tactical uppercase tracking-[0.08em]">
-                                <span className="text-[10px] sm:text-[11px] text-tactical-brass/90">Puntos</span>
-                                <span className="text-base sm:text-lg text-tactical-gold">{formatNumber(operator.puntos ?? 0)}</span>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
                     </div>
                 </div>
                 <div className="bg-black/30 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_20px_rgba(0,0,0,0.45)]">
