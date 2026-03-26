@@ -19,12 +19,7 @@ function Login() {
         setLoading(true)
 
         try {
-            let emailToUse = email.trim()
-            if (!emailToUse.includes('@')) {
-                emailToUse = `${emailToUse}@gmail.com`
-            }
-
-            await signInWithEmailAndPassword(auth, emailToUse, password)
+            await signInWithEmailAndPassword(auth, email.trim(), password)
             navigate('/usuarios')
         } catch (error) {
             console.error('Error en autenticación:', error)
@@ -106,15 +101,16 @@ function Login() {
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div>
                                 <label className="block text-[11px] uppercase tracking-[0.1em] text-tactical-brass mb-3">
-                                    Identificación operativa
+                                    Correo electrónico
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type="text"
+                                        type="email"
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-surface border border-theme focus:border-tactical-gold text-theme-secondary font-tactical uppercase tracking-[0.06em] px-4 py-3 transition-colors duration-200"
-                                        placeholder="usuario"
+                                        className="w-full bg-surface border border-theme focus:border-tactical-gold text-theme-secondary font-tactical tracking-[0.06em] px-4 py-3 transition-colors duration-200"
+                                        placeholder="correo@dominio.com"
                                         required
                                         disabled={loading}
                                     />
