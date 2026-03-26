@@ -236,7 +236,7 @@ function TeamDetailView() {
   }
 
   return (
-    <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+    <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
       <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] gap-4">
         <div className="flex items-center gap-4">
           <div className="w-24 h-24 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">

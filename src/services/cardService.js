@@ -177,10 +177,13 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
 
             // Mantener el createdAt original y actualizar updatedAt
             const existingData = existingDoc.data()
+            const incomingNum = String(cardData.numeroMembresia ?? '').trim()
             const updatedDoc = {
                 ...cardDoc,
                 createdAt: existingData.createdAt || new Date(), // Mantener la fecha original
-                updatedAt: new Date() // Actualizar la fecha de modificación
+                updatedAt: new Date(), // Actualizar la fecha de modificación
+                // No regenerar CTV al actualizar: si el cliente manda vacío, conservar el guardado
+                numeroMembresia: incomingNum || existingData.numeroMembresia || cardDoc.numeroMembresia
             }
 
             await updateDoc(docRef, updatedDoc)

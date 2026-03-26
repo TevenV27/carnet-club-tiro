@@ -196,7 +196,7 @@ function UserDetailView() {
     }
 
     return (
-        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+        <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.06em]">

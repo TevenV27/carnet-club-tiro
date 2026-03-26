@@ -47,6 +47,9 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
         const existingData = existingUserSnapshot.data()
         const rol =
             existingData.rol ?? payload.rol ?? 'operador'
+        const incomingNum = String(userBaseData.numeroMembresia ?? '').trim()
+        const numeroMembresia =
+            incomingNum || existingData.numeroMembresia
 
         await setDoc(
             userDocRef,
@@ -54,7 +57,8 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
                 ...payload,
                 // No degradar rol de administrador al actualizar carnet
                 rol,
-                createdAt: existingData.createdAt || now
+                createdAt: existingData.createdAt || now,
+                numeroMembresia
             }),
             { merge: true }
         )

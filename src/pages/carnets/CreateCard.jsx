@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { auth } from '../../firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -98,6 +98,8 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
 
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState(null)
+  /** CTV ya asignado en Firestore (edición): evita llamar a getNextMembershipNumber al guardar/generar. */
+  const numeroMembresiaGuardadoRef = useRef('')
 
   useEffect(() => {
     if (!isEditMode || loadingData) {
@@ -120,6 +122,8 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
           setEditError('No se encontró un carnet registrado para esta cédula.')
           return
         }
+
+        numeroMembresiaGuardadoRef.current = cardData.numeroMembresia || ''
 
         const equipoSeleccionado = equipos.find((eq) => eq.nombre === cardData.equipoTactico)
         const emailFrom = cardData.email || userRow?.email || ''
@@ -210,12 +214,29 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
 
   const [saving, setSaving] = useState(false)
 
+  const resolveNumeroMembresiaParaVista = async () => {
+    const t = formData.numeroMembresia?.trim() || ''
+    if (t) return t
+    if (isEditMode && numeroMembresiaGuardadoRef.current) {
+      return numeroMembresiaGuardadoRef.current
+    }
+    return getNextMembershipNumber()
+  }
+
   const handleGenerate = async () => {
     try {
-      // Auto-calcular número de membresía si no existe
-      if (!formData.numeroMembresia) {
-        const nextMembership = await getNextMembershipNumber()
-        setFormData(prev => ({ ...prev, numeroMembresia: nextMembership }))
+      const membership = await resolveNumeroMembresiaParaVista()
+      if (!membership) {
+        alert(
+          isEditMode
+            ? 'No hay número CTV en el carnet guardado. Ingresa el código manualmente o recarga la página.'
+            : 'No se pudo obtener el número de membresía.'
+        )
+        return
+      }
+
+      if (!formData.numeroMembresia?.trim()) {
+        setFormData((prev) => ({ ...prev, numeroMembresia: membership }))
       }
 
       // Auto-calcular fecha de emisión (MM/YYYY)
@@ -224,20 +245,22 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
         const month = String(now.getMonth() + 1).padStart(2, '0')
         const year = now.getFullYear()
         const emision = `${month}/${year}`
-        setFormData(prev => ({ ...prev, emision }))
+        setFormData((prev) => ({ ...prev, emision }))
       }
 
       // Preparar datos con valores automáticos
       const dataToGenerate = {
         ...formData,
         nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
-        numeroMembresia: formData.numeroMembresia || await getNextMembershipNumber(),
-        emision: formData.emision || (() => {
-          const now = new Date()
-          const month = String(now.getMonth() + 1).padStart(2, '0')
-          const year = now.getFullYear()
-          return `${month}/${year}`
-        })(),
+        numeroMembresia: membership,
+        emision:
+          formData.emision ||
+          (() => {
+            const now = new Date()
+            const month = String(now.getMonth() + 1).padStart(2, '0')
+            const year = now.getFullYear()
+            return `${month}/${year}`
+          })(),
         // equipoLogo ya está en formData desde que se seleccionó el equipo
       }
 
@@ -293,11 +316,18 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       const token = await user.getIdToken()
       console.log('Token de autenticación obtenido:', token ? 'Sí' : 'No')
 
+      const membershipSave = await resolveNumeroMembresiaParaVista()
+      if (!membershipSave) {
+        alert('No se pudo determinar el número CTV. Revisa el campo o recarga el carnet en modo edición.')
+        setSaving(false)
+        return
+      }
+
       // Asegurar que los valores automáticos estén presentes
       const dataToSave = {
         ...formData,
         nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
-        numeroMembresia: formData.numeroMembresia || await getNextMembershipNumber(),
+        numeroMembresia: membershipSave,
         emision: formData.emision || (() => {
           const now = new Date()
           const month = String(now.getMonth() + 1).padStart(2, '0')
@@ -420,9 +450,9 @@ Revisa la consola del navegador para más detalles.
   }
 
   return (
-    <div className="min-h-screen lg:h-screen bg-tactical-dark relative flex flex-col lg:overflow-hidden">
+    <div className="bg-tactical-dark relative flex flex-col lg:overflow-hidden">
 
-      <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
+      <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass space-y-6 overflow-hidden md:overflow-auto">
         {/* Header */}
         <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

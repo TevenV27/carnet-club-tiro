@@ -88,7 +88,7 @@ function UsersView() {
     }
 
     return (
-        <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass">
+        <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass">
             <section className="mb-8 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent pointer-events-none" />
                 <div className="relative z-10 border border-tactical-border p-[10px] md:p-6 bg-black/30 backdrop-blur-sm shadow-[0_0_25px_rgba(0,0,0,0.6)]">
@@ -137,14 +137,14 @@ function UsersView() {
                     Sin coincidencias para "{searchTerm}"
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {filteredUsers.map((user) => {
                         const cedula = user.cedula || user.id
 
                         return (
                             <article
                                 key={user.id}
-                                className="relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border border-tactical-border px-[10px] py-[10px] md:px-6 md:py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-[300px]"
+                                className="relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border border-tactical-border px-2.5 py-2.5 sm:px-[10px] sm:py-[10px] md:px-6 md:py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-0"
                                 onDoubleClick={() => navigate(`/usuarios/${encodeURIComponent(cedula)}`)}
                                 title="Doble clic para ver el informe completo"
                             >
@@ -159,12 +159,12 @@ function UsersView() {
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-transparent via-tactical-border/30 to-transparent opacity-40" />
                                 </div>
 
-                                <div className="grid gap-5 md:grid-cols-[auto,_1fr] relative z-10">
-                                    <div className="relative mx-auto md:mx-0">
+                                <div className="grid grid-cols-[auto,_1fr] gap-3 sm:gap-5 relative z-10 items-start">
+                                    <div className="relative">
                                         <div className="absolute -top-2 -left-2 w-7 h-7 border-tactical-gold border-t-2 border-l-2 opacity-60" />
                                         <div className="absolute -bottom-2 -right-2 w-10 h-10 border-tactical-border/70 border-b-2 border-r-2 opacity-60" />
                                         {user.foto ? (
-                                            <div className="w-32 h-40 border border-tactical-border overflow-hidden shadow-[0_0_18px_rgba(0,0,0,0.55)] relative">
+                                            <div className="w-[72px] h-[88px] sm:w-32 sm:h-40 border border-tactical-border overflow-hidden shadow-[0_0_18px_rgba(0,0,0,0.55)] relative">
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                                                 <img
                                                     src={user.foto}
@@ -173,15 +173,15 @@ function UsersView() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="w-32 h-40 flex items-center justify-center border border-dashed border-tactical-border text-[10px] font-tactical uppercase tracking-wide opacity-60 text-center break-words">
+                                            <div className="w-[72px] h-[88px] sm:w-32 sm:h-40 flex items-center justify-center border border-dashed border-tactical-border text-[10px] font-tactical uppercase tracking-wide opacity-60 text-center break-words">
                                                 Sin fotografía
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-3 font-tactical text-[11px] uppercase tracking-[0.05em] leading-relaxed pb-6 break-words">
+                                    <div className="min-w-0 space-y-2 font-tactical text-[10px] sm:text-[11px] uppercase tracking-[0.05em] leading-relaxed pb-2.5 sm:pb-6 break-words">
                                         <div className="flex flex-col border-b border-tactical-border/60 pb-3 gap-1 break-words">
-                                            <p className="text-tactical-gold text-base break-words">
+                                            <p className="text-tactical-gold text-base sm:text-base break-words">
                                                 {user.nombre || 'Sin nombre'}
                                             </p>
                                             <span className="text-[9px] text-tactical-brass break-words">
@@ -191,7 +191,7 @@ function UsersView() {
 
                                         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 break-words">
                                             {user.contacto && (
-                                                <div className="space-y-1">
+                                                <div className="hidden sm:block space-y-1">
                                                     <dt className="text-[9px] text-tactical-brass/90">Contacto</dt>
                                                     <dd className="text-tactical-gold break-words">{user.contacto}</dd>
                                                 </div>
@@ -203,24 +203,20 @@ function UsersView() {
                                                 </div>
                                             )}
                                             {user.rh && (
-                                                <div className="space-y-1">
+                                                <div className="hidden sm:block space-y-1">
                                                     <dt className="text-[9px] text-tactical-brass/90">RH</dt>
                                                     <dd className="text-tactical-gold break-words">{user.rh}</dd>
                                                 </div>
                                             )}
                                             {user.vigencia && (
-                                                <div className="space-y-1">
+                                                <div className="hidden sm:block space-y-1">
                                                     <dt className="text-[9px] text-tactical-brass/90">Vigencia</dt>
                                                     <dd className="text-tactical-gold break-words">{user.vigencia}</dd>
                                                 </div>
                                             )}
                                         </dl>
 
-                                        <div className="border border-tactical-border/40 rounded-md px-3 py-2 bg-black/30 text-xs tracking-[0.08em] break-words">
-                                            Carnet: <span className="text-tactical-gold">{user.carnetId || 'No asignado'}</span>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] tracking-[0.14em] text-tactical-brass/90 gap-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[9px] sm:text-[10px] tracking-[0.14em] text-tactical-brass/90 gap-2">
                                             <span className="break-words">Actualizado {formatTimestamp(user.updatedAt)}</span>
                                             <span className="text-tactical-gold whitespace-nowrap">Status: Verificado</span>
                                         </div>

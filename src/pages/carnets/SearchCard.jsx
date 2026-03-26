@@ -72,7 +72,7 @@ function SearchCard() {
     }
 
     return (
-        <div className="min-h-screen bg-tactical-dark p-4">
+        <div className="bg-tactical-dark p-3 md:p-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-4 text-center border-b border-tactical-border pb-3 relative"
