@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllUsers, updateUserPoints } from '../services/userService'
+import { getAllUsers, updateUserPoints } from '../../services/userService'
 
 const getCedula = (user) => user.cedula || user.id
 
@@ -106,7 +106,7 @@ function RankingView() {
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-tactical-gold font-tactical uppercase tracking-[0.4em]">
+                <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">
                     Calculando ranking...
                 </div>
             </div>
@@ -116,7 +116,7 @@ function RankingView() {
     if (error) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-red-500 font-tactical uppercase tracking-[0.4em] text-center px-6">
+                <div className="text-red-500 font-tactical uppercase tracking-[0.08em] text-center px-6">
                     {error}
                 </div>
             </div>
@@ -126,10 +126,10 @@ function RankingView() {
     return (
         <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8">
             <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
-                <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                     Ranking de Operadores
                 </h1>
-                <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
+                <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
                     Clasificación dinámica basada en puntos tácticos
                 </p>
             </header>
@@ -142,10 +142,10 @@ function RankingView() {
                             className="bg-red/50 border border-tactical-border rounded-lg p-5 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex flex-col gap-4 w-full"
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.5em]">
+                                <span className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.12em]">
                                     Top {idx + 1}
                                 </span>
-                                <span className="text-xs font-tactical text-tactical-brass/60 uppercase tracking-[0.4em]">
+                                <span className="text-xs font-tactical text-tactical-brass/90 uppercase tracking-[0.08em]">
                                     {operator.nivel || 'Operador'}
                                 </span>
                             </div>
@@ -158,22 +158,22 @@ function RankingView() {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass/50 font-tactical uppercase tracking-[0.5em]">
+                                        <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.12em]">
                                             Sin foto
                                         </div>
                                     )}
                                 </div>
                                 <div className="space-y-1 font-tactical uppercase">
-                                    <p className="text-tactical-gold text-sm tracking-[0.35em]">
+                                    <p className="text-tactical-gold text-sm tracking-[0.06em]">
                                         {operator.nombre || 'Operador sin nombre'}
                                     </p>
-                                    <p className="text-[10px] text-tactical-brass/60 tracking-[0.4em]">
+                                    <p className="text-[10px] text-tactical-brass/90 tracking-[0.08em]">
                                         Cédula: {getCedula(operator)}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-between font-tactical uppercase tracking-[0.4em]">
-                                <span className="text-[11px] text-tactical-brass/60">Puntos</span>
+                            <div className="flex items-center justify-between font-tactical uppercase tracking-[0.08em]">
+                                <span className="text-[11px] text-tactical-brass/90">Puntos</span>
                                 <span className="text-lg text-tactical-gold">{formatNumber(operator.puntos ?? 0)}</span>
                             </div>
                         </div>
@@ -182,18 +182,18 @@ function RankingView() {
                 <div className="bg-black/30 border border-tactical-border rounded-lg p-[10px] md:p-6 shadow-[0_0_20px_rgba(0,0,0,0.45)]">
                     <header className="px-6 py-4 border-b border-tactical-border/60 flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                                 Tabla de clasificación
                             </h2>
-                            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                                 {sortedUsers.length} operadores activos
                             </p>
                         </div>
                     </header>
 
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em]">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em]">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Posición</th>
                                     <th className="px-4 py-3 text-left">Operador</th>
@@ -224,20 +224,20 @@ function RankingView() {
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass/50">
+                                                            <div className="w-full h-full bg-black flex items-center justify-center text-[9px] text-tactical-brass">
                                                                 Sin foto
                                                             </div>
                                                         )}
                                                     </div>
                                                     <div>
                                                         <p className="text-tactical-gold">{user.nombre || 'Sin nombre'}</p>
-                                                        <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
+                                                        <p className="text-[9px] text-tactical-brass tracking-[0.12em]">
                                                             Cédula: {cedula}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-tactical-brass/70 text-[10px]">
+                                            <td className="px-4 py-3 text-tactical-brass text-[10px]">
                                                 {user.nivel || 'Operador'}
                                             </td>
                                             <td className="px-4 py-3 text-tactical-gold">{formatNumber(user.puntos ?? 0)}</td>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllUsers } from '../services/userService'
+import { getAllUsers } from '../../services/userService'
 
 const formatTimestamp = (value) => {
     if (!value) {
@@ -70,7 +70,7 @@ function UsersView() {
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-tactical-gold font-tactical uppercase tracking-widest">
+                <div className="text-tactical-gold font-tactical uppercase tracking-wide">
                     Cargando usuarios...
                 </div>
             </div>
@@ -80,7 +80,7 @@ function UsersView() {
     if (error) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-red-500 font-tactical uppercase tracking-widest">
+                <div className="text-red-500 font-tactical uppercase tracking-wide">
                     {error}
                 </div>
             </div>
@@ -95,10 +95,10 @@ function UsersView() {
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-1 bg-tactical-gold shadow-[0_0_20px_rgba(175,153,116,0.9)]" />
                         <div>
-                            <h2 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.3em] drop-shadow-md">
+                            <h2 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
                                 Panel de Operadores
                             </h2>
-                            <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.4em] uppercase mt-2">
+                            <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
                                 Inteligencia | Estado de Fuerza | Acceso Restringido
                             </p>
                         </div>
@@ -108,21 +108,21 @@ function UsersView() {
             <section className="mb-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm px-[10px] py-[10px] md:px-5 md:py-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     <div>
-                        <p className="text-xs font-tactical text-tactical-brass/80 uppercase tracking-[0.4em]">
+                        <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.08em]">
                             Buscar operadores por nombre o cédula
                         </p>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.5em] mt-1">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.12em] mt-1">
                             {filteredUsers.length} resultados activos
                         </p>
                     </div>
                     <div className="flex items-center gap-2 bg-black/60 border border-tactical-border px-3 py-2 rounded-md w-full lg:w-96 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
-                        <span className="text-tactical-gold text-xs font-tactical uppercase tracking-[0.4em]">Scan</span>
+                        <span className="text-tactical-gold text-xs font-tactical uppercase tracking-[0.08em]">Scan</span>
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Ej: Carlos | 1234567890"
-                            className="flex-1 bg-transparent border-0 text-tactical-brass text-sm font-tactical uppercase tracking-[0.3em] placeholder:text-tactical-brass/40 focus:outline-none"
+                            className="flex-1 bg-transparent border-0 text-tactical-brass text-sm font-tactical uppercase tracking-[0.05em] placeholder:text-tactical-brass/75 focus:outline-none"
                         />
                     </div>
                 </div>
@@ -133,7 +133,7 @@ function UsersView() {
                     No hay usuarios registrados todavía.
                 </div>
             ) : filteredUsers.length === 0 ? (
-                <div className="bg-black border border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.4em] text-tactical-brass/70">
+                <div className="bg-black border border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.08em] text-tactical-brass">
                     Sin coincidencias para "{searchTerm}"
                 </div>
             ) : (
@@ -152,7 +152,7 @@ function UsersView() {
                                     <div className="absolute inset-0 border border-tactical-border/60 rounded-lg" />
                                     <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-black/15" />
                                     <div className="absolute -top-1 -left-1 w-24 h-24 border border-tactical-border/20 rounded-full blur-lg" />
-                                    <div className="absolute top-5 right-5 text-[10px] font-tactical uppercase tracking-[0.3em] text-tactical-brass/80 bg-black/70 px-3 py-1 border border-tactical-border/40 rounded-full">
+                                    <div className="absolute top-5 right-5 text-[10px] font-tactical uppercase tracking-[0.05em] text-tactical-brass bg-black/70 px-3 py-1 border border-tactical-border/40 rounded-full">
                                         {user.nivel || 'Operador'}
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/80 to-transparent" />
@@ -173,18 +173,18 @@ function UsersView() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="w-32 h-40 flex items-center justify-center border border-dashed border-tactical-border text-[10px] font-tactical uppercase tracking-widest opacity-60 text-center break-words">
+                                            <div className="w-32 h-40 flex items-center justify-center border border-dashed border-tactical-border text-[10px] font-tactical uppercase tracking-wide opacity-60 text-center break-words">
                                                 Sin fotografía
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-3 font-tactical text-[11px] uppercase tracking-[0.3em] leading-relaxed pb-6 break-words">
+                                    <div className="flex-1 space-y-3 font-tactical text-[11px] uppercase tracking-[0.05em] leading-relaxed pb-6 break-words">
                                         <div className="flex flex-col border-b border-tactical-border/60 pb-3 gap-1 break-words">
                                             <p className="text-tactical-gold text-base break-words">
                                                 {user.nombre || 'Sin nombre'}
                                             </p>
-                                            <span className="text-[9px] text-tactical-brass/70 break-words">
+                                            <span className="text-[9px] text-tactical-brass break-words">
                                                 ID: {cedula}
                                             </span>
                                         </div>
@@ -192,37 +192,37 @@ function UsersView() {
                                         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 break-words">
                                             {user.contacto && (
                                                 <div className="space-y-1">
-                                                    <dt className="text-[9px] text-tactical-brass/60">Contacto</dt>
+                                                    <dt className="text-[9px] text-tactical-brass/90">Contacto</dt>
                                                     <dd className="text-tactical-gold break-words">{user.contacto}</dd>
                                                 </div>
                                             )}
                                             {user.numeroMembresia && (
                                                 <div className="space-y-1">
-                                                    <dt className="text-[9px] text-tactical-brass/60">Membresía</dt>
+                                                    <dt className="text-[9px] text-tactical-brass/90">Membresía</dt>
                                                     <dd className="text-tactical-gold break-words">{user.numeroMembresia}</dd>
                                                 </div>
                                             )}
                                             {user.rh && (
                                                 <div className="space-y-1">
-                                                    <dt className="text-[9px] text-tactical-brass/60">RH</dt>
+                                                    <dt className="text-[9px] text-tactical-brass/90">RH</dt>
                                                     <dd className="text-tactical-gold break-words">{user.rh}</dd>
                                                 </div>
                                             )}
                                             {user.vigencia && (
                                                 <div className="space-y-1">
-                                                    <dt className="text-[9px] text-tactical-brass/60">Vigencia</dt>
+                                                    <dt className="text-[9px] text-tactical-brass/90">Vigencia</dt>
                                                     <dd className="text-tactical-gold break-words">{user.vigencia}</dd>
                                                 </div>
                                             )}
                                         </dl>
 
-                                        <div className="border border-tactical-border/40 rounded-md px-3 py-2 bg-black/30 text-xs tracking-[0.4em] break-words">
+                                        <div className="border border-tactical-border/40 rounded-md px-3 py-2 bg-black/30 text-xs tracking-[0.08em] break-words">
                                             Carnet: <span className="text-tactical-gold">{user.carnetId || 'No asignado'}</span>
                                         </div>
 
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] tracking-[0.55em] text-tactical-brass/60 gap-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] tracking-[0.14em] text-tactical-brass/90 gap-2">
                                             <span className="break-words">Actualizado {formatTimestamp(user.updatedAt)}</span>
-                                            <span className="text-tactical-gold/80 whitespace-nowrap">Status: Verificado</span>
+                                            <span className="text-tactical-gold whitespace-nowrap">Status: Verificado</span>
                                         </div>
                                     </div>
                                 </div>

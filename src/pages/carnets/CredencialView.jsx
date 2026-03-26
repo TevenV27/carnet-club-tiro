@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { searchCardByCedula } from '../services/cardService'
-import CarnetPreview from './CarnetPreview'
+import { searchCardByCedula } from '../../services/cardService'
+import CarnetPreview from '../../components/carnet/CarnetPreview'
 
 function CredencialView() {
     const { cedula } = useParams()
@@ -78,7 +78,7 @@ function CredencialView() {
     if (loading) {
         return (
             <div className="min-h-screen bg-tactical-dark flex items-center justify-center p-4">
-                <div className="text-tactical-gold font-tactical text-xl uppercase tracking-wider">[CARGANDO CREDENCIAL...]</div>
+                <div className="text-tactical-gold font-tactical text-xl uppercase tracking-normal">[CARGANDO CREDENCIAL...]</div>
             </div>
         )
     }
@@ -88,14 +88,14 @@ function CredencialView() {
             <div className="min-h-screen bg-tactical-dark flex items-center justify-center p-8">
                 <div className="max-w-md w-full hud-border p-1">
                     <div className="bg-black p-8 text-center" style={{
-                        background: '#0a0a0a',
+                        background: '#0c0d11',
                         boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
                     }}>
-                        <h2 className="text-2xl font-bold text-red-500 mb-4 font-tactical uppercase tracking-wider">[ERROR]</h2>
+                        <h2 className="text-2xl font-bold text-red-500 mb-4 font-tactical uppercase tracking-normal">[ERROR]</h2>
                         <p className="text-tactical-brass mb-6 font-tactical">{error}</p>
                         <button
                             onClick={() => navigate('/buscar-carnet')}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
                             style={{
                                 boxShadow: 'none',
                                 textShadow: 'none'
@@ -137,7 +137,7 @@ function CredencialView() {
                         borderWidth: '1px',
                         boxShadow: 'none'
                     }}>
-                    <h1 className="text-2xl font-bold text-tactical-gold mb-1 font-tactical tracking-wider"
+                    <h1 className="text-2xl font-bold text-tactical-gold mb-1 font-tactical tracking-normal"
                         style={{
                             textShadow: 'none',
                             letterSpacing: '0.1em',
@@ -145,7 +145,7 @@ function CredencialView() {
                         }}>
                         [CLASIFICADO] CREDENCIAL DE OPERADOR
                     </h1>
-                    <p className="text-tactical-brass text-xs font-tactical uppercase tracking-wider opacity-80"
+                    <p className="text-tactical-brass text-xs font-tactical uppercase tracking-normal opacity-80"
                         style={{ letterSpacing: '0.08em', textShadow: 'none' }}>
                         CLUB DE TIRO DEPORTIVO DEL VALLE - OPERACIONES ESPECIALES
                     </p>
@@ -154,10 +154,10 @@ function CredencialView() {
                 {/* Información del miembro */}
                 <div className="hud-border p-1 mb-4">
                     <div className="bg-black p-4" style={{
-                        background: '#0a0a0a',
+                        background: '#0c0d11',
                         boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
                     }}>
-                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider"
+                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-normal"
                             style={{
                                 textShadow: 'none',
                                 letterSpacing: '0.08em',
@@ -205,10 +205,10 @@ function CredencialView() {
                 {/* Previsualización de carnets */}
                 <div className="hud-border p-1">
                     <div className="bg-black p-4" style={{
-                        background: '#0a0a0a',
+                        background: '#0c0d11',
                         boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
                     }}>
-                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider"
+                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-normal"
                             style={{
                                 textShadow: 'none',
                                 letterSpacing: '0.08em',
@@ -220,7 +220,7 @@ function CredencialView() {
                             {/* Cara Frontal */}
                             {card.frontCardUrl && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
+                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-normal opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA FRONTAL</h3>
                                     <CarnetPreview
                                         src={card.frontCardUrl}
@@ -237,7 +237,7 @@ function CredencialView() {
                             {/* Cara Trasera */}
                             {card.backCardUrl && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
+                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-normal opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA TRASERA</h3>
                                     <CarnetPreview
                                         src={card.backCardUrl}
@@ -255,7 +255,7 @@ function CredencialView() {
                         <div className="mt-4 text-center">
                             <button
                                 onClick={() => navigate('/buscar-carnet')}
-                                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+                                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
                                 style={{
                                     boxShadow: 'none',
                                     textShadow: 'none'

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../firebase/config'
+import { auth } from '../../firebase/config'
 import { useNavigate } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
-import logoImage from '../assets/logo.png'
+import { useTheme } from '../../context/ThemeContext'
+import logoImage from '../../assets/logo.png'
 
 function Login() {
     const navigate = useNavigate()
@@ -21,7 +21,7 @@ function Login() {
         try {
             let emailToUse = email.trim()
             if (!emailToUse.includes('@')) {
-                emailToUse = `${emailToUse}@campo-tiro-valle.com`
+                emailToUse = `${emailToUse}@gmail.com`
             }
 
             await signInWithEmailAndPassword(auth, emailToUse, password)
@@ -62,30 +62,30 @@ function Login() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <p className="text-[11px] uppercase tracking-[0.45em] text-tactical-brass/60">Control táctico</p>
-                                <h1 className="mt-4 text-4xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                                <p className="text-[11px] uppercase tracking-[0.1em] text-tactical-brass/90">Control táctico</p>
+                                <h1 className="mt-4 text-4xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                                     Club de Tiro del Valle
                                 </h1>
-                                <p className="mt-3 text-[12px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                                <p className="mt-3 text-[12px] uppercase tracking-[0.1em] text-tactical-brass/90">
                                     Sistema de identificación y credenciales
                                 </p>
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.4em]">
-                                <span className="text-tactical-brass/50">Nivel de seguridad</span>
+                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.08em]">
+                                <span className="text-tactical-brass">Nivel de seguridad</span>
                                 <span className="text-tactical-gold">Alpha</span>
                             </div>
-                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.4em]">
-                                <span className="text-tactical-brass/50">Estado del sistema</span>
+                            <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.08em]">
+                                <span className="text-tactical-brass">Estado del sistema</span>
                                 <span className="flex items-center gap-2 text-emerald-400">
                                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                     Operativo
                                 </span>
                             </div>
                             <div className="pt-4 border-t border-tactical-border/40">
-                                <p className="text-[11px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                                <p className="text-[11px] uppercase tracking-[0.1em] text-tactical-brass/90">
                                     Credenciales requeridas para acceso autorizado.
                                 </p>
                             </div>
@@ -93,19 +93,19 @@ function Login() {
                     </section>
 
                     <section className="relative p-8 md:p-12 bg-surface text-theme-primary">
-                        <div className="absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-transparent via-tactical-gold/30 to-transparent" />
+                        <div className="absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-transparent via-tactical-gold/50 to-transparent" />
                         <div className="mb-10">
-                            <h2 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                            <h2 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                                 Inicio de sesión
                             </h2>
-                            <p className="mt-2 text-[12px] uppercase tracking-[0.45em] text-tactical-brass/60">
+                            <p className="mt-2 text-[12px] uppercase tracking-[0.1em] text-tactical-brass/90">
                                 Autenticación autorizada
                             </p>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div>
-                                <label className="block text-[11px] uppercase tracking-[0.45em] text-tactical-brass/50 mb-3">
+                                <label className="block text-[11px] uppercase tracking-[0.1em] text-tactical-brass mb-3">
                                     Identificación operativa
                                 </label>
                                 <div className="relative">
@@ -113,7 +113,7 @@ function Login() {
                                         type="text"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-surface border border-theme focus:border-tactical-gold/80 text-theme-secondary font-tactical uppercase tracking-[0.35em] px-4 py-3 transition-colors duration-200"
+                                        className="w-full bg-surface border border-theme focus:border-tactical-gold text-theme-secondary font-tactical uppercase tracking-[0.06em] px-4 py-3 transition-colors duration-200"
                                         placeholder="usuario"
                                         required
                                         disabled={loading}
@@ -122,14 +122,14 @@ function Login() {
                             </div>
 
                             <div>
-                                <label className="block text-[11px] uppercase tracking-[0.45em] text-tactical-brass/50 mb-3">
+                                <label className="block text-[11px] uppercase tracking-[0.1em] text-tactical-brass mb-3">
                                     Clave de acceso
                                 </label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-surface border border-theme focus:border-tactical-gold/80 text-theme-secondary font-tactical uppercase tracking-[0.35em] px-4 py-3 transition-colors duration-200"
+                                    className="w-full bg-surface border border-theme focus:border-tactical-gold text-theme-secondary font-tactical uppercase tracking-[0.06em] px-4 py-3 transition-colors duration-200"
                                     placeholder="••••••••"
                                     required
                                     disabled={loading}
@@ -137,7 +137,7 @@ function Login() {
                             </div>
 
                             {error && (
-                                <div className="border border-red-600/80 bg-red-900/20 text-red-400 px-4 py-3 text-[11px] uppercase tracking-[0.4em]">
+                                <div className="border border-red-600/80 bg-red-900/20 text-red-400 px-4 py-3 text-[11px] uppercase tracking-[0.08em]">
                                     {error}
                                 </div>
                             )}
@@ -145,7 +145,7 @@ function Login() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full text-tactical-gold font-tactical text-sm uppercase tracking-[0.45em] border border-theme hover:border-tactical-gold hover:bg-surface-hover transition-all duration-200 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="w-full text-tactical-gold font-tactical text-sm uppercase tracking-[0.1em] border border-theme hover:border-tactical-gold hover:bg-surface-hover transition-all duration-200 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 style={{
                                     background: 'linear-gradient(90deg, rgba(var(--color-text-secondary), 0.16) 0%, rgba(var(--color-border), 0.28) 50%, rgba(var(--color-text-secondary), 0.16) 100%)'
                                 }}
@@ -157,7 +157,7 @@ function Login() {
                         <div className="mt-10 pt-5 border-t border-tactical-border/40 text-center">
                             <button
                                 onClick={() => navigate('/buscar-carnet')}
-                                className="text-theme-secondary hover:text-tactical-gold font-tactical text-[11px] uppercase tracking-[0.45em] transition-colors"
+                                className="text-theme-secondary hover:text-tactical-gold font-tactical text-[11px] uppercase tracking-[0.1em] transition-colors"
                             >
                                 Buscar credencial existente
                             </button>

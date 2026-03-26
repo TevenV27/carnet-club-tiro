@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createLevel, deleteLevel, getLevels, updateLevel } from '../services/levelsService'
+import { createLevel, deleteLevel, getLevels, updateLevel } from '../../services/levelsService'
 
 function LevelsView() {
     const [levels, setLevels] = useState([])
@@ -109,16 +109,16 @@ function LevelsView() {
     return (
         <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
             <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
-                <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                     Gestión de Niveles
                 </h1>
-                <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
+                <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
                     Crea, edita y elimina los niveles de operadores del sistema
                 </p>
             </header>
 
             {error && (
-                <div className="bg-red-900/70 border border-red-600 text-red-100 px-4 py-3 text-[11px] font-tactical uppercase tracking-[0.35em]">
+                <div className="bg-red-900/70 border border-red-600 text-red-100 px-4 py-3 text-[11px] font-tactical uppercase tracking-[0.06em]">
                     {error}
                 </div>
             )}
@@ -126,10 +126,10 @@ function LevelsView() {
             <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                             {editingLevel ? 'Editar nivel' : 'Crear nuevo nivel'}
                         </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                             Define los niveles disponibles para los operadores
                         </p>
                     </div>
@@ -137,7 +137,7 @@ function LevelsView() {
                         <button
                             type="button"
                             onClick={resetForm}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-[10px] uppercase tracking-[0.3em] transition-all duración-200"
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-[10px] uppercase tracking-[0.05em] transition-all duración-200"
                         >
                             Cancelar edición
                         </button>
@@ -149,26 +149,26 @@ function LevelsView() {
                     className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_auto] gap-4 items-end"
                 >
                     <div>
-                        <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                        <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                             Nombre del nivel
                         </label>
                         <input
                             type="text"
                             value={form.nombre}
                             onChange={(event) => handleChange('nombre', event.target.value)}
-                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                             placeholder="Ej: Operador básico"
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                        <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                             Descripción (opcional)
                         </label>
                         <input
                             type="text"
                             value={form.descripcion}
                             onChange={(event) => handleChange('descripcion', event.target.value)}
-                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                            className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                             placeholder="Breve descripción del nivel"
                         />
                     </div>
@@ -176,7 +176,7 @@ function LevelsView() {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {saving ? 'Guardando...' : editingLevel ? 'Actualizar nivel' : 'Crear nivel'}
                         </button>
@@ -187,27 +187,27 @@ function LevelsView() {
             <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                             Niveles configurados
                         </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                             Gestión centralizada de los niveles del sistema
                         </p>
                     </div>
                 </div>
 
                 {loading ? (
-                    <div className="h-32 flex items-center justify-center text-[11px] font-tactical uppercase tracking-[0.4em] text-tactical-brass/70">
+                    <div className="h-32 flex items-center justify-center text-[11px] font-tactical uppercase tracking-[0.08em] text-tactical-brass">
                         Cargando niveles...
                     </div>
                 ) : levels.length === 0 ? (
-                    <div className="h-32 flex items-center justify-center text-[11px] font-tactical uppercase tracking-[0.4em] text-tactical-brass/50 bg-black/40 border border-dashed border-tactical-border">
+                    <div className="h-32 flex items-center justify-center text-[11px] font-tactical uppercase tracking-[0.08em] text-tactical-brass bg-black/40 border border-dashed border-tactical-border">
                         Aún no se han registrado niveles en el sistema.
                     </div>
                 ) : (
                     <div className="overflow-x-auto border border-tactical-border/40">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass bg-black/40">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">#</th>
                                     <th className="px-4 py-3 text-left">Nivel</th>
@@ -220,7 +220,7 @@ function LevelsView() {
                                     <tr key={level.id} className="hover:bg-black/50 transition-colors duration-150">
                                         <td className="px-4 py-3 text-tactical-gold">{index + 1}</td>
                                         <td className="px-4 py-3 text-tactical-gold">{level.nombre}</td>
-                                        <td className="px-4 py-3 text-tactical-brass/80 text-[10px]">
+                                        <td className="px-4 py-3 text-tactical-brass text-[10px]">
                                             {level.descripcion || 'Sin descripción'}
                                         </td>
                                         <td className="px-4 py-3">
@@ -228,14 +228,14 @@ function LevelsView() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleEdit(level)}
-                                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-3 border border-tactical-border hover:border-tactical-gold font-tactical text-[10px] uppercase tracking-[0.25em] transition-all duración-200"
+                                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-3 border border-tactical-border hover:border-tactical-gold font-tactical text-[10px] uppercase tracking-[0.04em] transition-all duración-200"
                                                 >
                                                     Editar
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDelete(level)}
-                                                    className="bg-transparent hover:bg-red-900/40 text-red-400 font-semibold py-1 px-3 border border-red-600 font-tactical text-[10px] uppercase tracking-[0.25em] transition-all duración-200"
+                                                    className="bg-transparent hover:bg-red-900/40 text-red-400 font-semibold py-1 px-3 border border-red-600 font-tactical text-[10px] uppercase tracking-[0.04em] transition-all duración-200"
                                                 >
                                                     Eliminar
                                                 </button>

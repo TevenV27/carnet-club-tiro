@@ -7,9 +7,9 @@ import {
     cancelTournament,
     finalizeTournament,
     updateTournamentParticipantScores
-} from '../services/tournamentService'
-import { incrementUserPoints, getAllUsers } from '../services/userService'
-import { getScores } from '../services/scoresService'
+} from '../../services/tournamentService'
+import { incrementUserPoints, getAllUsers } from '../../services/userService'
+import { getScores } from '../../services/scoresService'
 
 const formatDateTime = (value) => {
     if (!value) {
@@ -416,7 +416,7 @@ function TournamentDetailView() {
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-tactical-gold font-tactical uppercase tracking-[0.4em]">
+                <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">
                     Cargando torneo...
                 </div>
             </div>
@@ -426,12 +426,12 @@ function TournamentDetailView() {
     if (error) {
         return (
             <div className="h-full flex flex-col items-center justify-center bg-tactical-dark gap-6 px-6 text-center">
-                <div className="text-red-500 font-tactical uppercase tracking-[0.4em]">
+                <div className="text-red-500 font-tactical uppercase tracking-[0.08em]">
                     {error}
                 </div>
                 <button
                     onClick={() => navigate('/torneos')}
-                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200"
+                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
                 >
                     Volver al listado de torneos
                 </button>
@@ -447,14 +447,14 @@ function TournamentDetailView() {
         <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
             <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <div className="space-y-2">
-                    <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                    <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                         {tournament.nombre}
                     </h1>
-                    <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
+                    <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
                         Inicio: {formatDateTime(tournament.fechaInicio)}
                     </p>
                     <p
-                        className={`text-[10px] font-tactical uppercase tracking-[0.45em] ${isCancelado ? 'text-red-400' : isFinalizado ? 'text-tactical-gold' : 'text-tactical-brass/70'
+                        className={`text-[10px] font-tactical uppercase tracking-[0.1em] ${isCancelado ? 'text-red-400' : isFinalizado ? 'text-tactical-gold' : 'text-tactical-brass'
                             }`}
                     >
                         Estado actual: {isCancelado ? 'Cancelado' : isFinalizado ? 'Finalizado' : 'En progreso'}
@@ -466,14 +466,14 @@ function TournamentDetailView() {
                             <button
                                 onClick={() => handleUpdateStatus('finalizado')}
                                 disabled={updatingStatus}
-                                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {updatingStatus ? 'Actualizando...' : 'Finalizar torneo'}
                             </button>
                             <button
                                 onClick={() => handleUpdateStatus('cancelado')}
                                 disabled={updatingStatus}
-                                className="bg-transparent hover:bg-red-900/40 text-red-400 font-semibold py-2 px-4 border border-red-600 font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="bg-transparent hover:bg-red-900/40 text-red-400 font-semibold py-2 px-4 border border-red-600 font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {updatingStatus ? 'Actualizando...' : 'Cancelar torneo'}
                             </button>
@@ -481,7 +481,7 @@ function TournamentDetailView() {
                     )}
                     <button
                         onClick={() => navigate('/torneos')}
-                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transición-all duración-200"
+                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transición-all duración-200"
                     >
                         Volver al panel
                     </button>
@@ -491,42 +491,42 @@ function TournamentDetailView() {
             <section className="flex flex-col gap-6">
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <header className="px-6 py-4 border-b border-tactical-border/60">
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                             Registrar actividad
                         </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                             Añade las misiones o pruebas que componen el torneo
                         </p>
                     </header>
 
                     <form className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleAddActivity}>
                         <div className="md:col-span-1">
-                            <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                            <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                                 Nombre de la actividad
                             </label>
                             <input
                                 type="text"
                                 value={activityForm.nombre}
                                 onChange={(event) => setActivityForm((prev) => ({ ...prev, nombre: event.target.value }))}
-                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                                 placeholder="Ej: Tiro de precisión"
                             />
                         </div>
                         <div className="md:col-span-1">
-                            <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                            <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                                 Descripción
                             </label>
                             <input
                                 type="text"
                                 value={activityForm.descripcion}
                                 onChange={(event) => setActivityForm((prev) => ({ ...prev, descripcion: event.target.value }))}
-                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                                 placeholder="Detalle opcional"
                             />
                         </div>
                         <div className="flex items-end justify-end gap-4">
                             <div className="md:col-span-1 w-full">
-                                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                                     Puntaje máximo
                                 </label>
                                 <input
@@ -534,7 +534,7 @@ function TournamentDetailView() {
                                     min="1"
                                     value={activityForm.puntajeMaximo}
                                     onChange={(event) => setActivityForm((prev) => ({ ...prev, puntajeMaximo: event.target.value }))}
-                                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                                     placeholder="Ej: 100"
                                 />
                             </div>
@@ -542,7 +542,7 @@ function TournamentDetailView() {
                                 <button
                                     type="submit"
                                     disabled={addingActivity || tournamentClosed}
-                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {addingActivity ? 'Agregando...' : 'Agregar actividad'}
                                 </button>
@@ -554,24 +554,24 @@ function TournamentDetailView() {
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                                 Tabla de puntuaciones
                             </h2>
-                            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                                 Doble clic en un campo para editar el puntaje
                             </p>
                         </div>
                         <button
                             onClick={handleSaveScores}
                             disabled={savingScores || tournamentClosed}
-                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {savingScores ? 'Guardando...' : 'Guardar puntuaciones'}
                         </button>
                     </div>
                     <div className="overflow-x-auto border border-tactical-border/40">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] uppercase tracking-[0.35em] text-tactical-brass bg-black/40">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[10px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Actividad</th>
                                     <th className="px-4 py-3 text-left">Descripción</th>
@@ -581,7 +581,7 @@ function TournamentDetailView() {
                             <tbody className="divide-y divide-tactical-border/40">
                                 {activities.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass/50 tracking-[0.45em]">
+                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass tracking-[0.1em]">
                                             Aún no se han registrado actividades para este torneo.
                                         </td>
                                     </tr>
@@ -605,8 +605,8 @@ function TournamentDetailView() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">#</th>
                                     <th className="px-4 py-3 text-left">Participante</th>
@@ -627,7 +627,7 @@ function TournamentDetailView() {
 
                                     return (
                                         <tr key={cedula} className="hover:bg-black/50 transition-colors duration-150">
-                                            <td className="px-4 py-3 text-tactical-brass/60">
+                                            <td className="px-4 py-3 text-tactical-brass/90">
                                                 {index + 1}
                                             </td>
                                             <td className="px-4 py-3 text-tactical-gold">
@@ -640,14 +640,14 @@ function TournamentDetailView() {
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass/50 tracking-[0.4em]">
+                                                            <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass tracking-[0.08em]">
                                                                 Sin foto
                                                             </div>
                                                         )}
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p>{participant.nombre}</p>
-                                                        <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
+                                                        <p className="text-[9px] text-tactical-brass tracking-[0.12em]">
                                                             {cedula}
                                                         </p>
                                                     </div>
@@ -680,16 +680,16 @@ function TournamentDetailView() {
 
                 <div className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
                     <div>
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                             Posiciones del Torneo
                         </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                             Clasificación según puntos acumulados en este torneo
                         </p>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Posición</th>
                                     <th className="px-4 py-3 text-left">Participante</th>
@@ -699,7 +699,7 @@ function TournamentDetailView() {
                             <tbody className="divide-y divide-tactical-border/40">
                                 {tournamentRankings.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass/50 tracking-[0.45em]">
+                                        <td colSpan={3} className="px-4 py-4 text-center text-[10px] text-tactical-brass tracking-[0.1em]">
                                             No hay participantes en este torneo.
                                         </td>
                                     </tr>
@@ -722,14 +722,14 @@ function TournamentDetailView() {
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             ) : (
-                                                                <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass/50 tracking-[0.4em]">
+                                                                <div className="w-full h-full bg-black flex items-center justify-center text-[8px] text-tactical-brass tracking-[0.08em]">
                                                                     Sin foto
                                                                 </div>
                                                             )}
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p>{ranking.nombre}</p>
-                                                            <p className="text-[9px] text-tactical-brass/50 tracking-[0.5em]">
+                                                            <p className="text-[9px] text-tactical-brass tracking-[0.12em]">
                                                                 {ranking.cedula}
                                                             </p>
                                                         </div>
@@ -751,16 +751,16 @@ function TournamentDetailView() {
             <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                        <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                             Galería del torneo
                         </h2>
-                        <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                        <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                             Evidencias fotográficas opcionales de la jornada
                         </p>
                     </div>
                     <button
                         onClick={() => setGalleryExpanded((prev) => !prev)}
-                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200"
+                        className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
                         type="button"
                     >
                         {galleryExpanded ? '[Ocultar galería]' : '[Mostrar galería]'}
@@ -770,14 +770,14 @@ function TournamentDetailView() {
                 {galleryExpanded && (
                     <div className="space-y-4">
                         {evidenceError && (
-                            <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.4em]">
+                            <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.08em]">
                                 {evidenceError}
                             </div>
                         )}
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <label className="inline-flex items-center gap-3 bg-black/40 border border-tactical-border px-4 py-2 cursor-pointer hover:border-tactical-gold transition-colors duración-150">
-                                <span className="text-[10px] font-tactical uppercase tracking-[0.4em] text-tactical-gold">
+                                <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-gold">
                                     Seleccionar imágenes
                                 </span>
                                 <input
@@ -789,7 +789,7 @@ function TournamentDetailView() {
                                 />
                             </label>
                             {uploadingEvidence && (
-                                <span className="text-[10px] font-tactical uppercase tracking-[0.4em] text-tactical-brass/70">
+                                <span className="text-[10px] font-tactical uppercase tracking-[0.08em] text-tactical-brass">
                                     Subiendo evidencias...
                                 </span>
                             )}
@@ -797,7 +797,7 @@ function TournamentDetailView() {
 
                         <div className="grid grid-cols-[repeat(auto-fit,_minmax(160px,_1fr))] gap-4">
                             {galleryItems.length === 0 ? (
-                                <div className="col-span-full text-center text-[10px] font-tactical uppercase tracking-[0.45em] text-tactical-brass/50 bg-black/40 border border-dashed border-tactical-border px-4 py-6">
+                                <div className="col-span-full text-center text-[10px] font-tactical uppercase tracking-[0.1em] text-tactical-brass bg-black/40 border border-dashed border-tactical-border px-4 py-6">
                                     Aún no hay evidencias registradas para este torneo.
                                 </div>
                             ) : (
@@ -813,7 +813,7 @@ function TournamentDetailView() {
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
-                                        <figcaption className="text-[9px] text-tactical-brass/60 font-tactical uppercase tracking-[0.4em]">
+                                        <figcaption className="text-[9px] text-tactical-brass/90 font-tactical uppercase tracking-[0.08em]">
                                             {formatDateTime(item.uploadedAt)}
                                         </figcaption>
                                     </figure>

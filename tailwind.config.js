@@ -29,11 +29,11 @@ export default {
         'terminal-bg-dark': withOpacityValue('--surface-hover-bg-rgb'),
       },
       fontFamily: {
-        'tactical': ['"Barlow Semi Condensed"', '"Barlow Condensed"', '"Red Hat Mono"', '"Courier New"', 'monospace'],
+        tactical: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'tactical': '0 0 10px rgba(212, 175, 55, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5)',
-        'tactical-glow': '0 0 20px rgba(212, 175, 55, 0.5)',
+        'tactical': '0 0 10px rgba(196, 148, 52, 0.35), inset 0 0 10px rgba(0, 0, 0, 0.5)',
+        'tactical-glow': '0 0 20px rgba(196, 148, 52, 0.45)',
       },
     },
   },

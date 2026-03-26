@@ -19,7 +19,7 @@ function ProtectedRoute({ children }) {
     if (loading) {
         return (
             <div className="min-h-screen bg-tactical-dark flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
+                style={{ background: 'linear-gradient(135deg, #0c0d11 0%, #1c2028 100%)' }}>
                 <div className="text-tactical-gold font-tactical">Cargando...</div>
             </div>
         )

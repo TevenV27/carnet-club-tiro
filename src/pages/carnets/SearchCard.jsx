@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { searchCardByCedula } from '../services/cardService'
+import { searchCardByCedula } from '../../services/cardService'
 import { useNavigate } from 'react-router-dom'
 
 function SearchCard() {
@@ -81,7 +81,7 @@ function SearchCard() {
                         borderWidth: '1px',
                         boxShadow: 'none'
                     }}>
-                    <h1 className="text-2xl font-bold text-tactical-gold mb-1 font-tactical tracking-wider"
+                    <h1 className="text-2xl font-bold text-tactical-gold mb-1 font-tactical tracking-normal"
                         style={{
                             textShadow: 'none',
                             letterSpacing: '0.1em',
@@ -89,7 +89,7 @@ function SearchCard() {
                         }}>
                         [CLASIFICADO] CONSULTA DE CARNETS
                     </h1>
-                    <p className="text-tactical-brass text-xs font-tactical uppercase tracking-wider opacity-80"
+                    <p className="text-tactical-brass text-xs font-tactical uppercase tracking-normal opacity-80"
                         style={{ letterSpacing: '0.08em', textShadow: 'none' }}>
                         CLUB DE TIRO DEPORTIVO DEL VALLE - OPERACIONES ESPECIALES
                     </p>
@@ -101,7 +101,7 @@ function SearchCard() {
                         background: 'linear-gradient(135deg, rgba(20, 15, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
                         boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)'
                     }}>
-                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider"
+                        <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-normal"
                             style={{
                                 textShadow: 'none',
                                 letterSpacing: '0.08em',
@@ -112,7 +112,7 @@ function SearchCard() {
 
                         <form onSubmit={handleSearch} className="flex gap-3">
                             <div className="flex-1">
-                                <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-wider opacity-80"
+                                <label className="block text-tactical-brass mb-1 font-tactical text-xs uppercase tracking-normal opacity-80"
                                     style={{ textShadow: 'none' }}>
                                     &gt; NÚMERO DE CÉDULA
                                 </label>
@@ -124,7 +124,7 @@ function SearchCard() {
                                     placeholder="EJ: 1234567890"
                                     style={{
                                         boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.8)',
-                                        background: '#0a0a0a'
+                                        background: '#0c0d11'
                                     }}
                                 />
                             </div>
@@ -132,7 +132,7 @@ function SearchCard() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-1.5 px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{
                                         boxShadow: 'none',
                                         textShadow: 'none',
@@ -157,7 +157,7 @@ function SearchCard() {
                         <div className="mt-3 text-center">
                             <button
                                 onClick={() => navigate('/crear-carnet')}
-                                className="text-tactical-brass hover:text-tactical-gold font-tactical text-xs transition-colors uppercase tracking-wider opacity-70"
+                                className="text-tactical-brass hover:text-tactical-gold font-tactical text-xs transition-colors uppercase tracking-normal opacity-70"
                                 style={{ textShadow: 'none' }}
                             >
                                 &gt; Volver al inicio
@@ -174,7 +174,7 @@ function SearchCard() {
                             boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)',
                             paddingRight: '12px'
                         }}>
-                            <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-wider"
+                            <h2 className="text-lg font-semibold text-tactical-gold mb-3 font-tactical border-b border-tactical-border pb-1 uppercase tracking-normal"
                                 style={{
                                     textShadow: 'none',
                                     letterSpacing: '0.08em',
@@ -184,7 +184,7 @@ function SearchCard() {
                             </h2>
 
                             <div className="mb-3 p-3 bg-tactical-gray border border-tactical-border">
-                                <h3 className="text-sm font-medium text-tactical-gold mb-2 font-tactical uppercase tracking-wider"
+                                <h3 className="text-sm font-medium text-tactical-gold mb-2 font-tactical uppercase tracking-normal"
                                     style={{ textShadow: 'none' }}>
                                     &gt; INFORMACIÓN DEL MIEMBRO
                                 </h3>
@@ -219,7 +219,7 @@ function SearchCard() {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Cara Frontal */}
                                 <div>
-                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
+                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-normal opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA FRONTAL</h3>
                                     <div
                                         className="flex justify-center mb-2 border border-tactical-border p-2"
@@ -253,7 +253,7 @@ function SearchCard() {
 
                                 {/* Cara Trasera */}
                                 <div>
-                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-wider opacity-80"
+                                    <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-normal opacity-80"
                                         style={{ textShadow: 'none' }}>&gt; CARA TRASERA</h3>
                                     <div
                                         className="flex justify-center mb-2 border border-tactical-border p-2"

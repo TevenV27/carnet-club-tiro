@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { auth } from '../firebase/config'
+import { auth } from '../../firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { generateFrontCard, generateBackCard } from '../utils/cardGenerator'
-import { saveCard, getNextMembershipNumber } from '../services/cardService'
-import { getVigencias } from '../services/vigenciasService'
-import { getSpecialties } from '../services/specialtiesService'
-import { getTeams } from '../services/teamService'
-import { getLevels } from '../services/levelsService'
-import '../App.css'
-import CarnetPreview from './CarnetPreview'
+import { generateFrontCard, generateBackCard } from '../../utils/cardGenerator'
+import { saveCard, getNextMembershipNumber, searchCardByCedula } from '../../services/cardService'
+import { getVigencias } from '../../services/vigenciasService'
+import { getSpecialties } from '../../services/specialtiesService'
+import { getTeams } from '../../services/teamService'
+import { getLevels } from '../../services/levelsService'
+import '../../app/App.css'
+import CarnetPreview from '../../components/carnet/CarnetPreview'
 
-function CreateCard({ onSignOut }) {
+function toDataUrl(base64OrDataUrl) {
+  if (!base64OrDataUrl) return ''
+  const s = String(base64OrDataUrl).trim()
+  if (s.startsWith('data:')) return s
+  return `data:image/jpeg;base64,${s}`
+}
+
+function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
   const navigate = useNavigate()
+  const isEditMode = Boolean(editCedula)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -48,6 +56,7 @@ function CreateCard({ onSignOut }) {
     }
     loadData()
   }, [])
+
   const [formData, setFormData] = useState({
     // Datos del frente
     nombre: '',
@@ -84,6 +93,84 @@ function CreateCard({ onSignOut }) {
   const [backCardBlob, setBackCardBlob] = useState(null)
   const [frontCardTransform, setFrontCardTransform] = useState({ rotateX: 0, rotateY: 0 })
   const [backCardTransform, setBackCardTransform] = useState({ rotateX: 0, rotateY: 0 })
+
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState(null)
+
+  useEffect(() => {
+    if (!isEditMode || loadingData) {
+      return undefined
+    }
+
+    let cancelled = false
+    const revokedUrls = []
+
+    ;(async () => {
+      setEditLoading(true)
+      setEditError(null)
+      try {
+        const cardData = await searchCardByCedula(editCedula)
+        if (cancelled) return
+        if (!cardData) {
+          setEditError('No se encontró un carnet registrado para esta cédula.')
+          return
+        }
+
+        const equipoSeleccionado = equipos.find((eq) => eq.nombre === cardData.equipoTactico)
+
+        setFormData((prev) => ({
+          ...prev,
+          nombre: cardData.nombre ?? '',
+          nivel: cardData.nivel ?? '',
+          numeroMembresia: cardData.numeroMembresia ?? '',
+          emision: cardData.emision ?? '',
+          vigencia: cardData.vigencia ?? '',
+          nombreClub: cardData.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE',
+          rh: cardData.rh ?? '',
+          contacto: cardData.contacto ?? '',
+          contactoEmergencia: cardData.contactoEmergencia ?? '',
+          cedula: cardData.cedula ?? editCedula,
+          identificador: cardData.identificador ?? '',
+          especialidad: cardData.especialidad ?? '',
+          equipoTactico: cardData.equipoTactico ?? '',
+          equipoLogo: equipoSeleccionado?.logo ?? cardData.equipoLogo ?? null,
+          rolEnEquipo: cardData.rolEnEquipo ?? '',
+          pistola: cardData.pistola ?? '',
+          fusil: cardData.fusil ?? '',
+          foto: typeof cardData.foto === 'string' && cardData.foto ? cardData.foto : null,
+        }))
+
+        if (cardData.frontCardBase64 && cardData.backCardBase64) {
+          const frontDataUrl = toDataUrl(cardData.frontCardBase64)
+          const backDataUrl = toDataUrl(cardData.backCardBase64)
+          const frontBlob = await (await fetch(frontDataUrl)).blob()
+          const backBlob = await (await fetch(backDataUrl)).blob()
+          if (cancelled) return
+          const frontUrl = URL.createObjectURL(frontBlob)
+          const backUrl = URL.createObjectURL(backBlob)
+          revokedUrls.push(frontUrl, backUrl)
+          setFrontCardUrl(frontUrl)
+          setBackCardUrl(backUrl)
+          setFrontCardBlob(frontBlob)
+          setBackCardBlob(backBlob)
+        }
+      } catch (err) {
+        console.error('Error cargando carnet para edición:', err)
+        if (!cancelled) {
+          setEditError('No se pudo cargar el carnet. Intenta de nuevo.')
+        }
+      } finally {
+        if (!cancelled) {
+          setEditLoading(false)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      revokedUrls.forEach((u) => URL.revokeObjectURL(u))
+    }
+  }, [isEditMode, editCedula, loadingData, equipos])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -213,6 +300,10 @@ function CreateCard({ onSignOut }) {
       } else {
         alert('Carnet guardado exitosamente')
       }
+
+      if (returnPath) {
+        navigate(returnPath)
+      }
     } catch (error) {
       console.error('Error guardando carnet:', error)
       console.error('Código de error:', error.code)
@@ -309,22 +400,54 @@ Revisa la consola del navegador para más detalles.
       <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
         {/* Header */}
         <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
-          <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
-            Generador de Carnets
-          </h1>
-          <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
-            Crea y gestiona los carnets de identificación de los operadores
-          </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
+                {isEditMode ? 'Editar carnet' : 'Generador de Carnets'}
+              </h1>
+              <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
+                {isEditMode
+                  ? 'Modifica los datos y vuelve a generar o guarda los cambios'
+                  : 'Crea y gestiona los carnets de identificación de los operadores'}
+              </p>
+            </div>
+            {returnPath ? (
+              <button
+                type="button"
+                onClick={() => navigate(returnPath)}
+                className="shrink-0 bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duration-200"
+              >
+                Volver al perfil
+              </button>
+            ) : null}
+          </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {editError ? (
+          <div
+            role="alert"
+            className="border border-red-500/60 bg-red-950/40 text-red-200 font-tactical text-xs uppercase tracking-[0.04em] px-4 py-3 rounded"
+          >
+            {editError}
+          </div>
+        ) : null}
+
+        {isEditMode && (loadingData || editLoading) ? (
+          <div className="border border-tactical-border bg-black/50 text-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] px-4 py-6 text-center rounded">
+            Cargando carnet para edición…
+          </div>
+        ) : null}
+
+        <div
+          className={`grid grid-cols-1 lg:grid-cols-2 gap-6 items-start ${isEditMode && (loadingData || editLoading) ? 'opacity-40 pointer-events-none' : ''}`}
+        >
           {/* Formulario */}
           <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4 flex flex-col max-h-[calc(100vh-200px)]">
             <div className="flex-shrink-0">
-              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em] mb-2">
+              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em] mb-2">
                 Datos del Carnet
               </h2>
-              <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+              <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                 Completa la información para generar el carnet
               </p>
             </div>
@@ -332,12 +455,12 @@ Revisa la consola del navegador para más detalles.
             <div className="space-y-4 overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
               {/* Sección Frente */}
               <div className="border-b border-tactical-border pb-4 mb-4">
-                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.3em] mb-4">
+                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.05em] mb-4">
                   Datos Cara Frontal
                 </h3>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Nombre Completo
                   </label>
                   <input
@@ -345,13 +468,13 @@ Revisa la consola del navegador para más detalles.
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: JUAN TENORIO"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Cédula
                   </label>
                   <input
@@ -359,13 +482,14 @@ Revisa la consola del navegador para más detalles.
                     name="cedula"
                     value={formData.cedula}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    disabled={isEditMode}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="EJ: 1234567890"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Contacto
                   </label>
                   <input
@@ -373,13 +497,13 @@ Revisa la consola del navegador para más detalles.
                     name="contacto"
                     value={formData.contacto}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: 3001234567"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Contacto de Emergencia
                   </label>
                   <input
@@ -387,13 +511,13 @@ Revisa la consola del navegador para más detalles.
                     name="contactoEmergencia"
                     value={formData.contactoEmergencia}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: 3009876543"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     RH
                   </label>
                   <input
@@ -401,7 +525,7 @@ Revisa la consola del navegador para más detalles.
                     name="rh"
                     value={formData.rh}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: O+"
                   />
                 </div>
@@ -411,14 +535,14 @@ Revisa la consola del navegador para más detalles.
 
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Nivel/Operador
                   </label>
                   <select
                     name="nivel"
                     value={formData.nivel}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     disabled={loadingData}
                   >
                     <option value="">Seleccione un nivel</option>
@@ -431,14 +555,14 @@ Revisa la consola del navegador para más detalles.
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Vigencia
                   </label>
                   <select
                     name="vigencia"
                     value={formData.vigencia}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     disabled={loadingData}
                   >
                     <option value="">Seleccione una vigencia</option>
@@ -453,12 +577,12 @@ Revisa la consola del navegador para más detalles.
 
               {/* Sección Reverso */}
               <div className="border-b border-tactical-border pb-4 mb-4">
-                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.3em] mb-4">
+                <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.05em] mb-4">
                   Datos Cara Trasera
                 </h3>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Identificador
                   </label>
                   <input
@@ -466,32 +590,32 @@ Revisa la consola del navegador para más detalles.
                     name="identificador"
                     value={formData.identificador}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: RAVEN-09"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Foto del Miembro
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-tactical file:uppercase file:tracking-[0.3em] file:bg-tactical-gray file:text-tactical-brass file:border file:border-tactical-border hover:file:bg-tactical-gray/80"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-tactical file:uppercase file:tracking-[0.05em] file:bg-tactical-gray file:text-tactical-brass file:border file:border-tactical-border hover:file:bg-tactical-gray/80"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Especialidad
                   </label>
                   <select
                     name="especialidad"
                     value={formData.especialidad}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     disabled={loadingData}
                   >
                     <option value="">Seleccione una especialidad</option>
@@ -504,14 +628,14 @@ Revisa la consola del navegador para más detalles.
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Equipo Táctico
                   </label>
                   <select
                     name="equipoTactico"
                     value={formData.equipoTactico}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     disabled={loadingData}
                   >
                     <option value="">Seleccione un equipo</option>
@@ -524,14 +648,14 @@ Revisa la consola del navegador para más detalles.
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Rol en el Equipo
                   </label>
                   <select
                     name="rolEnEquipo"
                     value={formData.rolEnEquipo}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     disabled={!formData.equipoTactico}
                   >
                     <option value="">Seleccione un rol</option>
@@ -541,7 +665,7 @@ Revisa la consola del navegador para más detalles.
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Pistola
                   </label>
                   <input
@@ -549,13 +673,13 @@ Revisa la consola del navegador para más detalles.
                     name="pistola"
                     value={formData.pistola}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: GLOCK 17"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Fusil
                   </label>
                   <input
@@ -563,7 +687,7 @@ Revisa la consola del navegador para más detalles.
                     name="fusil"
                     value={formData.fusil}
                     onChange={handleInputChange}
-                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                     placeholder="EJ: AR15 BLACK RAIN"
                   />
                 </div>
@@ -571,7 +695,7 @@ Revisa la consola del navegador para más detalles.
 
               <button
                 onClick={handleGenerate}
-                className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
+                className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duration-200"
               >
                 Generar Carnet
               </button>
@@ -581,10 +705,10 @@ Revisa la consola del navegador para más detalles.
           {/* Vista previa y descarga */}
           <section className="bg-black/40 border border-tactical-border rounded-lg p-[10px] md:p-6 space-y-4">
             <div>
-              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em] mb-2">
+              <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em] mb-2">
                 Vista Previa
               </h2>
-              <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+              <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                 Visualiza las caras del carnet generado
               </p>
             </div>
@@ -594,7 +718,7 @@ Revisa la consola del navegador para más detalles.
 
                   {frontCardUrl && (
                     <div>
-                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.3em]">
+                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.05em]">
                         Cara Frontal
                       </h3>
                       <CarnetPreview
@@ -609,7 +733,7 @@ Revisa la consola del navegador para más detalles.
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(frontCardUrl, 'carnet-frontal.png')}
-                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
+                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duration-200"
                         >
                           Descargar
                         </button>
@@ -619,7 +743,7 @@ Revisa la consola del navegador para más detalles.
 
                   {backCardUrl && (
                     <div>
-                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.3em]">
+                      <h3 className="text-xs font-tactical text-tactical-gold mb-2 text-center uppercase tracking-[0.05em]">
                         Cara Trasera
                       </h3>
                       <CarnetPreview
@@ -634,7 +758,7 @@ Revisa la consola del navegador para más detalles.
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => downloadCard(backCardUrl, 'carnet-trasero.png')}
-                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200"
+                          className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duration-200"
                         >
                           Descargar
                         </button>
@@ -647,7 +771,7 @@ Revisa la consola del navegador para más detalles.
                       <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.35em] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.06em] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {saving ? 'Guardando...' : 'Guardar en Base de Datos'}
                       </button>
@@ -655,9 +779,9 @@ Revisa la consola del navegador para más detalles.
                   )}
 
                   {!frontCardUrl && !backCardUrl && (
-                    <div className="col-span-2 text-tactical-brass/60 text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8">
-                      <p className="text-sm mb-2 uppercase tracking-[0.3em]">Estado: Esperando entrada</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em]">Complete el formulario y haga clic en "Generar Carnet" para ver la vista previa</p>
+                    <div className="col-span-2 text-tactical-brass/90 text-center py-12 font-tactical border-2 border-dashed border-tactical-border rounded p-8">
+                      <p className="text-sm mb-2 uppercase tracking-[0.05em]">Estado: Esperando entrada</p>
+                      <p className="text-[10px] uppercase tracking-[0.05em]">Complete el formulario y haga clic en "Generar Carnet" para ver la vista previa</p>
                     </div>
                   )}
                 </div>

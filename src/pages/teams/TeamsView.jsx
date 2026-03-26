@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Modal from './Modal'
-import { getTeams, createTeam } from '../services/teamService'
-import { getAllUsers } from '../services/userService'
+import Modal from '../../components/ui/Modal'
+import { getTeams, createTeam } from '../../services/teamService'
+import { getAllUsers } from '../../services/userService'
 
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ function TeamsView() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center bg-tactical-dark">
-        <div className="text-tactical-gold font-tactical uppercase tracking-[0.4em]">
+        <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">
           Cargando equipos...
         </div>
       </div>
@@ -176,7 +176,7 @@ function TeamsView() {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center bg-tactical-dark text-center px-6">
-        <div className="text-red-500 font-tactical uppercase tracking-[0.4em]">
+        <div className="text-red-500 font-tactical uppercase tracking-[0.08em]">
           {error}
         </div>
       </div>
@@ -187,10 +187,10 @@ function TeamsView() {
     <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8 overflow-auto">
       <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
         <div>
-          <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+          <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
             Equipos registrados
           </h1>
-          <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em]">
+          <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
             Administración de escuadras y capitanes
           </p>
         </div>
@@ -208,7 +208,7 @@ function TeamsView() {
               setLogoPreview(null)
               setCreateModalOpen(true)
             }}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 md:px-6 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
           >
             Registrar equipo
           </button>
@@ -217,17 +217,17 @@ function TeamsView() {
 
       <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
         <header className="px-[10px] md:px-6 py-[10px] md:py-4 border-b border-tactical-border/60">
-          <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+          <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
             Tabla de equipos
           </h2>
-          <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+          <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
             Consulta la información principal de cada escuadra registrada
           </p>
         </header>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
-            <thead className="bg-black/60 text-tactical-brass/70">
+          <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass">
+            <thead className="bg-black/60 text-tactical-brass">
               <tr>
                 <th className="px-4 py-3 text-left">Logo</th>
                 <th className="px-4 py-3 text-left">Equipo</th>
@@ -241,7 +241,7 @@ function TeamsView() {
             <tbody className="divide-y divide-tactical-border/40">
               {teams.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-[10px] text-tactical-brass/60 tracking-[0.45em]">
+                  <td colSpan={7} className="px-4 py-6 text-center text-[10px] text-tactical-brass/90 tracking-[0.1em]">
                     Aún no se han registrado equipos.
                   </td>
                 </tr>
@@ -258,16 +258,16 @@ function TeamsView() {
                         {team.logo ? (
                           <img src={team.logo} alt={team.nombre} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-[9px] text-tactical-brass/50 tracking-[0.45em]">Sin logo</span>
+                          <span className="text-[9px] text-tactical-brass tracking-[0.1em]">Sin logo</span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-tactical-gold">{team.nombre}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{team.departamento || 'N/D'}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{team.ciudad || 'N/D'}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{team.departamento || 'N/D'}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{team.ciudad || 'N/D'}</td>
                     <td className="px-4 py-3 text-tactical-gold">{team.capitanNombre || 'N/D'}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{team.capitanContacto || 'N/D'}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{team.capitanCedula || 'N/D'}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{team.capitanContacto || 'N/D'}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{team.capitanCedula || 'N/D'}</td>
                   </tr>
                 ))
               )}
@@ -288,7 +288,7 @@ function TeamsView() {
             <>
               <button
                 onClick={() => !saving && setCreateModalOpen(false)}
-                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200"
+                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
                 type="button"
                 disabled={saving}
               >
@@ -296,7 +296,7 @@ function TeamsView() {
               </button>
               <button
                 onClick={handleCreateTeam}
-                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 type="button"
                 disabled={saving}
               >
@@ -307,14 +307,14 @@ function TeamsView() {
         >
           <form className="space-y-4" onSubmit={handleCreateTeam}>
             {formError && (
-              <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.4em]">
+              <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.08em]">
                 {formError}
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                   Nombre del equipo
                 </label>
                 <input
@@ -322,13 +322,13 @@ function TeamsView() {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                   placeholder="Ej: Escuadrón Centinela"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                   Departamento
                 </label>
                 <input
@@ -336,13 +336,13 @@ function TeamsView() {
                   name="departamento"
                   value={formData.departamento}
                   onChange={handleInputChange}
-                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                   placeholder="Ej: Valle del Cauca"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                   Ciudad
                 </label>
                 <input
@@ -350,20 +350,20 @@ function TeamsView() {
                   name="ciudad"
                   value={formData.ciudad}
                   onChange={handleInputChange}
-                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                   placeholder="Ej: Cali"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                   Logotipo del equipo
                 </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleLogoChange}
-                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
                 />
                 {logoPreview && (
                   <div className="mt-2 w-32 h-32 border border-tactical-border overflow-hidden">
@@ -373,7 +373,7 @@ function TeamsView() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-3">
+                <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-3">
                   Selecciona capitán del equipo
                 </label>
                 <input
@@ -381,11 +381,11 @@ function TeamsView() {
                   value={captainSearch}
                   onChange={(event) => setCaptainSearch(event.target.value)}
                   placeholder="Buscar por nombre o cédula"
-                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold mb-3"
+                  className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold mb-3"
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
                   {filteredCapitanOptions.length === 0 ? (
-                    <div className="col-span-2 text-[9px] text-center text-tactical-brass/60 tracking-[0.4em]">
+                    <div className="col-span-2 text-[9px] text-center text-tactical-brass/90 tracking-[0.08em]">
                       No se encontraron operadores con ese criterio.
                     </div>
                   ) : (
@@ -400,24 +400,24 @@ function TeamsView() {
                           className={`flex items-center gap-3 bg-black/60 border px-3 py-2 transition-all duration-200 text-left ${
                             isSelected
                               ? 'border-tactical-gold shadow-[0_0_18px_rgba(234,179,8,0.35)]'
-                              : 'border-tactical-border hover:border-tactical-gold/60'
+                              : 'border-tactical-border hover:border-tactical-gold'
                           }`}
                         >
                           <div className="w-12 h-12 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">
                             {option.foto ? (
                               <img src={option.foto} alt={option.nombre} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-[8px] text-tactical-brass/50 tracking-[0.45em]">Sin foto</span>
+                              <span className="text-[8px] text-tactical-brass tracking-[0.1em]">Sin foto</span>
                             )}
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs text-tactical-gold font-tactical uppercase tracking-[0.35em]">
+                            <p className="text-xs text-tactical-gold font-tactical uppercase tracking-[0.06em]">
                               {option.nombre}
                             </p>
-                            <p className="text-[9px] text-tactical-brass/70 font-tactical uppercase tracking-[0.4em]">
+                            <p className="text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.08em]">
                               Cédula: {option.cedula}
                             </p>
-                            <p className="text-[9px] text-tactical-brass/50 font-tactical uppercase tracking-[0.4em]">
+                            <p className="text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.08em]">
                               {option.contacto || 'Sin contacto'}
                             </p>
                           </div>
@@ -435,7 +435,7 @@ function TeamsView() {
             </div>
 
             {selectedCapitan && (
-              <div className="bg-black/40 border border-tactical-border px-4 py-3 text-[10px] text-tactical-brass/60 font-tactical uppercase tracking-[0.4em]">
+              <div className="bg-black/40 border border-tactical-border px-4 py-3 text-[10px] text-tactical-brass/90 font-tactical uppercase tracking-[0.08em]">
                 Capitán seleccionado: <span className="text-tactical-gold">{selectedCapitan.nombre}</span> — Cédula:{' '}
                 {selectedCapitan.cedula}
               </div>

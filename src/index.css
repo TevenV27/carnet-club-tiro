@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,25 +7,28 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --app-background: linear-gradient(145deg, #050505 0%, #020202 45%, #0a0a0a 100%);
-    --sidebar-bg: #0c0c0c;
-    --surface-bg: #050505;
-    --surface-hover-bg: #0b0d14;
-    --surface-active-bg: #12151c;
-    --surface-bg-rgb: 5 5 5;
-    --surface-hover-bg-rgb: 11 13 20;
-    --surface-active-bg-rgb: 18 21 28;
-    --sidebar-bg-rgb: 12 12 12;
-    --panel-gradient: linear-gradient(135deg, rgba(17, 17, 17, 0.95) 0%, rgba(8, 8, 8, 0.96) 45%, rgba(13, 12, 11, 0.98) 100%);
-    --surface-gradient: radial-gradient(ellipse at top left, #1a1a1a 0%, #0a0a0a 40%, #0f0f0f 70%, #050505 100%);
-    --login-overlay: linear-gradient(145deg, rgba(8, 8, 8, 0.9) 0%, rgba(2, 2, 2, 0.98) 45%, rgba(5, 5, 5, 0.92) 100%);
-    --login-grid-color: rgba(212, 175, 55, 0.18);
+    /* Fondos un poco más claros que el negro puro: el texto “desaparece” menos */
+    --app-background: linear-gradient(145deg, #0b0c10 0%, #060708 45%, #101118 100%);
+    --sidebar-bg: #121318;
+    --surface-bg: #0c0d11;
+    --surface-hover-bg: #161820;
+    --surface-active-bg: #1c2028;
+    --surface-bg-rgb: 12 13 17;
+    --surface-hover-bg-rgb: 22 24 32;
+    --surface-active-bg-rgb: 28 32 40;
+    --sidebar-bg-rgb: 18 19 24;
+    --panel-gradient: linear-gradient(135deg, rgba(28, 30, 36, 0.97) 0%, rgba(14, 15, 18, 0.98) 45%, rgba(18, 19, 22, 0.99) 100%);
+    --surface-gradient: radial-gradient(ellipse at top left, #24262e 0%, #14151a 38%, #121318 68%, #0c0d11 100%);
+    --login-overlay: linear-gradient(145deg, rgba(14, 15, 18, 0.92) 0%, rgba(8, 9, 11, 0.96) 45%, rgba(12, 13, 17, 0.94) 100%);
+    --login-grid-color: rgba(196, 148, 52, 0.38);
     --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
-    --color-text-primary: 226 226 226;
-    --color-text-secondary: 196 196 196;
-    --color-accent: 176 138 38;
-    --color-muted: 150 150 150;
-    --color-border: 42 42 42;
+    /* Texto: máximo contraste usable sin romper el look táctico */
+    --color-text-primary: 252 250 244;
+    --color-text-secondary: 236 232 218;
+    /* Dorado más profundo (menos “lavado”) — títulos y acentos */
+    --color-accent: 196 148 52;
+    --color-muted: 210 205 188;
+    --color-border: 72 70 64;
   }
 
   [data-theme='light'] {
@@ -44,7 +45,7 @@
     --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05' fill='%23606979'/%3E%3C/svg%3E");
     --color-text-primary: 43 48 56;
     --color-text-secondary: 94 100 112;
-    --color-accent: 168 132 36;
+    --color-accent: 168 124 28;
     --color-muted: 136 140 150;
     --color-border: 156 161 174;
     --surface-bg-rgb: 247 248 250;
@@ -55,8 +56,8 @@
 
   body {
     margin: 0;
-    font-family: 'Barlow Semi Condensed', 'Barlow Condensed', 'Red Hat Mono', 'Courier New', 'Monaco', monospace;
-    font-weight: 600;
+    font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: var(--app-background);
@@ -66,9 +67,10 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Barlow Semi Condensed', 'Barlow Condensed', 'Red Hat Mono', monospace;
+    font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;
   }
+
 }
 
 @layer utilities {
@@ -152,10 +154,10 @@ input[type="file"]::file-selector-button {
   border: 1px solid rgb(var(--color-border));
   padding: 4px 12px;
   margin-right: 12px;
-  font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -303,4 +305,11 @@ input:focus {
   right: -2px;
   border-left: none;
   border-top: none;
+}
+
+/* Por encima de utilidades Tailwind: texto de formulario legible (evita dorado apagado en inputs) */
+input:not([type='file']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+select,
+textarea {
+  color: rgb(var(--color-text-primary)) !important;
 }

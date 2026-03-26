@@ -45,7 +45,7 @@ function CarnetPreview({
                 <img src={src} alt={alt} className={`rounded ${imageClassName}`} style={imageStyle} />
             ) : (
                 <div
-                    className={`flex items-center justify-center text-center text-[10px] text-tactical-brass/50 font-tactical uppercase tracking-[0.4em] border border-dashed border-tactical-border ${placeholderClassName}`}
+                    className={`flex items-center justify-center text-center text-[10px] text-tactical-brass font-tactical uppercase tracking-[0.08em] border border-dashed border-tactical-border ${placeholderClassName}`}
                     style={placeholderStyle}
                 >
                     {placeholder}

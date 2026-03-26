@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLogDays } from '../services/logService'
+import { getLogDays } from '../../services/logService'
 
 function LogsView() {
     const [logDays, setLogDays] = useState([])
@@ -58,7 +58,7 @@ function LogsView() {
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-tactical-gold font-tactical uppercase tracking-widest">
+                <div className="text-tactical-gold font-tactical uppercase tracking-wide">
                     Cargando logs...
                 </div>
             </div>
@@ -68,7 +68,7 @@ function LogsView() {
     if (error) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
-                <div className="text-red-500 font-tactical uppercase tracking-widest">
+                <div className="text-red-500 font-tactical uppercase tracking-wide">
                     {error}
                 </div>
             </div>
@@ -81,10 +81,10 @@ function LogsView() {
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-1 bg-tactical-gold shadow-[0_0_20px_rgba(175,153,116,0.9)]" />
                     <div>
-                        <h1 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.3em] drop-shadow-md">
+                        <h1 className="text-3xl lg:text-4xl font-tactical text-tactical-gold uppercase tracking-[0.05em] drop-shadow-md">
                             Registro de Actividades
                         </h1>
-                        <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.4em] uppercase mt-2">
+                        <p className="text-xs lg:text-sm font-tactical text-tactical-brass opacity-80 tracking-[0.08em] uppercase mt-2">
                             Auditoría | Historial | Acceso Restringido
                         </p>
                     </div>
@@ -92,25 +92,25 @@ function LogsView() {
             </header>
 
             {logDays.length === 0 ? (
-                <div className="bg-black/40 border border-dashed border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.4em] text-tactical-brass/70">
+                <div className="bg-black/40 border border-dashed border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.08em] text-tactical-brass">
                     No hay registros de actividad aún.
                 </div>
             ) : (
                 <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden p-[10px] md:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+                            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
                                 Días con actividad
                             </h2>
-                            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+                            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
                                 Haz doble clic en una fila para ver los detalles del día
                             </p>
                         </div>
                     </div>
 
                     <div className="overflow-x-auto border border-tactical-border/40">
-                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass bg-black/40">
-                            <thead className="bg-black/60 text-tactical-brass/70">
+                        <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass bg-black/40">
+                            <thead className="bg-black/60 text-tactical-brass">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Fecha</th>
                                     <th className="px-4 py-3 text-left">Actividades</th>
@@ -128,16 +128,16 @@ function LogsView() {
                                             <div className="text-tactical-gold font-semibold">
                                                 {formatDate(day.dateKey)}
                                             </div>
-                                            <div className="text-[10px] text-tactical-brass/60 tracking-[0.3em] mt-1">
+                                            <div className="text-[10px] text-tactical-brass/90 tracking-[0.05em] mt-1">
                                                 {day.dateKey}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="inline-flex items-center px-3 py-1 border border-tactical-border/60 bg-tactical-gold/20 text-tactical-gold text-[10px] tracking-[0.3em]">
+                                            <span className="inline-flex items-center px-3 py-1 border border-tactical-border/60 bg-tactical-gold/20 text-tactical-gold text-[10px] tracking-[0.05em]">
                                                 {day.count} {day.count === 1 ? 'actividad' : 'actividades'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-tactical-brass/80">
+                                        <td className="px-4 py-3 text-tactical-brass">
                                             {day.lastActivity?.toDate
                                                 ? day.lastActivity.toDate().toLocaleTimeString('es-ES', {
                                                       hour: '2-digit',

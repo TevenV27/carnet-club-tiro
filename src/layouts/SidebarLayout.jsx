@@ -87,7 +87,7 @@ function SidebarLayout({ onSignOut }) {
             {mobileMenuOpen && (
                 <div className="md:hidden bg-sidebar border-b border-theme">
                     <details open className="border-t border-theme/40">
-                        <summary className="flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-theme-secondary cursor-pointer select-none">
+                        <summary className="flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-theme-secondary cursor-pointer select-none">
                             Módulos
                             <span className="text-theme-muted">▼</span>
                         </summary>
@@ -98,7 +98,7 @@ function SidebarLayout({ onSignOut }) {
                                         return (
                                             <li key={menu.id}>
                                                 <div className="space-y-1">
-                                                    <span className="block rounded px-4 py-2 font-tactical text-xs uppercase tracking-[0.3em] text-theme-secondary border border-dashed border-theme/40">
+                                                    <span className="block rounded px-4 py-2 font-tactical text-xs uppercase tracking-[0.05em] text-theme-secondary border border-dashed border-theme/40">
                                                         Gestión
                                                     </span>
                                                     <div className="ml-4 space-y-1">
@@ -106,10 +106,10 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/niveles"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                             onClick={() => {
@@ -123,10 +123,10 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/roles"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                             onClick={() => {
@@ -140,10 +140,10 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/especialidades"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                             onClick={() => {
@@ -157,10 +157,10 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/puntajes"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                             onClick={() => {
@@ -174,10 +174,10 @@ function SidebarLayout({ onSignOut }) {
                                                             to="/gestion/vigencias"
                                                             className={({ isActive }) =>
                                                                 [
-                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.25em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                                    'block rounded px-4 py-2 font-tactical text-[11px] uppercase tracking-[0.04em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                             onClick={() => {
@@ -199,10 +199,10 @@ function SidebarLayout({ onSignOut }) {
                                                 to={menu.path.startsWith('/') ? menu.path : `/${menu.path}`}
                                                 className={({ isActive }) =>
                                                     [
-                                                        'block rounded px-4 py-3 font-tactical text-xs uppercase tracking-[0.3em] transition-colors duración-150 border border-transparent text-theme-secondary',
+                                                        'block rounded px-4 py-3 font-tactical text-xs uppercase tracking-[0.05em] transition-colors duración-150 border border-transparent text-theme-secondary',
                                                         isActive
                                                             ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                     ].join(' ')
                                                 }
                                                 onClick={() => {
@@ -253,11 +253,11 @@ function SidebarLayout({ onSignOut }) {
                                                             'group flex items-center gap-2 w-full text-left rounded px-3 py-2 font-tactical text-xs uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                             isGestionActive
                                                                 ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                         ].join(' ')}
                                                     >
-                                                        <span className="h-6 w-[2px] rounded-full bg-tactical-gold/50 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
-                                                        <span className="flex-1 font-semibold tracking-[0.2em] text-[11px] whitespace-normal break-words">
+                                                        <span className="h-6 w-[2px] rounded-full bg-tactical-gold/70 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
+                                                        <span className="flex-1 font-semibold tracking-[0.03em] text-[11px] whitespace-normal break-words">
                                                             Gestión
                                                         </span>
                                                     </button>
@@ -274,12 +274,12 @@ function SidebarLayout({ onSignOut }) {
                                                                     'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                         >
-                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
-                                                            <span className="flex-1 tracking-[0.2em]">Niveles</span>
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/65" />
+                                                            <span className="flex-1 tracking-[0.03em]">Niveles</span>
                                                         </NavLink>
                                                         <NavLink
                                                             to="/gestion/roles"
@@ -288,12 +288,12 @@ function SidebarLayout({ onSignOut }) {
                                                                     'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                         >
-                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
-                                                            <span className="flex-1 tracking-[0.2em]">Roles</span>
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/65" />
+                                                            <span className="flex-1 tracking-[0.03em]">Roles</span>
                                                         </NavLink>
                                                         <NavLink
                                                             to="/gestion/especialidades"
@@ -302,12 +302,12 @@ function SidebarLayout({ onSignOut }) {
                                                                     'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                         >
-                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
-                                                            <span className="flex-1 tracking-[0.2em]">Especialidades</span>
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/65" />
+                                                            <span className="flex-1 tracking-[0.03em]">Especialidades</span>
                                                         </NavLink>
                                                         <NavLink
                                                             to="/gestion/puntajes"
@@ -316,12 +316,12 @@ function SidebarLayout({ onSignOut }) {
                                                                     'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                         >
-                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
-                                                            <span className="flex-1 tracking-[0.2em]">Puntajes</span>
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/65" />
+                                                            <span className="flex-1 tracking-[0.03em]">Puntajes</span>
                                                         </NavLink>
                                                         <NavLink
                                                             to="/gestion/vigencias"
@@ -330,12 +330,12 @@ function SidebarLayout({ onSignOut }) {
                                                                     'flex items-center gap-2 rounded px-3 py-1.5 font-tactical text-[10px] uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                                     isActive
                                                                         ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                                        : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                                 ].join(' ')
                                                             }
                                                         >
-                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/40" />
-                                                            <span className="flex-1 tracking-[0.2em]">Vigencias</span>
+                                                            <span className="h-4 w-[2px] rounded-full bg-tactical-gold/65" />
+                                                            <span className="flex-1 tracking-[0.03em]">Vigencias</span>
                                                         </NavLink>
                                                     </div>
                                                 </div>
@@ -352,13 +352,13 @@ function SidebarLayout({ onSignOut }) {
                                                         'group flex items-center gap-2 rounded px-3 py-2 font-tactical text-xs uppercase transition-colors duración-150 border border-transparent text-theme-secondary',
                                                         isActive
                                                             ? 'border-tactical-gold text-tactical-gold bg-surface-active'
-                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold/40'
+                                                            : 'hover:text-tactical-gold hover:bg-surface-hover hover:border-tactical-gold'
                                                     ].join(' ')
                                                 }
                                                 onClick={() => handleMenuClick(menu.path)}
                                             >
-                                                <span className="h-6 w-[2px] rounded-full bg-tactical-gold/50 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
-                                                <span className="flex-1 font-semibold tracking-[0.2em] text-[11px] whitespace-normal break-words">
+                                                <span className="h-6 w-[2px] rounded-full bg-tactical-gold/70 opacity-0 group-hover:opacity-100 transition-opacity duración-200" />
+                                                <span className="flex-1 font-semibold tracking-[0.03em] text-[11px] whitespace-normal break-words">
                                                     {menu.label}
                                                 </span>
                                             </NavLink>
@@ -376,7 +376,7 @@ function SidebarLayout({ onSignOut }) {
                         </div>
                         <button
                             onClick={onSignOut}
-                            className="w-full bg-transparent hover:bg-surface-hover text-theme-secondary hover:text-tactical-gold font-semibold py-2.5 px-4 border border-theme hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.25em] transition-colors duración-200"
+                            className="w-full bg-transparent hover:bg-surface-hover text-theme-secondary hover:text-tactical-gold font-semibold py-2.5 px-4 border border-theme hover:border-tactical-gold font-tactical text-xs uppercase tracking-[0.04em] transition-colors duración-200"
                         >
                             Cerrar sesión
                         </button>
@@ -393,7 +393,7 @@ function SidebarLayout({ onSignOut }) {
                     <div className="flex-1 overflow-y-auto bg-surface">
                         {loading ? (
                             <div className="h-full flex items-center justify-center">
-                                <div className="text-tactical-gold font-tactical uppercase tracking-[0.4em]">
+                                <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">
                                     Cargando menús...
                                 </div>
                             </div>

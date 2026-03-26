@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import Modal from './Modal'
-import { getTeamById, updateTeamInfo } from '../services/teamService'
-import { getAllUsers } from '../services/userService'
+import Modal from '../../components/ui/Modal'
+import { getTeamById, updateTeamInfo } from '../../services/teamService'
+import { getAllUsers } from '../../services/userService'
 
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -196,7 +196,7 @@ function TeamDetailView() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center bg-tactical-dark">
-        <div className="text-tactical-gold font-tactical uppercase tracking-[0.4em]">
+        <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">
           Cargando equipo...
         </div>
       </div>
@@ -206,12 +206,12 @@ function TeamDetailView() {
   if (error) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-tactical-dark gap-4 text-center px-6">
-        <div className="text-red-500 font-tactical uppercase tracking-[0.4em]">
+        <div className="text-red-500 font-tactical uppercase tracking-[0.08em]">
           {error}
         </div>
         <button
           onClick={() => navigate('/equipos')}
-          className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+          className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
         >
           Volver al listado de equipos
         </button>
@@ -231,17 +231,17 @@ function TeamDetailView() {
             {team.logo ? (
               <img src={team.logo} alt={team.nombre} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-[10px] text-tactical-brass/50 tracking-[0.45em]">Sin logo</span>
+              <span className="text-[10px] text-tactical-brass tracking-[0.1em]">Sin logo</span>
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+            <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
               {team.nombre}
             </h1>
-            <p className="text-xs font-tactical text-tactical-brass/70 uppercase tracking-[0.45em] mt-2">
+            <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em] mt-2">
               {team.departamento || 'Departamento N/D'} — {team.ciudad || 'Ciudad N/D'}
             </p>
-            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em] mt-1">
+            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em] mt-1">
               Capitán: <span className="text-tactical-gold">{team.capitanNombre || 'N/D'}</span> —{' '}
               Cédula: {team.capitanCedula || 'N/D'} — Celular: {team.capitanContacto || 'N/D'}
             </p>
@@ -250,13 +250,13 @@ function TeamDetailView() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleOpenEditModal}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
           >
             Editar equipo
           </button>
           <button
             onClick={() => navigate('/equipos')}
-            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+            className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
           >
             Volver al panel de equipos
           </button>
@@ -266,18 +266,18 @@ function TeamDetailView() {
       <section className="bg-black/35 border border-tactical-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden space-y-4 p-[10px] md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.4em]">
+            <h2 className="text-lg font-tactical text-tactical-gold uppercase tracking-[0.08em]">
               Miembros del equipo
             </h2>
-            <p className="text-[10px] font-tactical text-tactical-brass/60 uppercase tracking-[0.45em]">
+            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.1em]">
               Operadores registrados en la escuadra
             </p>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.35em] text-tactical-brass">
-            <thead className="bg-black/60 text-tactical-brass/70">
+          <table className="min-w-full divide-y divide-tactical-border/60 font-tactical text-[11px] uppercase tracking-[0.06em] text-tactical-brass">
+            <thead className="bg-black/60 text-tactical-brass">
               <tr>
                 <th className="px-4 py-3 text-left">Foto</th>
                 <th className="px-4 py-3 text-left">Operador</th>
@@ -289,7 +289,7 @@ function TeamDetailView() {
             <tbody className="divide-y divide-tactical-border/40">
               {miembrosConDatos.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-[10px] text-tactical-brass/60 tracking-[0.45em]">
+                  <td colSpan={5} className="px-4 py-6 text-center text-[10px] text-tactical-brass/90 tracking-[0.1em]">
                     Este equipo aún no tiene operadores asignados.
                   </td>
                 </tr>
@@ -306,14 +306,14 @@ function TeamDetailView() {
                         {miembro.foto ? (
                           <img src={miembro.foto} alt={miembro.nombre} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-[9px] text-tactical-brass/50 tracking-[0.45em]">Sin foto</span>
+                          <span className="text-[9px] text-tactical-brass tracking-[0.1em]">Sin foto</span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-tactical-gold">{miembro.nombre}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{miembro.cedula}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{miembro.contacto}</td>
-                    <td className="px-4 py-3 text-tactical-brass/70">{miembro.rol}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{miembro.cedula}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{miembro.contacto}</td>
+                    <td className="px-4 py-3 text-tactical-brass">{miembro.rol}</td>
                   </tr>
                 ))
               )}
@@ -334,7 +334,7 @@ function TeamDetailView() {
             <>
               <button
                 onClick={() => !saving && setEditModalOpen(false)}
-                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200"
+                className="bg-transparent hover:bg-tactical-gray text-tactical-brass font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200"
                 type="button"
                 disabled={saving}
               >
@@ -342,7 +342,7 @@ function TeamDetailView() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-wider transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 type="button"
                 disabled={saving}
               >
@@ -353,32 +353,32 @@ function TeamDetailView() {
         >
           <form className="space-y-4" onSubmit={handleSaveEdit}>
             {formError && (
-              <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.4em]">
+              <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.08em]">
                 {formError}
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-2">
+              <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                 Logotipo del equipo
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleLogoChange}
-                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold"
+                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
               />
               <div className="mt-3 w-32 h-32 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">
                 {logoPreview ? (
                   <img src={logoPreview} alt="Previsualización logo" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-[9px] text-tactical-brass/50 tracking-[0.45em]">Sin logo</span>
+                  <span className="text-[9px] text-tactical-brass tracking-[0.1em]">Sin logo</span>
                 )}
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] text-tactical-brass/60 uppercase tracking-[0.45em] mb-3">
+              <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-3">
                 Selecciona nuevo capitán
               </label>
               <input
@@ -386,11 +386,11 @@ function TeamDetailView() {
                 value={captainSearch}
                 onChange={(event) => setCaptainSearch(event.target.value)}
                 placeholder="Buscar por nombre o cédula"
-                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.3em] focus:outline-none focus:border-tactical-gold mb-3"
+                className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold mb-3"
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
                 {miembrosFiltrados.length === 0 ? (
-                  <div className="col-span-2 text-[9px] text-center text-tactical-brass/60 tracking-[0.4em]">
+                  <div className="col-span-2 text-[9px] text-center text-tactical-brass/90 tracking-[0.08em]">
                     No se encontraron operadores con ese criterio.
                   </div>
                 ) : (
@@ -405,24 +405,24 @@ function TeamDetailView() {
                         className={`flex items-center gap-3 bg-black/60 border px-3 py-2 transition-all duration-200 text-left ${
                           isSelected
                             ? 'border-tactical-gold shadow-[0_0_18px_rgba(234,179,8,0.35)]'
-                            : 'border-tactical-border hover:border-tactical-gold/60'
+                            : 'border-tactical-border hover:border-tactical-gold'
                         }`}
                       >
                         <div className="w-12 h-12 border border-tactical-border overflow-hidden bg-black flex items-center justify-center">
                           {miembro.foto ? (
                             <img src={miembro.foto} alt={miembro.nombre} className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-[8px] text-tactical-brass/50 tracking-[0.45em]">Sin foto</span>
+                            <span className="text-[8px] text-tactical-brass tracking-[0.1em]">Sin foto</span>
                           )}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-tactical-gold font-tactical uppercase tracking-[0.35em]">
+                          <p className="text-xs text-tactical-gold font-tactical uppercase tracking-[0.06em]">
                             {miembro.nombre}
                           </p>
-                          <p className="text-[9px] text-tactical-brass/70 font-tactical uppercase tracking-[0.4em]">
+                          <p className="text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.08em]">
                             Cédula: {miembro.cedula}
                           </p>
-                          <p className="text-[9px] text-tactical-brass/50 font-tactical uppercase tracking-[0.4em]">
+                          <p className="text-[9px] text-tactical-brass font-tactical uppercase tracking-[0.08em]">
                             {miembro.rol}
                           </p>
                         </div>
