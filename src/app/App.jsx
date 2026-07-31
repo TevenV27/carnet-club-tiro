@@ -18,6 +18,12 @@ import TournamentDetailView from '../pages/tournaments/TournamentDetailView'
 import RankingView from '../pages/ranking/RankingView'
 import GeneratorView from '../pages/carnets/GeneratorView'
 import EditCarnetView from '../pages/carnets/EditCarnetView'
+import CarnetsListView from '../pages/carnets/CarnetsListView'
+import TraumaticoGeneratorView from '../pages/carnets/TraumaticoGeneratorView'
+import TraumaticoCarnetsListView from '../pages/carnets/TraumaticoCarnetsListView'
+import EditTraumaticoCarnetView from '../pages/carnets/EditTraumaticoCarnetView'
+import TraumaticoTournamentsView from '../pages/tournaments/TraumaticoTournamentsView'
+import TraumaticoRankingView from '../pages/ranking/TraumaticoRankingView'
 import TeamDetailView from '../pages/teams/TeamDetailView'
 import RolesView from '../pages/management/RolesView'
 import LevelsView from '../pages/management/LevelsView'
@@ -76,6 +82,7 @@ function App() {
           <Route element={<AdminRoute />}>
             <Route path="usuarios" element={<UsersView />} />
             <Route path="usuarios/:cedula/editar-carnet" element={<EditCarnetView />} />
+            <Route path="usuarios/:cedula/editar-carnet-traumatico" element={<EditTraumaticoCarnetView />} />
             <Route path="usuarios/:cedula" element={<UserDetailView />} />
             <Route path="gestion/niveles" element={<LevelsView />} />
             <Route path="gestion/roles" element={<RolesView />} />
@@ -87,13 +94,19 @@ function App() {
             <Route path="buscar-carnet" element={<SearchCard />} />
             <Route path="administracion" element={<AdministracionView />} />
             <Route path="generador" element={<GeneratorView />} />
+            <Route path="carnets" element={<CarnetsListView />} />
+            <Route path="traumatico/generador" element={<TraumaticoGeneratorView />} />
+            <Route path="traumatico/carnets" element={<TraumaticoCarnetsListView />} />
           </Route>
 
           <Route path="equipos" element={<TeamsView />} />
           <Route path="equipos/:teamId" element={<TeamDetailView />} />
           <Route path="torneos" element={<TournamentsView />} />
           <Route path="torneos/:torneoId" element={<TournamentDetailView />} />
+          <Route path="traumatico/torneos" element={<TraumaticoTournamentsView />} />
+          <Route path="traumatico/torneos/:torneoId" element={<TournamentDetailView />} />
           <Route path="ranking" element={<RankingView />} />
+          <Route path="traumatico/ranking" element={<TraumaticoRankingView />} />
           <Route path="perfil" element={<ProfileView />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

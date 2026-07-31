@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllUsers, updateUserPoints } from '../../services/userService'
+import { getAllUsers, updateUserPoints, userHasTraumaticoCarnet } from '../../services/userService'
 import { useAuthProfile } from '../../context/AuthProfileContext'
+import { isActivo } from '../../utils/activoStatus'
 
 const getCedula = (user) => user.cedula || user.id
 
@@ -12,7 +13,11 @@ const formatNumber = (value) => {
     return new Intl.NumberFormat('es-ES').format(value)
 }
 
-function RankingView() {
+const getPoints = (user, tipo) =>
+    tipo === 'traumatico' ? (user.puntosTraumatico ?? 0) : (user.puntos ?? 0)
+
+function RankingView({ tipo = 'airsoft' }) {
+    const isTraumatico = tipo === 'traumatico'
     const { canEdit } = useAuthProfile()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -32,10 +37,14 @@ function RankingView() {
                     return
                 }
 
-                setUsers(data)
+                const filtered = isTraumatico
+                    ? data.filter((u) => userHasTraumaticoCarnet(u) && isActivo(u))
+                    : data.filter(isActivo)
+
+                setUsers(filtered)
                 const draft = {}
-                data.forEach((user) => {
-                    draft[getCedula(user)] = user.puntos ?? 0
+                filtered.forEach((user) => {
+                    draft[getCedula(user)] = getPoints(user, tipo)
                 })
                 setPointsDraft(draft)
             } catch (err) {
@@ -55,12 +64,12 @@ function RankingView() {
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [tipo, isTraumatico])
 
     const sortedUsers = useMemo(() => {
         return [...users].sort((a, b) => {
-            const puntosA = a.puntos ?? 0
-            const puntosB = b.puntos ?? 0
+            const puntosA = getPoints(a, tipo)
+            const puntosB = getPoints(b, tipo)
             if (puntosA === puntosB) {
                 const nombreA = (a.nombre || '').toLowerCase()
                 const nombreB = (b.nombre || '').toLowerCase()
@@ -68,7 +77,7 @@ function RankingView() {
             }
             return puntosB - puntosA
         })
-    }, [users])
+    }, [users, tipo])
 
     const topOperators = useMemo(() => sortedUsers.slice(0, 3), [sortedUsers])
 
@@ -91,10 +100,17 @@ function RankingView() {
 
         try {
             setSaving(cedula)
-            await updateUserPoints(cedula, newPoints)
+            await updateUserPoints(cedula, newPoints, tipo)
             setUsers((prev) =>
                 prev.map((item) =>
-                    getCedula(item) === cedula ? { ...item, puntos: newPoints } : item
+                    getCedula(item) === cedula
+                        ? {
+                            ...item,
+                            ...(isTraumatico
+                                ? { puntosTraumatico: newPoints }
+                                : { puntos: newPoints })
+                        }
+                        : item
                 )
             )
         } catch (err) {
@@ -129,10 +145,12 @@ function RankingView() {
         <div className="p-[10px] md:p-8 bg-tactical-dark min-h-full h-full text-tactical-brass space-y-8">
             <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
-                    Ranking de Operadores
+                    {isTraumatico ? 'Ranking traumático' : 'Ranking de Operadores'}
                 </h1>
                 <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
-                    Clasificación dinámica basada en puntos tácticos
+                    {isTraumatico
+                        ? 'Solo operadores con carnet traumático · puntos separados del airsoft'
+                        : 'Clasificación dinámica basada en puntos tácticos'}
                 </p>
             </header>
 
@@ -177,7 +195,7 @@ function RankingView() {
                                 </div>
                                 <div className="flex items-center justify-between font-tactical uppercase tracking-[0.08em]">
                                     <span className="text-[10px] sm:text-[11px] text-tactical-brass/90">Puntos</span>
-                                    <span className="text-base sm:text-lg text-tactical-gold">{formatNumber(operator.puntos ?? 0)}</span>
+                                    <span className="text-base sm:text-lg text-tactical-gold">{formatNumber(getPoints(operator, tipo))}</span>
                                 </div>
                             </div>
                         ))}
@@ -250,7 +268,7 @@ function RankingView() {
                                             <td className="px-4 py-3 text-tactical-brass text-[10px]">
                                                 {user.nivel || 'Operador'}
                                             </td>
-                                            <td className="px-4 py-3 text-tactical-gold">{formatNumber(user.puntos ?? 0)}</td>
+                                            <td className="px-4 py-3 text-tactical-gold">{formatNumber(getPoints(user, tipo))}</td>
                                             {canEdit ? (
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-3">

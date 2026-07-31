@@ -71,7 +71,7 @@ service cloud.firestore {
 **Usuario:** `clubtirovalle2025@campo-tiro-valle.com` (o el email que hayas usado al crear el usuario)  
 **Contraseña:** `cobateairsoft2025`
 
-**NOTA:** Si usaste un email diferente al crear el usuario, actualiza el valor en `src/components/Login.jsx` o simplemente usa el email que creaste al iniciar sesión.
+**NOTA:** Si usaste un email diferente al crear el usuario, actualiza el valor en `src/pages/auth/Login.jsx` o simplemente usa el email que creaste al iniciar sesión.
 
 ## Nota Importante sobre Storage
 

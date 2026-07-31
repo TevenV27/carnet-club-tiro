@@ -1,12 +1,11 @@
 import { useOutletContext } from 'react-router-dom'
 import CreateCard from './CreateCard'
 
-function GeneratorView() {
+function TraumaticoGeneratorView() {
   const outletContext = useOutletContext()
   const onSignOut = outletContext?.onSignOut
 
-  return <CreateCard onSignOut={onSignOut} variant="airsoft" />
+  return <CreateCard onSignOut={onSignOut} variant="traumatico" />
 }
 
-export default GeneratorView
-
+export default TraumaticoGeneratorView

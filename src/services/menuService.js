@@ -7,46 +7,16 @@ import {
 } from 'firebase/firestore'
 
 const DEFAULT_MENUS = [
-    {
-        id: 'usuarios',
-        label: 'Usuarios',
-        path: 'usuarios'
-    },
-    {
-        id: 'equipos',
-        label: 'Equipos',
-        path: 'equipos'
-    },
-    {
-        id: 'torneos',
-        label: 'Torneos',
-        path: 'torneos'
-    },
-    {
-        id: 'ranking',
-        label: 'Ranking',
-        path: 'ranking'
-    },
-    {
-        id: 'gestion',
-        label: 'Gestión',
-        path: 'gestion/niveles'
-    },
-    {
-        id: 'generador',
-        label: 'Generador de Carnets',
-        path: 'generador'
-    },
-    {
-        id: 'logs',
-        label: 'Logs',
-        path: 'logs'
-    },
-    {
-        id: 'perfil',
-        label: 'Mi perfil',
-        path: 'perfil'
-    }
+    { id: 'usuarios', label: 'Usuarios', path: 'usuarios' },
+    { id: 'equipos', label: 'Equipos', path: 'equipos' },
+    { id: 'torneos', label: 'Torneos', path: 'torneos' },
+    { id: 'ranking', label: 'Ranking', path: 'ranking' },
+    { id: 'generador', label: 'Generador', path: 'generador' },
+    { id: 'carnets', label: 'Carnets', path: 'carnets' },
+    { id: 'gestion', label: 'Catálogos Airsoft', path: 'gestion/niveles' },
+    { id: 'traumatico', label: 'Traumático', path: 'traumatico/generador' },
+    { id: 'logs', label: 'Logs', path: 'logs' },
+    { id: 'perfil', label: 'Mi perfil', path: 'perfil' }
 ]
 
 export const getMenus = async () => {

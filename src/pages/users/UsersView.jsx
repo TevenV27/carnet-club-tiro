@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAllUsers } from '../../services/userService'
+import InactiveBanner from '../../components/ui/InactiveBanner'
+import { isActivo } from '../../utils/activoStatus'
 
 const formatTimestamp = (value) => {
     if (!value) {
@@ -112,7 +114,7 @@ function UsersView() {
                             Buscar operadores por nombre o cédula
                         </p>
                         <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.12em] mt-1">
-                            {filteredUsers.length} resultados activos
+                            {filteredUsers.length} resultados
                         </p>
                     </div>
                     <div className="flex items-center gap-2 bg-black/60 border border-tactical-border px-3 py-2 rounded-md w-full lg:w-96 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
@@ -140,11 +142,14 @@ function UsersView() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {filteredUsers.map((user) => {
                         const cedula = user.cedula || user.id
+                        const active = isActivo(user)
 
                         return (
                             <article
                                 key={user.id}
-                                className="relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border border-tactical-border px-2.5 py-2.5 sm:px-[10px] sm:py-[10px] md:px-6 md:py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-0"
+                                className={`relative bg-[radial-gradient(circle_at_top,_#1c1c1c_0%,_#080808_70%)] border px-2.5 py-2.5 sm:px-[10px] sm:py-[10px] md:px-6 md:py-7 rounded-lg overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-200 cursor-pointer select-none min-w-0 ${
+                                    active ? 'border-tactical-border' : 'border-red-500/70'
+                                }`}
                                 onDoubleClick={() => navigate(`/usuarios/${encodeURIComponent(cedula)}`)}
                                 title="Doble clic para ver el informe completo"
                             >
@@ -152,14 +157,20 @@ function UsersView() {
                                     <div className="absolute inset-0 border border-tactical-border/60 rounded-lg" />
                                     <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-black/15" />
                                     <div className="absolute -top-1 -left-1 w-24 h-24 border border-tactical-border/20 rounded-full blur-lg" />
-                                    <div className="absolute top-5 right-5 text-[10px] font-tactical uppercase tracking-[0.05em] text-tactical-brass bg-black/70 px-3 py-1 border border-tactical-border/40 rounded-full">
-                                        {user.nivel || 'Operador'}
+                                    <div className="absolute top-5 right-5 flex flex-col items-end gap-1 z-20">
+                                        {!active ? (
+                                            <InactiveBanner compact title="INACTIVO" />
+                                        ) : (
+                                            <div className="text-[10px] font-tactical uppercase tracking-[0.05em] text-tactical-brass bg-black/70 px-3 py-1 border border-tactical-border/40 rounded-full">
+                                                {user.nivel || 'Operador'}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/80 to-transparent" />
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-transparent via-tactical-border/30 to-transparent opacity-40" />
                                 </div>
 
-                                <div className="grid grid-cols-[auto,_1fr] gap-3 sm:gap-5 relative z-10 items-start">
+                                <div className={`grid grid-cols-[auto,_1fr] gap-3 sm:gap-5 relative z-10 items-start ${!active ? 'opacity-55 grayscale' : ''}`}>
                                     <div className="relative">
                                         <div className="absolute -top-2 -left-2 w-7 h-7 border-tactical-gold border-t-2 border-l-2 opacity-60" />
                                         <div className="absolute -bottom-2 -right-2 w-10 h-10 border-tactical-border/70 border-b-2 border-r-2 opacity-60" />
@@ -218,7 +229,9 @@ function UsersView() {
 
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[9px] sm:text-[10px] tracking-[0.14em] text-tactical-brass/90 gap-2">
                                             <span className="break-words">Actualizado {formatTimestamp(user.updatedAt)}</span>
-                                            <span className="text-tactical-gold whitespace-nowrap">Status: Verificado</span>
+                                            <span className={active ? 'text-tactical-gold whitespace-nowrap' : 'text-red-400 whitespace-nowrap font-bold'}>
+                                                Status: {active ? 'Verificado' : 'INACTIVO'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

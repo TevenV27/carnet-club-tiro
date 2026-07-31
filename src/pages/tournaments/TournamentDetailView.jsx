@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
     addActivityToTournament,
     addTournamentEvidence,
@@ -34,7 +34,11 @@ const calculateTotal = (scores = {}) =>
 function TournamentDetailView() {
     const { torneoId } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const { canEdit } = useAuthProfile()
+    const listPath = location.pathname.startsWith('/traumatico/')
+        ? '/traumatico/torneos'
+        : '/torneos'
 
     const [tournament, setTournament] = useState(null)
     const [scores, setScores] = useState({})
@@ -336,7 +340,9 @@ function TournamentDetailView() {
 
         const confirmationMessage =
             nextStatus === 'finalizado'
-                ? '¿Deseas marcar este torneo como FINALIZADO? Esto asignará puntos al ranking general según las posiciones.'
+                ? tournament?.tipo === 'traumatico'
+                    ? '¿Deseas marcar este torneo como FINALIZADO? Se asignarán puntos al ranking traumático.'
+                    : '¿Deseas marcar este torneo como FINALIZADO? Esto asignará puntos al ranking general según las posiciones.'
                 : '¿Deseas CANCELAR este torneo?'
 
         const confirmed = window.confirm(confirmationMessage)
@@ -392,10 +398,11 @@ function TournamentDetailView() {
                     pointsToAssign[participant.cedula] = scoresConfig.noAsistencia
                 })
 
-                // Aplicar puntos al ranking general
+                // Aplicar puntos al ranking correspondiente (airsoft o traumático)
+                const rankingTipo = tournament.tipo === 'traumatico' ? 'traumatico' : 'airsoft'
                 await Promise.all(
                     Object.entries(pointsToAssign).map(([cedula, points]) =>
-                        incrementUserPoints(cedula, points)
+                        incrementUserPoints(cedula, points, rankingTipo)
                     )
                 )
 
@@ -432,7 +439,7 @@ function TournamentDetailView() {
                     {error}
                 </div>
                 <button
-                    onClick={() => navigate('/torneos')}
+                    onClick={() => navigate(listPath)}
                     className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transition-all duración-200"
                 >
                     Volver al listado de torneos
@@ -482,7 +489,7 @@ function TournamentDetailView() {
                         </>
                     )}
                     <button
-                        onClick={() => navigate('/torneos')}
+                        onClick={() => navigate(listPath)}
                         className="bg-transparent hover:bg-tactical-gray text-tactical-gold font-semibold py-2 px-4 border border-tactical-border hover:border-tactical-gold font-tactical text-xs uppercase tracking-normal transición-all duración-200"
                     >
                         Volver al panel

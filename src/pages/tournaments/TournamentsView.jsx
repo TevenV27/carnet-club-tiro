@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllUsers } from '../../services/userService'
+import { getAllUsers, userHasTraumaticoCarnet } from '../../services/userService'
 import {
     createTournament,
     getTournaments
 } from '../../services/tournamentService'
 import Modal from '../../components/ui/Modal'
 import { useAuthProfile } from '../../context/AuthProfileContext'
+import { isActivo } from '../../utils/activoStatus'
 
 const formatDate = (timestamp) => {
     if (!timestamp) {
@@ -24,7 +25,9 @@ const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function TournamentsView() {
+function TournamentsView({ tipo = 'airsoft' }) {
+    const isTraumatico = tipo === 'traumatico'
+    const basePath = isTraumatico ? '/traumatico/torneos' : '/torneos'
     const { canEdit } = useAuthProfile()
     const [tournaments, setTournaments] = useState([])
     const [users, setUsers] = useState([])
@@ -49,7 +52,7 @@ function TournamentsView() {
             try {
                 setLoading(true)
                 const [tournamentsData, usersData] = await Promise.all([
-                    getTournaments(),
+                    getTournaments(tipo),
                     getAllUsers()
                 ])
 
@@ -58,7 +61,10 @@ function TournamentsView() {
                 }
 
                 setTournaments(tournamentsData)
-                setUsers(usersData)
+                const eligible = isTraumatico
+                    ? usersData.filter((u) => userHasTraumaticoCarnet(u) && isActivo(u))
+                    : usersData.filter(isActivo)
+                setUsers(eligible)
             } catch (err) {
                 console.error('Error cargando torneos:', err)
                 if (isMounted) {
@@ -76,7 +82,7 @@ function TournamentsView() {
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [tipo, isTraumatico])
 
     const activos = useMemo(
         () => tournaments.filter((torneo) => torneo.estado === 'activo'),
@@ -150,6 +156,7 @@ function TournamentsView() {
             const nuevoTorneo = await createTournament({
                 nombre: formData.nombre.trim(),
                 fechaInicio: formData.fechaInicio,
+                tipo,
                 participantes: selectedParticipants.map((participant) => ({
                     cedula: participant.cedula || participant.id,
                     nombre: participant.nombre || 'Operador',
@@ -192,7 +199,7 @@ function TournamentsView() {
         return (
             <article
                 key={torneo.id}
-                onDoubleClick={() => navigate(`/torneos/${torneo.id}`)}
+                onDoubleClick={() => navigate(`${basePath}/${torneo.id}`)}
                 className="relative border border-theme bg-surface px-[10px] md:px-6 py-[10px] md:py-5 rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.6)] transition-transform duration-200 cursor-pointer select-none hover:-translate-y-1"
                 title="Doble clic para ver detalles del torneo"
             >
@@ -264,8 +271,13 @@ function TournamentsView() {
             <header className="border border-tactical-border bg-black/40 backdrop-blur-sm p-[10px] md:p-6 shadow-[0_0_25px_rgba(0,0,0,0.6)] space-y-4">
                 <div>
                     <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
-                        Centro de Torneos
+                        {isTraumatico ? 'Torneos traumáticos' : 'Centro de Torneos'}
                     </h1>
+                    <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em] mt-2">
+                        {isTraumatico
+                            ? 'Solo operadores con carnet traumático (CTV-T)'
+                            : 'Operaciones airsoft'}
+                    </p>
                     <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
                         Gestiona competiciones, participantes y puntuaciones tácticas
                     </p>
@@ -323,7 +335,7 @@ function TournamentsView() {
 
             {canEdit && isCreateModalOpen && (
                 <Modal
-                    title="Crear nuevo torneo"
+                    title={isTraumatico ? 'Crear torneo traumático' : 'Crear nuevo torneo'}
                     onClose={() => {
                         if (!saving) {
                             setIsCreateModalOpen(false)
@@ -355,6 +367,12 @@ function TournamentsView() {
                             <div className="bg-red-900/60 border border-red-700 text-red-200 px-4 py-3 text-sm font-tactical uppercase tracking-[0.08em]">
                                 {formError}
                             </div>
+                        )}
+
+                        {isTraumatico && (
+                            <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.08em]">
+                                Solo aparecen operadores con carnet traumático (CTV-T). Los puntos van al ranking traumático.
+                            </p>
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,7 +424,14 @@ function TournamentsView() {
                                         Operadores disponibles ({filteredUsers.length})
                                     </div>
                                     <div className="max-h-72 overflow-y-auto divide-y divide-tactical-border/30">
-                                        {filteredUsers.map((user) => {
+                                        {filteredUsers.length === 0 ? (
+                                            <div className="px-3 py-4 text-center text-[10px] text-tactical-brass/75 uppercase tracking-[0.08em]">
+                                                {isTraumatico
+                                                    ? 'No hay operadores con carnet traumático'
+                                                    : 'No hay operadores disponibles'}
+                                            </div>
+                                        ) : (
+                                        filteredUsers.map((user) => {
                                             const cedula = user.cedula || user.id
                                             const alreadySelected = selectedParticipants.some(
                                                 (participant) => participant.cedula === cedula
@@ -445,7 +470,8 @@ function TournamentsView() {
                                                     </button>
                                                 </div>
                                             )
-                                        })}
+                                        })
+                                        )}
                                     </div>
                                 </div>
 

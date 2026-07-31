@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { searchCardByCedula } from '../../services/cardService'
+import { getUserByCedula } from '../../services/userService'
+import { CARD_WIDTH, CARD_HEIGHT } from '../../utils/cardGenerator'
 import { useNavigate } from 'react-router-dom'
+import InactiveBanner from '../../components/ui/InactiveBanner'
+import { isActivo } from '../../utils/activoStatus'
 
 function SearchCard() {
     const [cedula, setCedula] = useState('')
     const [card, setCard] = useState(null)
+    const [operator, setOperator] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
@@ -19,17 +24,22 @@ function SearchCard() {
         setLoading(true)
         setError('')
         setCard(null)
+        setOperator(null)
 
         try {
-            const foundCard = await searchCardByCedula(cedula.trim())
+            const trimmed = cedula.trim()
+            const [foundCard, userData] = await Promise.all([
+                searchCardByCedula(trimmed),
+                getUserByCedula(trimmed)
+            ])
             if (foundCard) {
-                // Convertir base64 a URLs si es necesario
                 const cardWithUrls = {
                     ...foundCard,
                     frontCardUrl: foundCard.frontCardBase64 || foundCard.frontCardUrl,
                     backCardUrl: foundCard.backCardBase64 || foundCard.backCardUrl
                 }
                 setCard(cardWithUrls)
+                setOperator(userData)
             } else {
                 setError('No se encontró ningún carnet con esa cédula')
             }
@@ -167,10 +177,21 @@ function SearchCard() {
                 </div>
 
                 {/* Resultado de búsqueda */}
-                {card && (
+                {card && (() => {
+                    const operatorActive = isActivo(operator)
+                    const carnetActive = isActivo(card)
+                    const showInactive = !operatorActive || !carnetActive
+                    const inactiveTitle = !operatorActive ? 'OPERADOR INACTIVO' : 'CARNET INACTIVO'
+                    const inactiveMessage = !operatorActive
+                        ? 'Este operador está desactivado. La credencial no es válida.'
+                        : 'Este carnet está desactivado y no debe considerarse vigente.'
+
+                    return (
                     <div className="hud-border p-1">
                         <div className="bg-black p-4" style={{
-                            background: 'linear-gradient(135deg, rgba(20, 15, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
+                            background: showInactive
+                                ? 'linear-gradient(135deg, rgba(60, 10, 10, 0.95) 0%, rgba(0, 0, 0, 0.95) 100%)'
+                                : 'linear-gradient(135deg, rgba(20, 15, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
                             boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.8)',
                             paddingRight: '12px'
                         }}>
@@ -183,10 +204,16 @@ function SearchCard() {
                                 &gt; RESULTADO DE BÚSQUEDA
                             </h2>
 
-                            <div className="mb-3 p-3 bg-tactical-gray border border-tactical-border">
+                            {showInactive && (
+                                <div className="mb-3">
+                                    <InactiveBanner title={inactiveTitle} message={inactiveMessage} />
+                                </div>
+                            )}
+
+                            <div className={`mb-3 p-3 bg-tactical-gray border ${showInactive ? 'border-red-500' : 'border-tactical-border'} ${showInactive ? 'opacity-70' : ''}`}>
                                 <h3 className="text-sm font-medium text-tactical-gold mb-2 font-tactical uppercase tracking-normal"
                                     style={{ textShadow: 'none' }}>
-                                    &gt; INFORMACIÓN DEL MIEMBRO
+                                    &gt; INFORMACIÓN DEL MIEMBRO{showInactive ? ' — INACTIVO' : ''}
                                 </h3>
                                 <div className="grid grid-cols-2 gap-2 text-tactical-brass font-tactical text-xs">
                                     <div>
@@ -216,7 +243,7 @@ function SearchCard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid grid-cols-2 gap-4 ${showInactive ? 'grayscale opacity-45' : ''}`}>
                                 {/* Cara Frontal */}
                                 <div>
                                     <h3 className="text-sm font-medium text-tactical-brass mb-2 font-tactical text-center uppercase tracking-normal opacity-80"
@@ -238,7 +265,7 @@ function SearchCard() {
                                                 width: '100%',
                                                 maxWidth: '200px',
                                                 height: 'auto',
-                                                aspectRatio: '650/1004',
+                                                aspectRatio: `${CARD_WIDTH}/${CARD_HEIGHT}`,
                                                 objectFit: 'contain',
                                                 display: 'block',
                                                 boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
@@ -272,7 +299,7 @@ function SearchCard() {
                                                 width: '100%',
                                                 maxWidth: '200px',
                                                 height: 'auto',
-                                                aspectRatio: '650/1004',
+                                                aspectRatio: `${CARD_WIDTH}/${CARD_HEIGHT}`,
                                                 objectFit: 'contain',
                                                 display: 'block',
                                                 boxShadow: '0 4px 15px rgba(0, 0, 0, 0.8)',
@@ -287,7 +314,8 @@ function SearchCard() {
                             </div>
                         </div>
                     </div>
-                )}
+                    )
+                })()}
             </div>
         </div>
     )

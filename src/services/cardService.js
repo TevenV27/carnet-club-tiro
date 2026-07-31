@@ -164,9 +164,24 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         console.log('Usuario ID:', userId)
         console.log('Cédula:', cardData.cedula)
 
-        // Verificar si ya existe un carnet con esta cédula
+        const tipoCarnet = cardData.tipoCarnet === 'traumatico' ? 'traumatico' : 'airsoft'
+        cardDoc.tipoCarnet = tipoCarnet
+        if (tipoCarnet === 'traumatico') {
+            cardDoc.disciplina = cardData.disciplina || 'BAJA LETALIDAD'
+            cardDoc.tipo = cardData.tipo || 'TRAUMÁTICA'
+        } else if (!cardDoc.disciplina) {
+            cardDoc.disciplina = 'AIRSOFT'
+        }
+
+        // Verificar si ya existe un carnet del mismo tipo con esta cédula
         const q = query(collection(db, 'carnets'), where('cedula', '==', cardData.cedula))
         const querySnapshot = await getDocs(q)
+        const existingSameTipo = querySnapshot.docs.find((d) => {
+            const t = d.data()?.tipoCarnet
+            if (tipoCarnet === 'traumatico') return t === 'traumatico'
+            // airsoft: docs sin tipo (legado) o explícitos
+            return !t || t === 'airsoft'
+        })
 
         const usuarioRef = doc(db, 'usuarios', cardData.cedula)
         const usuarioAntes = await getDoc(usuarioRef)
@@ -180,8 +195,8 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         const userEmailNorm = usuarioAntes.exists() && usuarioAntes.data()?.email
             ? String(usuarioAntes.data().email).trim().toLowerCase()
             : ''
-        const carnetEmailNorm = !querySnapshot.empty && querySnapshot.docs[0].data()?.email
-            ? String(querySnapshot.docs[0].data().email).trim().toLowerCase()
+        const carnetEmailNorm = existingSameTipo?.data()?.email
+            ? String(existingSameTipo.data().email).trim().toLowerCase()
             : ''
         // Mismo orden que CreateCard al cargar: email del carnet, si no el de usuarios
         const priorEmailNorm = carnetEmailNorm || userEmailNorm
@@ -234,44 +249,47 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         let resultDoc
         let cardId
         const baseUserData = {
-            ...restCardData
+            ...restCardData,
+            tipoCarnet,
+            disciplina: cardDoc.disciplina,
+            ...(tipoCarnet === 'traumatico' ? { tipo: cardDoc.tipo } : {})
         }
 
-        if (!querySnapshot.empty) {
-            // Si ya existe, actualizar el documento existente
-            const existingDoc = querySnapshot.docs[0]
+        if (existingSameTipo) {
+            // Si ya existe del mismo tipo, actualizar
+            const existingDoc = existingSameTipo
             docRef = doc(db, 'carnets', existingDoc.id)
 
-            // Mantener el createdAt original y actualizar updatedAt
             const existingData = existingDoc.data()
             const incomingNum = String(cardData.numeroMembresia ?? '').trim()
+            // No pisar el estado activo/inactivo al regenerar el carnet
+            const { activo: _incomingActivo, ...cardDocWithoutActivo } = cardDoc
             const updatedDoc = {
-                ...cardDoc,
-                createdAt: existingData.createdAt || new Date(), // Mantener la fecha original
-                updatedAt: new Date(), // Actualizar la fecha de modificación
-                // No regenerar CTV al actualizar: si el cliente manda vacío, conservar el guardado
+                ...cardDocWithoutActivo,
+                createdAt: existingData.createdAt || new Date(),
+                updatedAt: new Date(),
+                activo: existingData.activo !== false,
                 numeroMembresia: incomingNum || existingData.numeroMembresia || cardDoc.numeroMembresia
             }
 
             await updateDoc(docRef, updatedDoc)
             
-            // Registrar log
             await logAction(
                 'actualizar',
                 'carnets',
                 existingDoc.id,
-                `Carnet actualizado: ${cardData.numeroMembresia || cardData.cedula}`,
-                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia }
+                `Carnet ${tipoCarnet} actualizado: ${cardData.numeroMembresia || cardData.cedula}`,
+                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia, tipoCarnet }
             )
             
             console.log('Carnet actualizado exitosamente. ID:', existingDoc.id, '(ya existía con esta cédula)')
             resultDoc = updatedDoc
             cardId = existingDoc.id
         } else {
-            // Si no existe, crear un nuevo documento
-            console.log('No se encontró carnet existente, creando nuevo...')
+            console.log('No se encontró carnet existente del mismo tipo, creando nuevo...')
             console.log('Datos a guardar (sin imágenes):', {
                 ...restCardData,
+                tipoCarnet,
                 userId,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -280,19 +298,19 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
                 foto: fotoBase64 ? `[Base64 string de ${fotoBase64.length} caracteres]` : null
             })
 
-            docRef = await addDoc(collection(db, 'carnets'), cardDoc)
+            const newCardDoc = { ...cardDoc, activo: true }
+            docRef = await addDoc(collection(db, 'carnets'), newCardDoc)
             
-            // Registrar log
             await logAction(
                 'crear',
                 'carnets',
                 docRef.id,
-                `Carnet creado: ${cardData.numeroMembresia || cardData.cedula}`,
-                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia }
+                `Carnet ${tipoCarnet} creado: ${cardData.numeroMembresia || cardData.cedula}`,
+                { cedula: cardData.cedula, numeroMembresia: cardData.numeroMembresia, tipoCarnet }
             )
             
             console.log('Documento creado exitosamente con ID:', docRef.id, '(nuevo carnet)')
-            resultDoc = cardDoc
+            resultDoc = newCardDoc
             cardId = docRef.id
         }
 
@@ -338,7 +356,7 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
         return {
             id: cardId,
             ...resultDoc,
-            _wasUpdated: !querySnapshot.empty,
+            _wasUpdated: Boolean(existingSameTipo),
             _userRecordCreated: userSyncResult?.created ?? null,
             _authCreation: authCreation,
             _authSkippedAlreadyLinked: yaTieneAuth,
@@ -350,20 +368,46 @@ export const saveCard = async (cardData, frontCardBlob, backCardBlob, userId) =>
     }
 }
 
-// Buscar carnet por cédula
-export const searchCardByCedula = async (cedula) => {
-    try {
-        const q = query(collection(db, 'carnets'), where('cedula', '==', cedula))
-        const querySnapshot = await getDocs(q)
+// Buscar carnet por cédula (opcionalmente filtrado por tipo)
+export const searchCardByCedula = async (cedula, tipoCarnet = null) => {
+    const cards = await searchCardsByCedula(cedula)
+    if (!cards.length) return null
 
-        if (querySnapshot.empty) {
-            return null
+    if (tipoCarnet === 'traumatico') {
+        return cards.find((c) => c.tipoCarnet === 'traumatico') || null
+    }
+    if (tipoCarnet === 'airsoft') {
+        return cards.find((c) => !c.tipoCarnet || c.tipoCarnet === 'airsoft') || null
+    }
+    return cards[0]
+}
+
+/** Todos los carnets de una cédula (prueba string y número por datos legacy). */
+export const searchCardsByCedula = async (cedula) => {
+    try {
+        if (cedula === null || cedula === undefined || cedula === '') {
+            return []
         }
 
-        const doc = querySnapshot.docs[0]
-        return { id: doc.id, ...doc.data() }
+        const raw = String(cedula).trim()
+        const variants = [raw]
+        if (/^\d+$/.test(raw)) {
+            const asNum = Number(raw)
+            if (!Number.isNaN(asNum)) variants.push(asNum)
+        }
+
+        const byId = new Map()
+        for (const value of variants) {
+            const q = query(collection(db, 'carnets'), where('cedula', '==', value))
+            const querySnapshot = await getDocs(q)
+            querySnapshot.forEach((docSnap) => {
+                byId.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+            })
+        }
+
+        return Array.from(byId.values())
     } catch (error) {
-        console.error('Error buscando carnet:', error)
+        console.error('Error buscando carnets:', error)
         throw error
     }
 }
@@ -386,34 +430,51 @@ export const getUserCards = async (userId) => {
     }
 }
 
-// Generar el siguiente número de membresía automáticamente (CTV-1001, CTV-1002, etc.)
+/** Todos los documentos de la colección `carnets`. `tipoCarnet`: 'airsoft' | 'traumatico' | null (todos). */
+export const getAllCarnets = async (tipoCarnet = null) => {
+    try {
+        const snapshot = await getDocs(collection(db, 'carnets'))
+        const cards = []
+        snapshot.forEach((d) => {
+            const data = d.data()
+            const t = data.tipoCarnet
+            if (tipoCarnet === 'traumatico') {
+                if (t !== 'traumatico') return
+            } else if (tipoCarnet === 'airsoft') {
+                if (t && t !== 'airsoft') return
+            }
+            cards.push({ id: d.id, ...data })
+        })
+        return cards
+    } catch (error) {
+        console.error('Error obteniendo todos los carnets:', error)
+        throw error
+    }
+}
+
+// Generar el siguiente número de membresía airsoft (CTV-1001, CTV-1002, …)
 export const getNextMembershipNumber = async () => {
     try {
         const snapshot = await getDocs(collection(db, 'carnets'))
         
-        let maxNumber = 1000 // Empezamos en 1000 para que el primer número sea CTV-1001
+        let maxNumber = 1000
         
-        snapshot.docs.forEach((doc) => {
-            const data = doc.data()
+        snapshot.docs.forEach((docSnap) => {
+            const data = docSnap.data()
+            if (data.tipoCarnet === 'traumatico') return
             const numeroMembresia = data.numeroMembresia || ''
-            
-            // Extraer el número del formato CTV-XXXX
-            const match = numeroMembresia.match(/CTV-(\d+)/i)
+            // Solo CTV-XXXX (no CTV-T…)
+            const match = String(numeroMembresia).match(/^CTV-(\d+)$/i)
             if (match) {
                 const number = parseInt(match[1], 10)
-                // Solo considerar números válidos entre 1001 y 9999
-                // Ignorar números fuera de este rango (posibles errores o datos antiguos)
                 if (!isNaN(number) && number >= 1001 && number <= 9999 && number > maxNumber) {
                     maxNumber = number
                 }
             }
         })
         
-        // El siguiente número será maxNumber + 1
-        // Si no se encontró ningún número válido, maxNumber seguirá siendo 1000, y el siguiente será 1001
         const nextNumber = maxNumber + 1
         
-        // Asegurar que el número no exceda 9999
         if (nextNumber > 9999) {
             console.warn('Se alcanzó el límite máximo de números de membresía (9999)')
             return 'CTV-9999'
@@ -422,7 +483,65 @@ export const getNextMembershipNumber = async () => {
         return `CTV-${nextNumber.toString().padStart(4, '0')}`
     } catch (error) {
         console.error('Error generando número de membresía:', error)
-        // Si hay error, retornar el primer número por defecto
         return 'CTV-1001'
     }
+}
+
+// Generar el siguiente número traumático (CTV-T1001, CTV-T1002, …)
+export const getNextTraumaticoMembershipNumber = async () => {
+    try {
+        const snapshot = await getDocs(collection(db, 'carnets'))
+
+        let maxNumber = 1000
+
+        snapshot.docs.forEach((docSnap) => {
+            const data = docSnap.data()
+            const numeroMembresia = data.numeroMembresia || ''
+            const match = String(numeroMembresia).match(/^CTV-T(\d+)$/i)
+            if (match) {
+                const number = parseInt(match[1], 10)
+                if (!isNaN(number) && number >= 1001 && number <= 9999 && number > maxNumber) {
+                    maxNumber = number
+                }
+            }
+        })
+
+        const nextNumber = maxNumber + 1
+
+        if (nextNumber > 9999) {
+            console.warn('Se alcanzó el límite máximo de números traumáticos (9999)')
+            return 'CTV-T9999'
+        }
+
+        return `CTV-T${nextNumber.toString().padStart(4, '0')}`
+    } catch (error) {
+        console.error('Error generando número de membresía traumático:', error)
+        return 'CTV-T1001'
+    }
+}
+
+/** Activa o desactiva un carnet por ID (`activo: false` = inactivo). */
+export const setCarnetActivo = async (cardId, activo) => {
+    if (!cardId) {
+        throw new Error('Se requiere el ID del carnet.')
+    }
+    const next = Boolean(activo)
+    const cardRef = doc(db, 'carnets', cardId)
+    // setDoc merge: más fiable que updateDoc si el doc existe
+    await setDoc(
+        cardRef,
+        {
+            activo: next,
+            updatedAt: new Date()
+        },
+        { merge: true }
+    )
+    await logAction(
+        'actualizar',
+        'carnets',
+        cardId,
+        `Carnet ${next ? 'activado' : 'desactivado'}: ${cardId}`,
+        { cardId, activo: next }
+    )
+    return { id: cardId, activo: next }
 }

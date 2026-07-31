@@ -27,43 +27,81 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
     const userDocRef = doc(db, 'usuarios', userBaseData.cedula)
     const now = new Date()
     const emailNorm = normalizeEmail(userBaseData.email)
-
-    const payload = {
-        ...userBaseData,
-        email: emailNorm ?? userBaseData.email ?? null,
-        foto: fotoBase64 ?? null,
-        userId,
-        carnetId,
-        carnetUpdatedAt: now,
-        updatedAt: now
-    }
-    if (authUid) {
-        payload.authUid = authUid
-    }
+    const tipoCarnet = userBaseData.tipoCarnet === 'traumatico' ? 'traumatico' : 'airsoft'
+    const incomingNum = String(userBaseData.numeroMembresia ?? '').trim()
 
     const existingUserSnapshot = await getDoc(userDocRef)
 
     if (existingUserSnapshot.exists()) {
         const existingData = existingUserSnapshot.data()
-        const rol =
-            existingData.rol ?? payload.rol ?? 'operador'
-        const incomingNum = String(userBaseData.numeroMembresia ?? '').trim()
-        const numeroMembresia =
-            incomingNum || existingData.numeroMembresia
+        const rol = existingData.rol ?? userBaseData.rol ?? 'operador'
+
+        if (tipoCarnet === 'traumatico') {
+            // Misma cédula ya tiene perfil (p. ej. airsoft): no pisar foto, marca, armas, etc.
+            await setDoc(
+                userDocRef,
+                omitUndefined({
+                    numeroMembresiaTraumatico:
+                        incomingNum || existingData.numeroMembresiaTraumatico,
+                    carnetIdTraumatico: carnetId || existingData.carnetIdTraumatico,
+                    carnetTraumaticoUpdatedAt: now,
+                    updatedAt: now,
+                    rol,
+                    // Solo sincronizar correo si viene en el formulario (Auth)
+                    ...(emailNorm ? { email: emailNorm } : {}),
+                    ...(authUid ? { authUid } : {})
+                }),
+                { merge: true }
+            )
+
+            await logAction(
+                'actualizar',
+                'usuarios',
+                userDocRef.id,
+                `Vínculo carnet traumático: ${userBaseData.cedula}`,
+                { cedula: userBaseData.cedula, numeroMembresiaTraumatico: incomingNum }
+            )
+
+            console.log(
+                'Usuario existente: solo se vinculó carnet traumático. Cédula:',
+                userBaseData.cedula
+            )
+            return { created: false, id: userDocRef.id, traumaticoLinkOnly: true }
+        }
+
+        // Airsoft: actualizar perfil operativo sin tocar datos traumáticos
+        const {
+            marca: _marca,
+            calibre: _calibre,
+            an: _an,
+            tipo: _tipo,
+            tipoCarnet: _tipoCarnet,
+            arma: _arma,
+            numeroMembresiaTraumatico: _nmt,
+            carnetIdTraumatico: _cit,
+            ...airsoftFields
+        } = userBaseData
 
         await setDoc(
             userDocRef,
             omitUndefined({
-                ...payload,
-                // No degradar rol de administrador al actualizar carnet
+                ...airsoftFields,
+                email: emailNorm ?? userBaseData.email ?? null,
+                foto: fotoBase64 ?? null,
+                userId,
+                carnetId,
+                carnetUpdatedAt: now,
+                updatedAt: now,
                 rol,
                 createdAt: existingData.createdAt || now,
-                numeroMembresia
+                numeroMembresia: incomingNum || existingData.numeroMembresia,
+                numeroMembresiaTraumatico: existingData.numeroMembresiaTraumatico,
+                carnetIdTraumatico: existingData.carnetIdTraumatico,
+                ...(authUid ? { authUid } : {})
             }),
             { merge: true }
         )
 
-        // Registrar log
         await logAction(
             'actualizar',
             'usuarios',
@@ -76,16 +114,53 @@ export const upsertUserRecord = async ({ userBaseData, fotoBase64, userId, carne
         return { created: false, id: userDocRef.id }
     }
 
-    await setDoc(
-        userDocRef,
-        omitUndefined({
-            ...payload,
-            rol: 'operador',
-            createdAt: now
-        })
-    )
+    // Usuario nuevo
+    if (tipoCarnet === 'traumatico') {
+        await setDoc(
+            userDocRef,
+            omitUndefined({
+                cedula: userBaseData.cedula,
+                nombre: userBaseData.nombre ?? null,
+                email: emailNorm ?? userBaseData.email ?? null,
+                contacto: userBaseData.contacto ?? null,
+                contactoEmergencia: userBaseData.contactoEmergencia ?? null,
+                rh: userBaseData.rh ?? null,
+                vigencia: userBaseData.vigencia ?? null,
+                foto: fotoBase64 ?? null,
+                userId,
+                carnetIdTraumatico: carnetId,
+                numeroMembresia: incomingNum || null,
+                numeroMembresiaTraumatico: incomingNum || null,
+                disciplina: userBaseData.disciplina || 'BAJA LETALIDAD',
+                tipo: userBaseData.tipo || 'TRAUMÁTICA',
+                tipoCarnet: 'traumatico',
+                rol: 'operador',
+                activo: true,
+                createdAt: now,
+                updatedAt: now,
+                carnetTraumaticoUpdatedAt: now,
+                ...(authUid ? { authUid } : {})
+            })
+        )
+    } else {
+        await setDoc(
+            userDocRef,
+            omitUndefined({
+                ...userBaseData,
+                email: emailNorm ?? userBaseData.email ?? null,
+                foto: fotoBase64 ?? null,
+                userId,
+                carnetId,
+                carnetUpdatedAt: now,
+                updatedAt: now,
+                rol: 'operador',
+                activo: true,
+                createdAt: now,
+                ...(authUid ? { authUid } : {})
+            })
+        )
+    }
 
-    // Registrar log
     await logAction(
         'crear',
         'usuarios',
@@ -163,6 +238,49 @@ export const setUserRol = async (cedula, rol) => {
     )
 }
 
+/** Activa o desactiva el operador completo (`activo: false` = inactivo). */
+export const setUserActivo = async (cedula, activo) => {
+    if (!cedula) {
+        throw new Error('Se requiere la cédula para actualizar el estado del operador.')
+    }
+    const next = Boolean(activo)
+    const userDocRef = doc(db, 'usuarios', cedula)
+    await setDoc(
+        userDocRef,
+        {
+            activo: next,
+            updatedAt: new Date()
+        },
+        { merge: true }
+    )
+
+    // Al desactivar el operador, marcar también sus carnets (consultas públicas leen `carnets`)
+    if (!next) {
+        const cardsSnap = await getDocs(
+            query(collection(db, 'carnets'), where('cedula', '==', cedula))
+        )
+        const now = new Date()
+        await Promise.all(
+            cardsSnap.docs.map((cardSnap) =>
+                setDoc(
+                    cardSnap.ref,
+                    { activo: false, updatedAt: now },
+                    { merge: true }
+                )
+            )
+        )
+    }
+
+    await logAction(
+        'actualizar',
+        'usuarios',
+        cedula,
+        `Operador ${next ? 'activado' : 'desactivado'}: ${cedula}`,
+        { cedula, activo: next, carnetsDesactivados: !next }
+    )
+    return { cedula, activo: next }
+}
+
 export const getUserByCedula = async (cedula) => {
     if (!cedula) {
         throw new Error('Se requiere la cédula para consultar el usuario.')
@@ -193,33 +311,34 @@ export const getUserByCedula = async (cedula) => {
     }
 }
 
-export const updateUserPoints = async (cedula, points) => {
+export const updateUserPoints = async (cedula, points, tipo = 'airsoft') => {
     if (!cedula) {
         throw new Error('Se requiere la cédula para actualizar los puntos.')
     }
 
     const userDocRef = doc(db, 'usuarios', cedula)
     const now = new Date()
+    const field = tipo === 'traumatico' ? 'puntosTraumatico' : 'puntos'
+    const value = Number.isFinite(points) ? points : 0
 
     await setDoc(userDocRef, {
-        puntos: Number.isFinite(points) ? points : 0,
+        [field]: value,
         rankingUpdatedAt: now,
         updatedAt: now
     }, { merge: true })
 
-    // Registrar log
     await logAction(
         'actualizar',
         'usuarios',
         userDocRef.id,
-        `Puntos actualizados para usuario: ${cedula} (${points} puntos)`,
-        { cedula, puntos: points }
+        `Puntos ${tipo} actualizados para usuario: ${cedula} (${value} puntos)`,
+        { cedula, [field]: value, tipo }
     )
 
-    return { cedula, puntos: Number.isFinite(points) ? points : 0 }
+    return { cedula, [field]: value, tipo }
 }
 
-export const incrementUserPoints = async (cedula, delta) => {
+export const incrementUserPoints = async (cedula, delta, tipo = 'airsoft') => {
     if (!cedula) {
         throw new Error('Se requiere la cédula para ajustar los puntos.')
     }
@@ -230,22 +349,31 @@ export const incrementUserPoints = async (cedula, delta) => {
 
     const userDocRef = doc(db, 'usuarios', cedula)
     const now = new Date()
+    const field = tipo === 'traumatico' ? 'puntosTraumatico' : 'puntos'
 
     await setDoc(userDocRef, {
-        puntos: increment(delta),
+        [field]: increment(delta),
         rankingUpdatedAt: now,
         updatedAt: now
     }, { merge: true })
 
-    // Registrar log
     await logAction(
         'actualizar',
         'usuarios',
         userDocRef.id,
-        `Puntos incrementados para usuario: ${cedula} (${delta > 0 ? '+' : ''}${delta} puntos)`,
-        { cedula, delta }
+        `Puntos ${tipo} incrementados para usuario: ${cedula} (${delta > 0 ? '+' : ''}${delta} puntos)`,
+        { cedula, delta, tipo }
     )
 
-    return { cedula, delta }
+    return { cedula, delta, tipo }
+}
+
+/** Usuario con carnet traumático vinculado (CTV-T / carnetIdTraumatico). */
+export const userHasTraumaticoCarnet = (user) => {
+    if (!user) return false
+    if (user.carnetIdTraumatico) return true
+    if (user.numeroMembresiaTraumatico) return true
+    if (/^CTV-T\d+/i.test(String(user.numeroMembresia || ''))) return true
+    return false
 }
 

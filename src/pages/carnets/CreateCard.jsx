@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { auth } from '../../firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { generateFrontCard, generateBackCard } from '../../utils/cardGenerator'
-import { saveCard, getNextMembershipNumber, searchCardByCedula } from '../../services/cardService'
+import { saveCard, getNextMembershipNumber, getNextTraumaticoMembershipNumber, searchCardByCedula } from '../../services/cardService'
 import { getUserByCedula } from '../../services/userService'
 import { getVigencias } from '../../services/vigenciasService'
 import { getSpecialties } from '../../services/specialtiesService'
@@ -19,9 +19,23 @@ function toDataUrl(base64OrDataUrl) {
   return `data:image/jpeg;base64,${s}`
 }
 
-function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
+/** Convierte data URL / base64 guardado en Firestore a File (para el input file y generateBackCard). */
+async function dataUrlToFile(dataUrl, filename = 'foto.jpg') {
+  const res = await fetch(dataUrl)
+  const blob = await res.blob()
+  const ext = blob.type.includes('png')
+    ? 'png'
+    : blob.type.includes('webp')
+      ? 'webp'
+      : 'jpeg'
+  const base = filename.replace(/\.[^.]+$/, '') || 'foto'
+  return new File([blob], `${base}.${ext}`, { type: blob.type || 'image/jpeg' })
+}
+
+function CreateCard({ onSignOut, editCedula = '', returnPath = '', variant = 'airsoft' }) {
   const navigate = useNavigate()
   const isEditMode = Boolean(editCedula)
+  const isTraumatico = variant === 'traumatico'
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -34,21 +48,29 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     return () => unsubscribe()
   }, [navigate])
 
-  // Cargar vigencias, especialidades, equipos y niveles al montar
+  // Cargar catálogos según variante
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoadingData(true)
-        const [vigenciasData, especialidadesData, equiposData, nivelesData] = await Promise.all([
-          getVigencias(),
-          getSpecialties(),
-          getTeams(),
-          getLevels()
-        ])
-        setVigencias(vigenciasData)
-        setEspecialidades(especialidadesData)
-        setEquipos(equiposData)
-        setNiveles(nivelesData)
+        if (isTraumatico) {
+          const vigenciasData = await getVigencias()
+          setVigencias(vigenciasData)
+          setEspecialidades([])
+          setEquipos([])
+          setNiveles([])
+        } else {
+          const [vigenciasData, especialidadesData, equiposData, nivelesData] = await Promise.all([
+            getVigencias(),
+            getSpecialties(),
+            getTeams(),
+            getLevels()
+          ])
+          setVigencias(vigenciasData)
+          setEspecialidades(especialidadesData)
+          setEquipos(equiposData)
+          setNiveles(nivelesData)
+        }
       } catch (error) {
         console.error('Error cargando datos:', error)
       } finally {
@@ -56,7 +78,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       }
     }
     loadData()
-  }, [])
+  }, [isTraumatico])
 
   const [formData, setFormData] = useState({
     // Datos del frente
@@ -65,7 +87,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     numeroMembresia: '',
     emision: '',
     vigencia: '',
-    nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo, no se muestra en input
+    nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE',
     rh: '',
     contacto: '',
     contactoEmergencia: '',
@@ -76,10 +98,16 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     identificador: '',
     especialidad: '',
     equipoTactico: '',
-    equipoLogo: null, // Logo del equipo seleccionado
+    equipoLogo: null,
     rolEnEquipo: '',
     pistola: '',
     fusil: '',
+    marca: '',
+    calibre: '',
+    an: '',
+    disciplina: isTraumatico ? 'BAJA LETALIDAD' : 'AIRSOFT',
+    tipo: isTraumatico ? 'TRAUMÁTICA' : '',
+    tipoCarnet: isTraumatico ? 'traumatico' : 'airsoft',
     foto: null,
   })
 
@@ -100,6 +128,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
   const [editError, setEditError] = useState(null)
   /** CTV ya asignado en Firestore (edición): evita llamar a getNextMembershipNumber al guardar/generar. */
   const numeroMembresiaGuardadoRef = useRef('')
+  const photoInputRef = useRef(null)
 
   useEffect(() => {
     if (!isEditMode || loadingData) {
@@ -114,7 +143,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       setEditError(null)
       try {
         const [cardData, userRow] = await Promise.all([
-          searchCardByCedula(editCedula),
+          searchCardByCedula(editCedula, isTraumatico ? 'traumatico' : 'airsoft'),
           getUserByCedula(editCedula)
         ])
         if (cancelled) return
@@ -127,6 +156,22 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
 
         const equipoSeleccionado = equipos.find((eq) => eq.nombre === cardData.equipoTactico)
         const emailFrom = cardData.email || userRow?.email || ''
+
+        const fotoStr =
+          (typeof cardData.foto === 'string' && cardData.foto.trim())
+            ? cardData.foto.trim()
+            : (typeof userRow?.foto === 'string' && userRow.foto.trim())
+              ? userRow.foto.trim()
+              : null
+
+        let fotoFile = null
+        if (fotoStr) {
+          try {
+            fotoFile = await dataUrlToFile(toDataUrl(fotoStr), `foto-${editCedula}`)
+          } catch (photoErr) {
+            console.warn('No se pudo restaurar la foto como archivo:', photoErr)
+          }
+        }
 
         setFormData((prev) => ({
           ...prev,
@@ -148,7 +193,13 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
           rolEnEquipo: cardData.rolEnEquipo ?? '',
           pistola: cardData.pistola ?? '',
           fusil: cardData.fusil ?? '',
-          foto: typeof cardData.foto === 'string' && cardData.foto ? cardData.foto : null,
+          marca: cardData.marca ?? cardData.arma ?? '',
+          calibre: cardData.calibre ?? '',
+          an: cardData.an ?? '',
+          disciplina: cardData.disciplina || (isTraumatico ? 'BAJA LETALIDAD' : 'AIRSOFT'),
+          tipo: cardData.tipo || (isTraumatico ? 'TRAUMÁTICA' : ''),
+          tipoCarnet: isTraumatico ? 'traumatico' : 'airsoft',
+          foto: fotoFile
         }))
 
         if (cardData.frontCardBase64 && cardData.backCardBase64) {
@@ -181,7 +232,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       cancelled = true
       revokedUrls.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [isEditMode, editCedula, loadingData, equipos])
+  }, [isEditMode, editCedula, loadingData, equipos, isTraumatico])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -212,6 +263,21 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     }
   }
 
+  // Al cargar edición, formData.foto pasa a ser File: reflejarlo en el input (no se puede hacer con value=)
+  useEffect(() => {
+    const input = photoInputRef.current
+    if (!input) return
+    if (formData.foto instanceof File) {
+      try {
+        const dt = new DataTransfer()
+        dt.items.add(formData.foto)
+        input.files = dt.files
+      } catch (err) {
+        console.warn('No se pudo asignar la foto al selector de archivo:', err)
+      }
+    }
+  }, [formData.foto])
+
   const [saving, setSaving] = useState(false)
 
   const resolveNumeroMembresiaParaVista = async () => {
@@ -220,7 +286,9 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
     if (isEditMode && numeroMembresiaGuardadoRef.current) {
       return numeroMembresiaGuardadoRef.current
     }
-    return getNextMembershipNumber()
+    return isTraumatico
+      ? getNextTraumaticoMembershipNumber()
+      : getNextMembershipNumber()
   }
 
   const handleGenerate = async () => {
@@ -251,8 +319,12 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       // Preparar datos con valores automáticos
       const dataToGenerate = {
         ...formData,
-        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
+        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE',
         numeroMembresia: membership,
+        tipoCarnet: isTraumatico ? 'traumatico' : 'airsoft',
+        disciplina: isTraumatico ? 'BAJA LETALIDAD' : (formData.disciplina || 'AIRSOFT'),
+        tipo: isTraumatico ? 'TRAUMÁTICA' : formData.tipo,
+        identificador: isTraumatico ? 'INFORMACIÓN' : formData.identificador,
         emision:
           formData.emision ||
           (() => {
@@ -261,7 +333,6 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
             const year = now.getFullYear()
             return `${month}/${year}`
           })(),
-        // equipoLogo ya está en formData desde que se seleccionó el equipo
       }
 
       // Generar tarjeta frontal
@@ -326,8 +397,12 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '' }) {
       // Asegurar que los valores automáticos estén presentes
       const dataToSave = {
         ...formData,
-        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE', // Siempre el mismo
+        nombreClub: 'CLUB DE TIRO DEPORTIVO DEL VALLE',
         numeroMembresia: membershipSave,
+        tipoCarnet: isTraumatico ? 'traumatico' : 'airsoft',
+        disciplina: isTraumatico ? 'BAJA LETALIDAD' : (formData.disciplina || 'AIRSOFT'),
+        tipo: isTraumatico ? 'TRAUMÁTICA' : formData.tipo,
+        identificador: isTraumatico ? 'INFORMACIÓN' : formData.identificador,
         emision: formData.emision || (() => {
           const now = new Date()
           const month = String(now.getMonth() + 1).padStart(2, '0')
@@ -458,12 +533,16 @@ Revisa la consola del navegador para más detalles.
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="space-y-2">
               <h1 className="text-3xl font-tactical text-tactical-gold uppercase tracking-[0.08em]">
-                {isEditMode ? 'Editar carnet' : 'Generador de Carnets'}
+                {isEditMode
+                  ? (isTraumatico ? 'Editar carnet traumático' : 'Editar carnet')
+                  : (isTraumatico ? 'Generador Traumático' : 'Generador de Carnets')}
               </h1>
               <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.1em]">
                 {isEditMode
                   ? 'Modifica los datos y vuelve a generar o guarda los cambios'
-                  : 'Crea y gestiona los carnets de identificación de los operadores'}
+                  : isTraumatico
+                    ? 'Carnets de baja letalidad · consecutivo CTV-T'
+                    : 'Crea y gestiona los carnets de identificación de los operadores'}
               </p>
             </div>
             {returnPath ? (
@@ -605,10 +684,7 @@ Revisa la consola del navegador para más detalles.
                   />
                 </div>
 
-
-
-
-
+                {!isTraumatico ? (
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Nivel/Operador
@@ -628,6 +704,32 @@ Revisa la consola del navegador para más detalles.
                     ))}
                   </select>
                 </div>
+                ) : (
+                <>
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Disciplina
+                  </label>
+                  <input
+                    type="text"
+                    value="BAJA LETALIDAD"
+                    disabled
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] opacity-70 cursor-not-allowed"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Tipo
+                  </label>
+                  <input
+                    type="text"
+                    value="TRAUMÁTICA"
+                    disabled
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] opacity-70 cursor-not-allowed"
+                  />
+                </div>
+                </>
+                )}
 
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
@@ -656,6 +758,7 @@ Revisa la consola del navegador para más detalles.
                   Datos Cara Trasera
                 </h3>
 
+                {!isTraumatico ? (
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Identificador
@@ -669,12 +772,14 @@ Revisa la consola del navegador para más detalles.
                     placeholder="EJ: RAVEN-09"
                   />
                 </div>
+                ) : null}
 
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Foto del Miembro
                   </label>
                   <input
+                    ref={photoInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
@@ -682,6 +787,50 @@ Revisa la consola del navegador para más detalles.
                   />
                 </div>
 
+                {isTraumatico ? (
+                <>
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Marca
+                  </label>
+                  <input
+                    type="text"
+                    name="marca"
+                    value={formData.marca}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: MARCA DEL ARMA"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Calibre
+                  </label>
+                  <input
+                    type="text"
+                    name="calibre"
+                    value={formData.calibre}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: .43 / 11 MM"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    A/N
+                  </label>
+                  <input
+                    type="text"
+                    name="an"
+                    value={formData.an}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                    placeholder="EJ: A/N"
+                  />
+                </div>
+                </>
+                ) : (
+                <>
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
                     Especialidad
@@ -766,6 +915,8 @@ Revisa la consola del navegador para más detalles.
                     placeholder="EJ: AR15 BLACK RAIN"
                   />
                 </div>
+                </>
+                )}
               </div>
 
               <button

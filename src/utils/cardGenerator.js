@@ -1,15 +1,256 @@
 import QRCode from 'qrcode'
 import logoImage from '../assets/logo.png'
 
-// Dimensiones para tarjeta de identificación VERTICAL
-// 5.5 cm (ancho) x 8.5 cm (alto) a 300 DPI
-// 5.5 cm = 55 mm = 55 * 300 / 25.4 = 649.61 px ≈ 650 px
-// 8.5 cm = 85 mm = 85 * 300 / 25.4 = 1003.94 px ≈ 1004 px
-const CARD_WIDTH = 650   // 5.5 cm (ancho)
-const CARD_HEIGHT = 1004 // 8.5 cm (alto) - VERTICAL (más alto que ancho)
+// Dimensiones físicas: 6 cm (ancho) × 9 cm (alto), proporción 2:3 — tamaño de la tarjeta donde se pegan las caras
+// A 300 DPI: px = round(cm × 300 / 2.54)
+export const CARD_WIDTH = 709   // 6 cm
+export const CARD_HEIGHT = 1063 // 9 cm
+
+/** Escala de render (p. ej. 2 = ~600 DPI efectivos en el PNG). Mejora nitidez de texto, QR y fotos. */
+const RENDER_SCALE = 2
+
+/** Lado máximo del logo del equipo (cara trasera), en coordenadas lógicas del carnet */
+const TEAM_LOGO_MAX_SIDE = 180
+
+/** Grosor de trazo en espacio lógico para que en el PNG final coincida con el diseño a escala 1× */
+const strokePx = (devicePixels) => devicePixels / RENDER_SCALE
 const GOLD_COLOR = '#826030'
 const GOLD_COLOR_LIGHT = '#D4AF37'
 const DARK_BG = '#151311'  // Fondo oscuro gris café, más cerca del negro
+
+/** Paleta por tipo: airsoft (dorado cálido) vs traumático (verde militar sobre fondo claro). */
+const getCardTheme = (formData) => {
+    if (formData?.tipoCarnet === 'traumatico') {
+        return {
+            id: 'traumatico',
+            bg: '#12110f',
+            accent: '#b08449',
+            header: '#c9a66b',
+            value: '#af9974',
+            divider: '#826030',
+            grainAccent: { r: 130, g: 96, b: 48 },
+            qrLight: '#D4C5A9',
+            stripe: null
+        }
+    }
+    return {
+        id: 'airsoft',
+        bg: DARK_BG,
+        accent: GOLD_COLOR,
+        header: '#b08449',
+        value: '#af9974',
+        divider: '#af9974',
+        grainAccent: { r: 130, g: 96, b: 48 },
+        qrLight: '#D4C5A9',
+        stripe: null
+    }
+}
+
+/** Fondo táctico (hex, camo digital, mira, chevrons) — solo traumático / fondo claro. */
+const drawTraumaticoBackground = (ctx, theme) => {
+    const { r, g, b } = theme.grainAccent
+    const rgba = (a) => `rgba(${r}, ${g}, ${b}, ${a})`
+
+    // Base con leve variación tonal
+    const radial = ctx.createRadialGradient(
+        CARD_WIDTH / 2, CARD_HEIGHT * 0.4, 20,
+        CARD_WIDTH / 2, CARD_HEIGHT * 0.5, CARD_HEIGHT * 0.85
+    )
+    radial.addColorStop(0, rgba(0.05))
+    radial.addColorStop(1, rgba(0))
+    ctx.fillStyle = radial
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+
+    // Camuflaje digital (bloques angulares)
+    const digi = [
+        [20, 140, 70, 40, 0.07], [100, 160, 50, 30, 0.05], [40, 200, 90, 35, 0.06],
+        [540, 150, 80, 45, 0.07], [600, 210, 55, 28, 0.05], [500, 230, 70, 40, 0.045],
+        [30, 680, 100, 50, 0.06], [150, 720, 60, 35, 0.05], [80, 780, 85, 40, 0.055],
+        [480, 700, 110, 55, 0.06], [560, 780, 70, 38, 0.05], [520, 850, 95, 45, 0.05],
+        [200, 400, 120, 30, 0.035], [380, 450, 80, 50, 0.04], [280, 900, 100, 40, 0.05],
+        [0, 500, 55, 80, 0.04], [654, 520, 55, 90, 0.04]
+    ]
+    digi.forEach(([x, y, w, h, a]) => {
+        ctx.fillStyle = rgba(a)
+        ctx.fillRect(x, y, w, h)
+    })
+
+    // Malla hexagonal
+    const hexSize = 26
+    const hexH = hexSize * Math.sqrt(3)
+    ctx.strokeStyle = rgba(0.09)
+    ctx.lineWidth = strokePx(1)
+    for (let row = -1; row < CARD_HEIGHT / hexH + 2; row++) {
+        for (let col = -1; col < CARD_WIDTH / (hexSize * 1.5) + 2; col++) {
+            const cx = col * hexSize * 1.5
+            const cy = row * hexH + (col % 2 ? hexH / 2 : 0)
+            ctx.beginPath()
+            for (let i = 0; i < 6; i++) {
+                const ang = (Math.PI / 180) * (60 * i - 30)
+                const px = cx + hexSize * Math.cos(ang)
+                const py = cy + hexSize * Math.sin(ang)
+                if (i === 0) ctx.moveTo(px, py)
+                else ctx.lineTo(px, py)
+            }
+            ctx.closePath()
+            ctx.stroke()
+        }
+    }
+
+    // Rejilla táctica con marcas de medición
+    ctx.strokeStyle = rgba(0.08)
+    ctx.lineWidth = strokePx(1)
+    const grid = 48
+    for (let x = grid; x < CARD_WIDTH; x += grid) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, CARD_HEIGHT)
+        ctx.stroke()
+        // ticks
+        for (let y = grid / 2; y < CARD_HEIGHT; y += grid) {
+            ctx.beginPath()
+            ctx.moveTo(x - 4, y)
+            ctx.lineTo(x + 4, y)
+            ctx.strokeStyle = rgba(0.12)
+            ctx.stroke()
+            ctx.strokeStyle = rgba(0.08)
+        }
+    }
+    for (let y = grid; y < CARD_HEIGHT; y += grid) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(CARD_WIDTH, y)
+        ctx.stroke()
+    }
+
+    // Mira táctica / reticula
+    const cx = CARD_WIDTH / 2
+    const cy = CARD_HEIGHT * 0.35
+    ctx.strokeStyle = rgba(0.14)
+    ctx.lineWidth = strokePx(1.5)
+    ;[70, 130, 200, 280].forEach((radius) => {
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+        ctx.stroke()
+    })
+    // Cruz principal
+    ctx.strokeStyle = rgba(0.16)
+    ctx.lineWidth = strokePx(1.25)
+    ctx.beginPath()
+    ctx.moveTo(cx - 300, cy)
+    ctx.lineTo(cx - 18, cy)
+    ctx.moveTo(cx + 18, cy)
+    ctx.lineTo(cx + 300, cy)
+    ctx.moveTo(cx, cy - 300)
+    ctx.lineTo(cx, cy - 18)
+    ctx.moveTo(cx, cy + 18)
+    ctx.lineTo(cx, cy + 300)
+    ctx.stroke()
+    // Puntos mil-dot
+    ctx.fillStyle = rgba(0.18)
+    ;[-120, -70, -40, 40, 70, 120].forEach((d) => {
+        ctx.beginPath()
+        ctx.arc(cx + d, cy, 2.2, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(cx, cy + d, 2.2, 0, Math.PI * 2)
+        ctx.fill()
+    })
+    // Centro
+    ctx.beginPath()
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2)
+    ctx.strokeStyle = rgba(0.2)
+    ctx.lineWidth = strokePx(1.5)
+    ctx.stroke()
+
+    // Franjas hazard / chevron en laterales
+    const drawHazard = (x0, y0, w, h, flip) => {
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(x0, y0, w, h)
+        ctx.clip()
+        ctx.strokeStyle = rgba(0.11)
+        ctx.lineWidth = strokePx(8)
+        const dir = flip ? -1 : 1
+        for (let i = -h; i < w + h; i += 18) {
+            ctx.beginPath()
+            ctx.moveTo(x0 + i, y0)
+            ctx.lineTo(x0 + i + dir * h, y0 + h)
+            ctx.stroke()
+        }
+        ctx.restore()
+    }
+    drawHazard(0, 280, 28, 220, false)
+    drawHazard(CARD_WIDTH - 28, 280, 28, 220, true)
+    drawHazard(0, 700, 28, 200, false)
+    drawHazard(CARD_WIDTH - 28, 700, 28, 200, true)
+
+    // Paneles angulares superiores/inferiores
+    ctx.fillStyle = rgba(0.05)
+    ctx.beginPath()
+    ctx.moveTo(0, 90)
+    ctx.lineTo(140, 90)
+    ctx.lineTo(110, 130)
+    ctx.lineTo(0, 130)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo(CARD_WIDTH, 90)
+    ctx.lineTo(CARD_WIDTH - 140, 90)
+    ctx.lineTo(CARD_WIDTH - 110, 130)
+    ctx.lineTo(CARD_WIDTH, 130)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo(0, CARD_HEIGHT - 90)
+    ctx.lineTo(140, CARD_HEIGHT - 90)
+    ctx.lineTo(110, CARD_HEIGHT - 130)
+    ctx.lineTo(0, CARD_HEIGHT - 130)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo(CARD_WIDTH, CARD_HEIGHT - 90)
+    ctx.lineTo(CARD_WIDTH - 140, CARD_HEIGHT - 90)
+    ctx.lineTo(CARD_WIDTH - 110, CARD_HEIGHT - 130)
+    ctx.lineTo(CARD_WIDTH, CARD_HEIGHT - 130)
+    ctx.closePath()
+    ctx.fill()
+
+    // Esquinas tipo bracket táctico (más marcadas)
+    const drawCorner = (x, y, dx, dy) => {
+        ctx.strokeStyle = rgba(0.28)
+        ctx.lineWidth = strokePx(3)
+        ctx.beginPath()
+        ctx.moveTo(x, y + dy * 56)
+        ctx.lineTo(x, y)
+        ctx.lineTo(x + dx * 56, y)
+        ctx.stroke()
+        ctx.strokeStyle = rgba(0.16)
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(x + dx * 12, y + dy * 42)
+        ctx.lineTo(x + dx * 12, y + dy * 12)
+        ctx.lineTo(x + dx * 42, y + dy * 12)
+        ctx.stroke()
+        // notch
+        ctx.fillStyle = rgba(0.2)
+        ctx.fillRect(x + (dx > 0 ? 0 : -10), y + (dy > 0 ? 0 : -10), 10, 10)
+    }
+    const inset = 20
+    drawCorner(inset, inset, 1, 1)
+    drawCorner(CARD_WIDTH - inset, inset, -1, 1)
+    drawCorner(inset, CARD_HEIGHT - inset, 1, -1)
+    drawCorner(CARD_WIDTH - inset, CARD_HEIGHT - inset, -1, -1)
+
+    // Marcas de registro laterales
+    ctx.fillStyle = rgba(0.15)
+    for (let y = 200; y < CARD_HEIGHT - 180; y += 90) {
+        ctx.fillRect(10, y, 8, 2)
+        ctx.fillRect(CARD_WIDTH - 18, y, 8, 2)
+        ctx.fillRect(10, y + 8, 5, 2)
+        ctx.fillRect(CARD_WIDTH - 15, y + 8, 5, 2)
+    }
+}
 
 // Función auxiliar para cargar imagen
 const loadImage = (src) => {
@@ -69,9 +310,19 @@ const darkenColor = (r, g, b, factor) => {
     }
 }
 
-// Función para dibujar texto con efecto metalizado
-const drawTextWithShadow = (ctx, text, x, y, fontSize, fontFamily = 'Arial', color = GOLD_COLOR) => {
-    ctx.font = `bold ${fontSize}px ${fontFamily}`
+// Función para dibujar texto (metalizado en airsoft; plano en traumático vía useFlatText)
+let useFlatText = false
+
+const drawTextWithShadow = (ctx, text, x, y, fontSize, fontFamily = 'Arial', color = GOLD_COLOR, bold = true) => {
+    ctx.font = `${bold ? 'bold' : 'normal'} ${fontSize}px ${fontFamily}`
+
+    if (useFlatText) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'
+        ctx.fillText(text, x + 1, y + 1)
+        ctx.fillStyle = color
+        ctx.fillText(text, x, y)
+        return
+    }
 
     // Obtener dimensiones del texto para crear el gradiente
     const metrics = ctx.measureText(text)
@@ -107,7 +358,7 @@ const drawTextWithShadow = (ctx, text, x, y, fontSize, fontFamily = 'Arial', col
     gradient.addColorStop(1, `rgba(${darkColor.r}, ${darkColor.g}, ${darkColor.b}, 0.85)`)
 
     // Dibujar sombra primero (más sutil para colores más claros)
-    if (color === '#af9974' || color === '#E8E8E8') {
+    if (color === '#af9974' || color === '#B8C99A' || color === '#A8C5D0' || color === '#4A5538' || color === '#826030' || color === '#3D2A12' || color === '#E07A7A' || color === '#E8E8E8') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'
         ctx.fillText(text, x + 1, y + 1)
     } else {
@@ -115,20 +366,19 @@ const drawTextWithShadow = (ctx, text, x, y, fontSize, fontFamily = 'Arial', col
         ctx.fillText(text, x + 2, y + 2)
     }
 
-    // Dibujar texto con efecto metalizado
+    // Dibujar texto con efecto metalizado (sin tercer trazo con blur: suaviza y pierde nitidez al exportar)
     ctx.fillStyle = gradient
     ctx.fillText(text, x, y)
-
-    // Agregar un resplandor muy sutil para aumentar el efecto metálico sin blanquear
-    ctx.shadowColor = `rgba(${lightColor.r}, ${lightColor.g}, ${lightColor.b}, 0.15)`
-    ctx.shadowBlur = 1
-    ctx.fillText(text, x, y)
-    ctx.shadowBlur = 0  // Resetear sombra
 }
 
-// Función para agregar efecto granulado/ruido con destello diagonal
-const addGrainEffect = (ctx, width, height, intensity = 0.05) => {
-    // Obtener los datos de la imagen actual del canvas
+// Textura de fondo: debe llamarse solo con el color de fondo ya pintado; el contenido (texto, QR, fotos) se dibuja después encima.
+// Usa píxeles reales del canvas (getImageData ignora la transformación actual).
+const addGrainEffect = (ctx, canvas, intensity = 0.05, grainAccent = { r: 130, g: 96, b: 48 }) => {
+    const width = canvas.width
+    const height = canvas.height
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+
     const imageData = ctx.getImageData(0, 0, width, height)
     const data = imageData.data
 
@@ -172,44 +422,40 @@ const addGrainEffect = (ctx, width, height, intensity = 0.05) => {
         ctx.fillRect(x, y, size, size)
     }
 
-    // Agregar efecto de destello diagonal (de esquina superior izquierda a inferior derecha)
-    // Usando los tonos del carnet (dorado/brass) y muy sutil
-    ctx.save()
-
+    // Destello diagonal (misma transformación identidad)
     // Calcular la diagonal
     const diagonalLength = Math.sqrt(width * width + height * height)
+    const { r, g, b } = grainAccent
 
-    // Crear gradiente lineal diagonal con tonos dorados del carnet
+    // Crear gradiente lineal diagonal con tonos del tema del carnet
     const gradient = ctx.createLinearGradient(
         -diagonalLength * 0.3, -diagonalLength * 0.3,  // Inicio (fuera del canvas, esquina superior izquierda)
         width + diagonalLength * 0.3, height + diagonalLength * 0.3  // Fin (fuera del canvas, esquina inferior derecha)
     )
 
-    // Gradiente con tonos dorados del carnet, muy sutil y oscuro
-    // Usando tonos más oscuros del dorado con opacidad muy baja
-    gradient.addColorStop(0, 'rgba(130, 96, 48, 0)')      // Transparente al inicio (dorado oscuro #826030)
-    gradient.addColorStop(0.35, 'rgba(130, 96, 48, 0)')   // Transparente antes del centro
-    gradient.addColorStop(0.45, 'rgba(130, 96, 48, 0.015)') // Brillo muy sutil y oscuro
-    gradient.addColorStop(0.5, 'rgba(130, 96, 48, 0.025)')  // Pico de brillo muy sutil en el centro
-    gradient.addColorStop(0.55, 'rgba(130, 96, 48, 0.015)') // Brillo muy sutil y oscuro
-    gradient.addColorStop(0.65, 'rgba(130, 96, 48, 0)')   // Transparente después del centro
-    gradient.addColorStop(1, 'rgba(130, 96, 48, 0)')      // Transparente al final
+    gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
+    gradient.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, 0)`)
+    gradient.addColorStop(0.45, `rgba(${r}, ${g}, ${b}, 0.015)`)
+    gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.025)`)
+    gradient.addColorStop(0.55, `rgba(${r}, ${g}, ${b}, 0.015)`)
+    gradient.addColorStop(0.65, `rgba(${r}, ${g}, ${b}, 0)`)
+    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
 
     // Aplicar el gradiente como una capa de brillo sutil y oscuro
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, width, height)
 
-    // Agregar un segundo destello más sutil y estrecho con tono brass oscuro
+    // Agregar un segundo destello más sutil y estrecho
     const narrowGradient = ctx.createLinearGradient(
         -diagonalLength * 0.2, -diagonalLength * 0.2,
         width + diagonalLength * 0.2, height + diagonalLength * 0.2
     )
 
-    narrowGradient.addColorStop(0, 'rgba(130, 96, 48, 0)')
-    narrowGradient.addColorStop(0.48, 'rgba(130, 96, 48, 0)')
-    narrowGradient.addColorStop(0.5, 'rgba(130, 96, 48, 0.02)')  // Línea de brillo muy sutil y oscuro
-    narrowGradient.addColorStop(0.52, 'rgba(130, 96, 48, 0)')
-    narrowGradient.addColorStop(1, 'rgba(130, 96, 48, 0)')
+    narrowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
+    narrowGradient.addColorStop(0.48, `rgba(${r}, ${g}, ${b}, 0)`)
+    narrowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.02)`)
+    narrowGradient.addColorStop(0.52, `rgba(${r}, ${g}, ${b}, 0)`)
+    narrowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
 
     ctx.fillStyle = narrowGradient
     ctx.fillRect(0, 0, width, height)
@@ -221,7 +467,7 @@ const addGrainEffect = (ctx, width, height, intensity = 0.05) => {
 const drawClubShield = (ctx, x, y, width, height) => {
     // Dibujar escudo (forma más alargada/ovalada)
     ctx.strokeStyle = GOLD_COLOR
-    ctx.lineWidth = 3
+    ctx.lineWidth = strokePx(3)
     ctx.fillStyle = 'rgba(212, 175, 55, 0.1)'
 
     // Forma de escudo más alargada
@@ -245,7 +491,7 @@ const drawClubShield = (ctx, x, y, width, height) => {
     // Anillos del target
     for (let i = 5; i > 0; i--) {
         ctx.strokeStyle = GOLD_COLOR
-        ctx.lineWidth = 2
+        ctx.lineWidth = strokePx(2)
         ctx.beginPath()
         ctx.arc(centerX, centerY, radius * (i / 5), 0, Math.PI * 2)
         ctx.stroke()
@@ -303,83 +549,92 @@ const drawClubShield = (ctx, x, y, width, height) => {
 // Generar tarjeta frontal (VERTICAL)
 export const generateFrontCard = async (formData) => {
     const canvas = document.createElement('canvas')
-    // Asegurar que el canvas sea VERTICAL (más alto que ancho)
-    canvas.width = CARD_WIDTH  // 650px = 5.5 cm (ancho)
-    canvas.height = CARD_HEIGHT // 1004px = 8.5 cm (alto) - VERTICAL
+    canvas.width = CARD_WIDTH * RENDER_SCALE
+    canvas.height = CARD_HEIGHT * RENDER_SCALE
     const ctx = canvas.getContext('2d')
+    if (ctx.imageSmoothingQuality !== undefined) {
+        ctx.imageSmoothingQuality = 'high'
+    }
+    ctx.imageSmoothingEnabled = true
+
+    const theme = getCardTheme(formData)
+    const isTraumatico = theme.id === 'traumatico'
+    useFlatText = isTraumatico
 
     // Verificar dimensiones
-    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height, '(VERTICAL - 5.5cm x 8.5cm)')
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height, `(VERTICAL · escala ${RENDER_SCALE}×)`)
 
     // Border radius tipo carnet
     const cardBorderRadius = 25
 
-    // Recortar el canvas con border radius para que todo respete las esquinas redondeadas
+    ctx.save()
+    ctx.scale(RENDER_SCALE, RENDER_SCALE)
     ctx.save()
     roundRect(ctx, 0, 0, CARD_WIDTH, CARD_HEIGHT, cardBorderRadius)
     ctx.clip()
 
-    // Fondo oscuro
-    ctx.fillStyle = DARK_BG
+    // Fondo (tema)
+    ctx.fillStyle = theme.bg
     ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+
+    if (isTraumatico) {
+        drawTraumaticoBackground(ctx, theme)
+    }
+
+    // Granulado y destellos solo sobre el fondo (encima van textos, logo y fotos nítidos)
+    addGrainEffect(ctx, canvas, isTraumatico ? 0.015 : 0.05, theme.grainAccent)
+
+    // Franja superior distintiva (solo traumático)
+    if (theme.stripe) {
+        ctx.fillStyle = theme.stripe
+        ctx.fillRect(0, 0, CARD_WIDTH, 8)
+        ctx.fillRect(0, CARD_HEIGHT - 8, CARD_WIDTH, 8)
+    }
 
     // Padding del carnet
     const padding = 35
 
     // Top Header Section con padding
-    // Título superior - MUCHO más grande y prominente
-    ctx.fillStyle = '#b08449'
+    ctx.fillStyle = theme.header
     ctx.font = 'bold 60px Arial'
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, 'MIEMBRO OFICIAL', CARD_WIDTH / 2, padding + 60, 65, 'Arial', '#b08449')
+    drawTextWithShadow(ctx, 'MIEMBRO OFICIAL', CARD_WIDTH / 2, padding + 60, 65, 'Arial', theme.header)
 
-    // Nombre del club - más grande
+    // Nombre del club
     ctx.font = 'bold 24px Arial'
-    drawTextWithShadow(ctx, formData.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE', CARD_WIDTH / 2, padding + 110, 28, 'Arial', '#b08449')
+    drawTextWithShadow(ctx, formData.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE', CARD_WIDTH / 2, padding + 110, 28, 'Arial', theme.header)
 
-    // Central Logo Section - Logo MUCHO más grande
-    // Logo más grande para ocupar más espacio
-    const maxLogoHeight = 420  // Mucho más grande
-    const maxLogoWidth = 580   // Más ancho, casi todo el ancho disponible
-    const logoY = padding + 130  // Después del header con padding
+    // Central Logo Section
+    const maxLogoHeight = 420
+    const maxLogoWidth = 580
+    const logoY = padding + 130
 
     try {
-        // Vite devuelve la URL de la imagen al importarla
         const logoUrl = typeof logoImage === 'string' ? logoImage : logoImage.default || logoImage
         const logoImg = await loadImage(logoUrl)
 
-        // Calcular dimensiones manteniendo la proporción original
         const logoAspectRatio = logoImg.width / logoImg.height
         let logoWidth = maxLogoWidth
         let logoHeight = maxLogoWidth / logoAspectRatio
 
-        // Si la altura calculada excede el máximo, ajustar por altura
         if (logoHeight > maxLogoHeight) {
             logoHeight = maxLogoHeight
             logoWidth = maxLogoHeight * logoAspectRatio
         }
 
-        // Centrar el logo horizontalmente
         const logoX = (CARD_WIDTH - logoWidth) / 2
-
-        // Dibujar el logo manteniendo la proporción original
         ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight)
     } catch (error) {
         console.error('Error cargando logo:', error)
-        // Fallback: dibujar escudo si no se puede cargar la imagen
         const logoX = (CARD_WIDTH - maxLogoWidth) / 2
         drawClubShield(ctx, logoX, logoY, maxLogoWidth, maxLogoHeight)
     }
 
-    // Member Information Section - Letras más grandes con MÁS separación del logo
-    // Nombre del miembro - MUCHO más grande y en color #af9974
-    // Ajustar tamaño de fuente si el nombre es muy largo
-    const memberInfoY = logoY + maxLogoHeight + 50  // Más separación (antes 35)
+    const memberInfoY = logoY + maxLogoHeight + 50
     const nombreText = formData.nombre.toUpperCase() || 'NOMBRE'
-    const maxNombreWidth = CARD_WIDTH - (padding * 2) - 20  // Ancho disponible menos padding y margen
-    let nombreFontSize = 60  // Tamaño inicial
+    const maxNombreWidth = CARD_WIDTH - (padding * 2) - 20
+    let nombreFontSize = 60
 
-    // Ajustar tamaño de fuente si el nombre es muy largo
     ctx.font = `bold ${nombreFontSize}px Arial`
     let textMetrics = ctx.measureText(nombreText)
     while (textMetrics.width > maxNombreWidth && nombreFontSize > 30) {
@@ -389,83 +644,92 @@ export const generateFrontCard = async (formData) => {
     }
 
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, nombreText, CARD_WIDTH / 2, memberInfoY, nombreFontSize, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, nombreText, CARD_WIDTH / 2, memberInfoY, nombreFontSize, 'Arial', theme.value, true)
 
-    // Nivel/Operador - tamaño mediano más grande
+    const frontSubtitle = isTraumatico
+        ? 'CÓDIGO DE MIEMBRO'
+        : (formData.nivel || 'NIVEL').toUpperCase()
     ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, formData.nivel.toUpperCase() || 'NIVEL', CARD_WIDTH / 2, memberInfoY + 55, 28)
+    ctx.fillStyle = theme.accent
+    drawTextWithShadow(ctx, frontSubtitle, CARD_WIDTH / 2, memberInfoY + 55, 28, 'Arial', theme.accent)
 
-    // Número de membresía - tamaño mediano-grande en color #af9974
     ctx.font = 'bold 36px Arial'
-    drawTextWithShadow(ctx, formData.numeroMembresia || 'CTDV-0000', CARD_WIDTH / 2, memberInfoY + 105, 36, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.numeroMembresia || 'CTDV-0000', CARD_WIDTH / 2, memberInfoY + 105, 36, 'Arial', theme.value, false)
 
-    // Bottom Details Section - Todo en columna, letras MUCHO más grandes
-    // Calcular bottomY para que los últimos elementos lleguen hasta el final respetando el padding
-    // El último valor está en bottomY + 205, debe estar cerca de CARD_HEIGHT - padding
-    const lastValueY = CARD_HEIGHT - padding - 10  // 10px de margen antes del padding
-    const bottomY = lastValueY - 205  // Retroceder 205px desde el último valor
+    const lastValueY = CARD_HEIGHT - padding - 10
+    const bottomY = lastValueY - 205
 
     ctx.textAlign = 'left'
-    ctx.fillStyle = GOLD_COLOR
+    ctx.fillStyle = theme.accent
 
-    // Columna izquierda - EMISIÓN, VIGENCIA y RH
-    ctx.textAlign = 'left'
-
-    // EMISIÓN (primera)
+    // EMISIÓN
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'EMISIÓN:', padding + 10, bottomY, 26)
+    drawTextWithShadow(ctx, 'EMISIÓN:', padding + 10, bottomY, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.emision || 'MM/YYYY', padding + 10, bottomY + 35, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.emision || 'MM/YYYY', padding + 10, bottomY + 35, 28, 'Arial', theme.value, false)
 
     // VIGENCIA
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'VIGENCIA:', padding + 10, bottomY + 85, 26)
+    drawTextWithShadow(ctx, 'VIGENCIA:', padding + 10, bottomY + 85, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.vigencia || 'T-XX', padding + 10, bottomY + 120, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.vigencia || 'T-XX', padding + 10, bottomY + 120, 28, 'Arial', theme.value, false)
 
-    // RH (último dato del lado izquierdo, debajo de VIGENCIA)
+    // RH
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'RH:', padding + 10, bottomY + 170, 26)
+    drawTextWithShadow(ctx, 'RH:', padding + 10, bottomY + 170, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.rh || '---', padding + 10, bottomY + 205, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.rh || '---', padding + 10, bottomY + 205, 28, 'Arial', theme.value, false)
 
-    // Columna derecha - CÉDULA, CONTACTO y EMERGENCIA
     ctx.textAlign = 'right'
 
-    // CÉDULA (primera)
+    // CÉDULA
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'CÉDULA:', CARD_WIDTH - padding - 10, bottomY, 26)
+    drawTextWithShadow(ctx, 'CÉDULA:', CARD_WIDTH - padding - 10, bottomY, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.cedula || '---', CARD_WIDTH - padding - 10, bottomY + 35, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.cedula || '---', CARD_WIDTH - padding - 10, bottomY + 35, 28, 'Arial', theme.value, false)
 
     // CONTACTO
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'CONTACTO:', CARD_WIDTH - padding - 10, bottomY + 85, 26)
+    drawTextWithShadow(ctx, 'CONTACTO:', CARD_WIDTH - padding - 10, bottomY + 85, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.contacto || '---', CARD_WIDTH - padding - 10, bottomY + 120, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.contacto || '---', CARD_WIDTH - padding - 10, bottomY + 120, 28, 'Arial', theme.value, false)
 
-    // CONTACTO DE EMERGENCIA (último)
+    // EMERGENCIA
     ctx.font = 'bold 26px Arial'
-    drawTextWithShadow(ctx, 'EMERGENCIA:', CARD_WIDTH - padding - 10, bottomY + 170, 26)
+    drawTextWithShadow(ctx, 'EMERGENCIA:', CARD_WIDTH - padding - 10, bottomY + 170, 26, 'Arial', theme.accent)
     ctx.font = 'bold 28px Arial'
-    drawTextWithShadow(ctx, formData.contactoEmergencia || '---', CARD_WIDTH - padding - 10, bottomY + 205, 28, 'Arial', '#af9974')
+    drawTextWithShadow(ctx, formData.contactoEmergencia || '---', CARD_WIDTH - padding - 10, bottomY + 205, 28, 'Arial', theme.value, false)
 
-    // Restaurar el contexto (quitar el clip) antes del granulado y el borde
     ctx.restore()
 
-    // Aplicar efecto granulado
-    addGrainEffect(ctx, CARD_WIDTH, CARD_HEIGHT, 0.05)
-
-    // Bordes redondeados - más hacia adentro con border radius
-    ctx.strokeStyle = GOLD_COLOR
-    ctx.lineWidth = 2  // Borde más delgado (la mitad de 4)
-    const borderOffset = 12  // Borde más hacia adentro
+    ctx.strokeStyle = theme.accent
+    ctx.lineWidth = strokePx(isTraumatico ? 3 : 2)
+    const borderOffset = 12
     const borderWidth = CARD_WIDTH - (borderOffset * 2)
     const borderHeight = CARD_HEIGHT - (borderOffset * 2)
-    const borderCornerRadius = cardBorderRadius - borderOffset  // Ajustar el radius del borde
+    const borderCornerRadius = cardBorderRadius - borderOffset
     roundRect(ctx, borderOffset, borderOffset, borderWidth, borderHeight, Math.max(0, borderCornerRadius))
     ctx.stroke()
+
+    // Segundo borde interior (solo traumático) para diferenciarlo del airsoft
+    if (isTraumatico) {
+        ctx.strokeStyle = theme.value
+        ctx.lineWidth = strokePx(1)
+        const innerOffset = borderOffset + 6
+        roundRect(
+            ctx,
+            innerOffset,
+            innerOffset,
+            CARD_WIDTH - innerOffset * 2,
+            CARD_HEIGHT - innerOffset * 2,
+            Math.max(0, borderCornerRadius - 6)
+        )
+        ctx.stroke()
+    }
+
+    ctx.restore()
+
+    useFlatText = false
 
     return new Promise((resolve) => {
         canvas.toBlob((blob) => {
@@ -477,13 +741,22 @@ export const generateFrontCard = async (formData) => {
 // Generar tarjeta trasera (VERTICAL)
 export const generateBackCard = async (formData) => {
     const canvas = document.createElement('canvas')
-    // Asegurar que el canvas sea VERTICAL (más alto que ancho)
-    canvas.width = CARD_WIDTH  // 650px = 5.5 cm (ancho)
-    canvas.height = CARD_HEIGHT // 1004px = 8.5 cm (alto) - VERTICAL
+    canvas.width = CARD_WIDTH * RENDER_SCALE
+    canvas.height = CARD_HEIGHT * RENDER_SCALE
     const ctx = canvas.getContext('2d')
+    if (ctx.imageSmoothingQuality !== undefined) {
+        ctx.imageSmoothingQuality = 'high'
+    }
+    ctx.imageSmoothingEnabled = true
 
-    // Verificar dimensiones
-    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height, '(VERTICAL - 5.5cm x 8.5cm)')
+    const theme = getCardTheme(formData)
+    const isTraumatico = theme.id === 'traumatico'
+    useFlatText = isTraumatico
+    const lightR = theme.grainAccent.r
+    const lightG = theme.grainAccent.g
+    const lightB = theme.grainAccent.b
+
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height, `(VERTICAL · escala ${RENDER_SCALE}×)`)
 
     // Padding del carnet
     const padding = 35
@@ -491,19 +764,31 @@ export const generateBackCard = async (formData) => {
     // Border radius tipo carnet
     const cardBorderRadius = 25
 
-    // Recortar el canvas con border radius para que todo respete las esquinas redondeadas
+    ctx.save()
+    ctx.scale(RENDER_SCALE, RENDER_SCALE)
     ctx.save()
     roundRect(ctx, 0, 0, CARD_WIDTH, CARD_HEIGHT, cardBorderRadius)
     ctx.clip()
 
-    // Fondo oscuro
-    ctx.fillStyle = DARK_BG
+    ctx.fillStyle = theme.bg
     ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+
+    if (isTraumatico) {
+        drawTraumaticoBackground(ctx, theme)
+    }
+
+    addGrainEffect(ctx, canvas, isTraumatico ? 0.015 : 0.05, theme.grainAccent)
+
+    if (theme.stripe) {
+        ctx.fillStyle = theme.stripe
+        ctx.fillRect(0, 0, CARD_WIDTH, 8)
+        ctx.fillRect(0, CARD_HEIGHT - 8, CARD_WIDTH, 8)
+    }
+
     ctx.restore()
 
-    // Bordes redondeados - más hacia adentro con border radius
-    ctx.strokeStyle = GOLD_COLOR
-    ctx.lineWidth = 2  // Borde más delgado (la mitad de 4)
+    ctx.strokeStyle = theme.accent
+    ctx.lineWidth = strokePx(isTraumatico ? 3 : 2)
     const borderOffset = 12  // Borde más hacia adentro
     const borderWidth = CARD_WIDTH - (borderOffset * 2)
     const borderHeight = CARD_HEIGHT - (borderOffset * 2)
@@ -511,16 +796,41 @@ export const generateBackCard = async (formData) => {
     roundRect(ctx, borderOffset, borderOffset, borderWidth, borderHeight, Math.max(0, borderCornerRadius))
     ctx.stroke()
 
-    // Top Section - Identificador superior (centrado, más abajo para dar espacio arriba)
-    ctx.fillStyle = '#b08449'  // Mismo color que "MIEMBRO OFICIAL"
+    if (isTraumatico) {
+        ctx.strokeStyle = theme.value
+        ctx.lineWidth = strokePx(1)
+        const innerOffset = borderOffset + 6
+        roundRect(
+            ctx,
+            innerOffset,
+            innerOffset,
+            CARD_WIDTH - innerOffset * 2,
+            CARD_HEIGHT - innerOffset * 2,
+            Math.max(0, borderCornerRadius - 6)
+        )
+        ctx.stroke()
+    }
+
+    // Top Section - Identificador (airsoft) o título de disciplina (traumático)
+    const backHeader = isTraumatico
+        ? 'INFORMACIÓN'
+        : (formData.identificador || 'IDENTIFICADOR').toUpperCase()
+    ctx.fillStyle = theme.header
     ctx.font = 'bold 48px Arial'
     ctx.textAlign = 'center'
-    drawTextWithShadow(ctx, formData.identificador.toUpperCase() || 'IDENTIFICADOR', CARD_WIDTH / 2, padding + 55, 48, 'Arial', '#b08449')
+    // Ajustar tamaño si el título es largo
+    let backHeaderSize = 48
+    ctx.font = `bold ${backHeaderSize}px Arial`
+    while (ctx.measureText(backHeader).width > CARD_WIDTH - padding * 2 - 20 && backHeaderSize > 26) {
+        backHeaderSize -= 2
+        ctx.font = `bold ${backHeaderSize}px Arial`
+    }
+    drawTextWithShadow(ctx, backHeader, CARD_WIDTH / 2, padding + 55, backHeaderSize, 'Arial', theme.header)
 
     // Línea divisoria debajo del identificador
     const lineIdentificadorY = padding + 90
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
+    ctx.strokeStyle = theme.divider
+    ctx.lineWidth = strokePx(1.5)
     ctx.beginPath()
     ctx.moveTo(padding + 10, lineIdentificadorY)
     ctx.lineTo(CARD_WIDTH - padding - 10, lineIdentificadorY)
@@ -576,30 +886,30 @@ export const generateBackCard = async (formData) => {
         roundRect(ctx, photoX + photoWidth - 10, photoY, 10, photoHeight, borderRadius)
         ctx.fill()
 
-        // Efecto de luz izquierda (color #af9974) - más delgada
+        // Efecto de luz izquierda - más delgada
         const lightLeft = ctx.createLinearGradient(photoX, photoY, photoX + 7, photoY)
-        lightLeft.addColorStop(0, 'rgba(175, 153, 116, 0.3)')
-        lightLeft.addColorStop(1, 'rgba(175, 153, 116, 0)')
+        lightLeft.addColorStop(0, `rgba(${lightR}, ${lightG}, ${lightB}, 0.3)`)
+        lightLeft.addColorStop(1, `rgba(${lightR}, ${lightG}, ${lightB}, 0)`)
         ctx.fillStyle = lightLeft
         roundRect(ctx, photoX, photoY, 7, photoHeight, borderRadius)
         ctx.fill()
 
-        // Efecto de luz abajo (color #af9974) - más delgada
+        // Efecto de luz abajo - más delgada
         const lightBottom = ctx.createLinearGradient(photoX, photoY + photoHeight - 7, photoX, photoY + photoHeight)
-        lightBottom.addColorStop(0, 'rgba(175, 153, 116, 0)')
-        lightBottom.addColorStop(1, 'rgba(175, 153, 116, 0.3)')
+        lightBottom.addColorStop(0, `rgba(${lightR}, ${lightG}, ${lightB}, 0)`)
+        lightBottom.addColorStop(1, `rgba(${lightR}, ${lightG}, ${lightB}, 0.3)`)
         ctx.fillStyle = lightBottom
         roundRect(ctx, photoX, photoY + photoHeight - 7, photoWidth, 7, borderRadius)
         ctx.fill()
 
         // Borde sutil interno para definir mejor el efecto
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)'
-        ctx.lineWidth = 1
+        ctx.lineWidth = strokePx(1)
         roundRect(ctx, photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2, borderRadius - 1)
         ctx.stroke()
     } else {
         // Placeholder si no hay foto
-        ctx.fillStyle = '#333333'
+        ctx.fillStyle = isTraumatico ? '#2a2620' : '#333333'
         roundRect(ctx, photoX, photoY, photoWidth, photoHeight, borderRadius)
         ctx.fill()
 
@@ -620,32 +930,34 @@ export const generateBackCard = async (formData) => {
         roundRect(ctx, photoX + photoWidth - 10, photoY, 10, photoHeight, borderRadius)
         ctx.fill()
 
-        // Efecto de luz izquierda (color #af9974) - más delgada
+        // Efecto de luz izquierda - más delgada
         const lightLeft = ctx.createLinearGradient(photoX, photoY, photoX + 7, photoY)
-        lightLeft.addColorStop(0, 'rgba(175, 153, 116, 0.3)')
-        lightLeft.addColorStop(1, 'rgba(175, 153, 116, 0)')
+        lightLeft.addColorStop(0, `rgba(${lightR}, ${lightG}, ${lightB}, 0.3)`)
+        lightLeft.addColorStop(1, `rgba(${lightR}, ${lightG}, ${lightB}, 0)`)
         ctx.fillStyle = lightLeft
         roundRect(ctx, photoX, photoY, 7, photoHeight, borderRadius)
         ctx.fill()
 
-        // Efecto de luz abajo (color #af9974) - más delgada
+        // Efecto de luz abajo - más delgada
         const lightBottom = ctx.createLinearGradient(photoX, photoY + photoHeight - 7, photoX, photoY + photoHeight)
-        lightBottom.addColorStop(0, 'rgba(175, 153, 116, 0)')
-        lightBottom.addColorStop(1, 'rgba(175, 153, 116, 0.3)')
+        lightBottom.addColorStop(0, `rgba(${lightR}, ${lightG}, ${lightB}, 0)`)
+        lightBottom.addColorStop(1, `rgba(${lightR}, ${lightG}, ${lightB}, 0.3)`)
         ctx.fillStyle = lightBottom
         roundRect(ctx, photoX, photoY + photoHeight - 7, photoWidth, 7, borderRadius)
         ctx.fill()
 
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)'
-        ctx.lineWidth = 1
+        ctx.lineWidth = strokePx(1)
         roundRect(ctx, photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2, borderRadius - 1)
         ctx.stroke()
 
-        ctx.fillStyle = GOLD_COLOR
+        ctx.fillStyle = theme.accent
         ctx.font = '20px Arial'
         ctx.textAlign = 'center'
         ctx.fillText('FOTO', photoX + photoWidth / 2, photoY + photoHeight / 2)
     }
+
+    const disciplinaValor = (formData.disciplina || (isTraumatico ? 'BAJA LETALIDAD' : 'AIRSOFT')).toUpperCase()
 
     // Right Column - Información a la derecha de la foto
     const infoX = photoX + photoWidth + 25
@@ -653,151 +965,234 @@ export const generateBackCard = async (formData) => {
 
     ctx.textAlign = 'left'
 
-    // ESPECIALIDAD
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'ESPECIALIDAD', infoX, infoY, 26)
+    if (isTraumatico) {
+        // DISCIPLINA (fija: BAJA LETALIDAD)
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'DISCIPLINA', infoX, infoY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 24px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, disciplinaValor, infoX, infoY + 42, 24, 'Arial', theme.value, false)
 
-    // Valor de ESPECIALIDAD
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, formData.especialidad.toUpperCase() || 'ESPECIALIDAD', infoX, infoY + 50, 28, 'Arial', '#af9974')
+        const lineDiscY = infoY + 72
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(infoX, lineDiscY)
+        ctx.lineTo(CARD_WIDTH - padding - 5, lineDiscY)
+        ctx.stroke()
 
-    // Línea divisoria después del valor de ESPECIALIDAD
-    const lineEspY = infoY + 90
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(infoX, lineEspY)
-    ctx.lineTo(CARD_WIDTH - padding - 5, lineEspY)
-    ctx.stroke()
+        // TIPO (fijo: TRAUMÁTICA)
+        infoY = lineDiscY + 32
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'TIPO', infoX, infoY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 24px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(
+            ctx,
+            (formData.tipo || 'TRAUMÁTICA').toUpperCase(),
+            infoX,
+            infoY + 42,
+            24,
+            'Arial',
+            theme.value,
+            false
+        )
 
-    // NIVEL (con más padding)
-    infoY = lineEspY + 35  // Más padding entre secciones
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'NIVEL', infoX, infoY, 26)
+        const lineTipoY = infoY + 72
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(infoX, lineTipoY)
+        ctx.lineTo(CARD_WIDTH - padding - 5, lineTipoY)
+        ctx.stroke()
+    } else {
+        // ESPECIALIDAD
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'ESPECIALIDAD', infoX, infoY, 26, 'Arial', theme.accent)
 
-    // Valor de NIVEL
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, formData.nivel.toUpperCase() || 'NIVEL', infoX, infoY + 50, 28, 'Arial', '#af9974')
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, (formData.especialidad || 'ESPECIALIDAD').toUpperCase(), infoX, infoY + 50, 28, 'Arial', theme.value, false)
 
-    // Línea divisoria después del valor de NIVEL
-    const lineNivelY = infoY + 90
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(infoX, lineNivelY)
-    ctx.lineTo(CARD_WIDTH - padding - 5, lineNivelY)
-    ctx.stroke()
+        const lineEspY = infoY + 90
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(infoX, lineEspY)
+        ctx.lineTo(CARD_WIDTH - padding - 5, lineEspY)
+        ctx.stroke()
 
-    // DISCIPLINA (con más padding después de NIVEL)
-    infoY = lineNivelY + 35  // Más padding entre secciones
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'DISCIPLINA', infoX, infoY, 26)
+        // NIVEL
+        infoY = lineEspY + 35
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'NIVEL', infoX, infoY, 26, 'Arial', theme.accent)
 
-    // Valor de DISCIPLINA
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, 'AIRSOFT', infoX, infoY + 50, 28, 'Arial', '#af9974')
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, (formData.nivel || 'NIVEL').toUpperCase(), infoX, infoY + 50, 28, 'Arial', theme.value, false)
 
-    // Línea divisoria después del valor de DISCIPLINA
-    const lineDisciplinaY = infoY + 90
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(infoX, lineDisciplinaY)
-    ctx.lineTo(CARD_WIDTH - padding - 5, lineDisciplinaY)
-    ctx.stroke()
+        const lineNivelY = infoY + 90
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(infoX, lineNivelY)
+        ctx.lineTo(CARD_WIDTH - padding - 5, lineNivelY)
+        ctx.stroke()
 
-    // Línea divisoria después de la foto (antes de EQUIPO TÁCTICO) - con más padding
-    const weaponsY = photoY + photoHeight + 30  // Más padding
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
+        // DISCIPLINA
+        infoY = lineNivelY + 35
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'DISCIPLINA', infoX, infoY, 26, 'Arial', theme.accent)
+
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, disciplinaValor, infoX, infoY + 50, 28, 'Arial', theme.value, false)
+
+        const lineDisciplinaY = infoY + 90
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(infoX, lineDisciplinaY)
+        ctx.lineTo(CARD_WIDTH - padding - 5, lineDisciplinaY)
+        ctx.stroke()
+    }
+
+    // Línea divisoria después de la foto
+    const weaponsY = photoY + photoHeight + 30
+    ctx.strokeStyle = theme.divider
+    ctx.lineWidth = strokePx(1.5)
     ctx.beginPath()
     ctx.moveTo(photoX, weaponsY)
     ctx.lineTo(CARD_WIDTH - padding - 5, weaponsY)
     ctx.stroke()
 
-    // EQUIPO TÁCTICO - Título de la sección de armas
-    const equipoTacticoY = weaponsY + 40  // Más padding arriba del título (después de la línea)
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'EQUIPO TÁCTICO', photoX, equipoTacticoY, 26)
-
-    // PISTOLA (valor del equipo táctico)
-    const weaponsTextY = equipoTacticoY + 50  // Padding después del título
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, `PISTOLA: ${formData.pistola.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY, 28, 'Arial', '#af9974')
-
-    // FUSIL (valor del equipo táctico)
-    drawTextWithShadow(ctx, `FUSIL: ${formData.fusil.toUpperCase() || 'MODELO'}`, photoX, weaponsTextY + 40, 28, 'Arial', '#af9974')
-
-    // Línea divisoria después de armas
-    const line1Y = weaponsTextY + 75  // Más padding
-    ctx.strokeStyle = '#af9974'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(photoX, line1Y)
-    ctx.lineTo(CARD_WIDTH - padding - 5, line1Y)
-    ctx.stroke()
-
-    // Lower Mid-Section - Equipo y Rol (lado a lado)
-    const teamY = line1Y + 40  // Más padding arriba del texto (después de la línea)
     const teamX = photoX
-    const rolX = CARD_WIDTH - padding - 5  // Alineado a la derecha
 
-    // EQUIPO (izquierda)
-    ctx.textAlign = 'left'
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'EQUIPO', teamX, teamY, 26)
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, (formData.equipoTactico || 'N/A').toUpperCase(), teamX, teamY + 40, 28, 'Arial', '#af9974')
+    if (isTraumatico) {
+        // MARCA / CALIBRE / A/N
+        const armaSectionY = weaponsY + 40
+        ctx.textAlign = 'left'
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'MARCA', photoX, armaSectionY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(
+            ctx,
+            (formData.marca || formData.arma || '---').toUpperCase(),
+            photoX,
+            armaSectionY + 42,
+            28,
+            'Arial',
+            theme.value,
+            false
+        )
 
-    // ROL EN EL EQUIPO (derecha, nivelado con EQUIPO)
-    ctx.textAlign = 'right'
-    ctx.font = 'bold 26px Arial'
-    ctx.fillStyle = GOLD_COLOR
-    drawTextWithShadow(ctx, 'ROL', rolX, teamY, 26)
-    ctx.font = 'bold 28px Arial'
-    ctx.fillStyle = '#af9974'
-    drawTextWithShadow(ctx, (formData.rolEnEquipo || 'N/A').toUpperCase(), rolX, teamY + 40, 28, 'Arial', '#af9974')
+        const calibreY = armaSectionY + 95
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'CALIBRE', photoX, calibreY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(
+            ctx,
+            (formData.calibre || '---').toUpperCase(),
+            photoX,
+            calibreY + 42,
+            28,
+            'Arial',
+            theme.value,
+            false
+        )
 
-    // QR Code (abajo a la derecha, mejor posicionado)
-    // Calcular posición del QR primero para nivelar el logo
+        const anY = calibreY + 95
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'A/N', photoX, anY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(
+            ctx,
+            (formData.an || '---').toUpperCase(),
+            photoX,
+            anY + 42,
+            28,
+            'Arial',
+            theme.value,
+            false
+        )
+    } else {
+        // EQUIPO TÁCTICO - pistola / fusil
+        const equipoTacticoY = weaponsY + 40
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'EQUIPO TÁCTICO', photoX, equipoTacticoY, 26, 'Arial', theme.accent)
+
+        const weaponsTextY = equipoTacticoY + 50
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, `PISTOLA: ${(formData.pistola || 'MODELO').toUpperCase()}`, photoX, weaponsTextY, 28, 'Arial', theme.value, false)
+        drawTextWithShadow(ctx, `FUSIL: ${(formData.fusil || 'MODELO').toUpperCase()}`, photoX, weaponsTextY + 40, 28, 'Arial', theme.value, false)
+
+        const line1Y = weaponsTextY + 75
+        ctx.strokeStyle = theme.divider
+        ctx.lineWidth = strokePx(1.5)
+        ctx.beginPath()
+        ctx.moveTo(photoX, line1Y)
+        ctx.lineTo(CARD_WIDTH - padding - 5, line1Y)
+        ctx.stroke()
+
+        const teamY = line1Y + 40
+        const rolX = CARD_WIDTH - padding - 5
+
+        ctx.textAlign = 'left'
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'EQUIPO', teamX, teamY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, (formData.equipoTactico || 'N/A').toUpperCase(), teamX, teamY + 40, 28, 'Arial', theme.value, false)
+
+        ctx.textAlign = 'right'
+        ctx.font = 'bold 26px Arial'
+        ctx.fillStyle = theme.accent
+        drawTextWithShadow(ctx, 'ROL', rolX, teamY, 26, 'Arial', theme.accent)
+        ctx.font = 'bold 28px Arial'
+        ctx.fillStyle = theme.value
+        drawTextWithShadow(ctx, (formData.rolEnEquipo || 'N/A').toUpperCase(), rolX, teamY + 40, 28, 'Arial', theme.value, false)
+    }
+
+    // QR Code (abajo a la derecha)
     const qrSize = 100
-    const qrPadding = 5  // Padding interno (reducido)
-    const qrBorderWidth = 2  // Ancho del borde
+    const qrPadding = 5
+    const qrBorderWidth = 2
     const qrX = CARD_WIDTH - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
     const qrY = CARD_HEIGHT - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
 
-    // Logo del equipo (nivelado con el QR)
-    if (formData.equipoLogo) {
+    const qrBgX = qrX - qrPadding - qrBorderWidth
+    const availLogoWidth = Math.max(72, qrBgX - teamX - 12)
+
+    // Logo del equipo (solo airsoft)
+    if (!isTraumatico && formData.equipoLogo) {
         try {
             const logoImg = await loadImage(formData.equipoLogo)
-            const logoSize = 120  // Tamaño más grande del logo
+            const logoSize = Math.min(TEAM_LOGO_MAX_SIDE, availLogoWidth)
             const logoX = teamX
-
-            // Nivelar el logo con el QR (misma altura Y, centrado verticalmente)
             const logoAspectRatio = logoImg.width / logoImg.height
             let logoWidth = logoSize
             let logoHeight = logoSize / logoAspectRatio
 
-            // Si la altura calculada excede el tamaño, ajustar por altura
             if (logoHeight > logoSize) {
                 logoHeight = logoSize
                 logoWidth = logoSize * logoAspectRatio
             }
 
-            // Centrar verticalmente el logo con el QR
             const logoY = qrY + (qrSize / 2) - (logoHeight / 2)
-
-            // Alinear el logo a la izquierda
             ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight)
         } catch (error) {
             console.error('Error cargando logo del equipo:', error)
@@ -815,28 +1210,31 @@ export const generateBackCard = async (formData) => {
             baseUrl = process.env.VITE_APP_URL
         }
 
-        // Si no hay baseUrl, usar una URL relativa (menos ideal para QR codes)
+        // URL del QR: incluye tipo para no confundir airsoft vs traumático
+        const tipoQr =
+            formData.tipoCarnet === 'traumatico' ? 'traumatico' : 'airsoft'
+        const cedulaQr = encodeURIComponent(String(formData.cedula || '').trim())
         const qrData = baseUrl
-            ? `${baseUrl}/credencial/${formData.cedula}`
-            : `/credencial/${formData.cedula}`
+            ? `${baseUrl}/credencial/${cedulaQr}?tipo=${tipoQr}`
+            : `/credencial/${cedulaQr}?tipo=${tipoQr}`
 
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 200,
+            width: 200 * RENDER_SCALE,
             margin: 2,
             color: {
                 dark: '#000000',
-                light: '#D4C5A9'  // Beige/arena claro para el fondo interno del QR
+                light: theme.qrLight
             },
             errorCorrectionLevel: 'M'
         })
 
         const qrImg = await loadImage(qrDataUrl)
 
-        // Sombra sutil para dar profundidad
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
-        ctx.shadowBlur = 8
-        ctx.shadowOffsetX = 2
-        ctx.shadowOffsetY = 2
+        // Sombra muy ligera (blur alto suaviza bordes del QR y del recuadro)
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.22)'
+        ctx.shadowBlur = 2
+        ctx.shadowOffsetX = 1
+        ctx.shadowOffsetY = 1
 
         // Fondo beige/arena con borde redondeado para el QR
         const qrBgX = qrX - qrPadding - qrBorderWidth
@@ -844,13 +1242,13 @@ export const generateBackCard = async (formData) => {
         const qrBgSize = qrSize + (qrPadding * 2) + (qrBorderWidth * 2)
 
         // Fondo beige/arena claro (similar al color #af9974 pero más claro)
-        ctx.fillStyle = '#D4C5A9'  // Beige/arena claro con buen contraste
+        ctx.fillStyle = theme.qrLight
         roundRect(ctx, qrBgX, qrBgY, qrBgSize, qrBgSize, 8)
         ctx.fill()
 
         // Borde dorado
-        ctx.strokeStyle = GOLD_COLOR
-        ctx.lineWidth = qrBorderWidth
+        ctx.strokeStyle = theme.accent
+        ctx.lineWidth = strokePx(qrBorderWidth)
         roundRect(ctx, qrBgX, qrBgY, qrBgSize, qrBgSize, 8)
         ctx.stroke()
 
@@ -866,8 +1264,9 @@ export const generateBackCard = async (formData) => {
         console.error('Error generando QR:', error)
     }
 
-    // Aplicar efecto granulado
-    addGrainEffect(ctx, CARD_WIDTH, CARD_HEIGHT, 0.05)
+    ctx.restore()
+
+    useFlatText = false
 
     return new Promise((resolve) => {
         canvas.toBlob((blob) => {

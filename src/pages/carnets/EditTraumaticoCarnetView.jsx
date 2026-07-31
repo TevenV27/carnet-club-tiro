@@ -1,7 +1,7 @@
 import { useOutletContext, useParams } from 'react-router-dom'
 import CreateCard from './CreateCard'
 
-function EditCarnetView() {
+function EditTraumaticoCarnetView() {
   const { cedula: cedulaParam } = useParams()
   const cedula = decodeURIComponent(cedulaParam || '')
   const outletContext = useOutletContext()
@@ -11,9 +11,9 @@ function EditCarnetView() {
       editCedula={cedula}
       returnPath={`/usuarios/${encodeURIComponent(cedula)}`}
       onSignOut={outletContext?.onSignOut}
-      variant="airsoft"
+      variant="traumatico"
     />
   )
 }
 
-export default EditCarnetView
+export default EditTraumaticoCarnetView

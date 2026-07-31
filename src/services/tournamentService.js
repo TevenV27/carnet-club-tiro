@@ -27,6 +27,7 @@ const normalizeTournament = (docSnap) => {
         nombre: data.nombre || 'Torneo sin nombre',
         fechaInicio: data.fechaInicio,
         estado: estadoDoc,
+        tipo: data.tipo === 'traumatico' ? 'traumatico' : 'airsoft',
         participantes: data.participantes || [],
         actividades: data.actividades || [],
         galeria: data.galeria || [],
@@ -57,11 +58,17 @@ const determineEstado = (fechaInicio) => {
     return 'activo'
 }
 
-export const getTournaments = async () => {
+export const getTournaments = async (tipo = null) => {
     const snapshot = await getDocs(tournamentsCollection)
     const tournaments = snapshot.docs
         .map((docSnap) => normalizeTournament(docSnap))
         .filter(Boolean)
+        .filter((t) => {
+            if (!tipo) return true
+            if (tipo === 'traumatico') return t.tipo === 'traumatico'
+            // airsoft: docs sin tipo (legado) o explícitos
+            return t.tipo !== 'traumatico'
+        })
         .sort((a, b) => {
             const dateA = a.fechaInicio?.toDate?.() ?? new Date(a.fechaInicio || 0)
             const dateB = b.fechaInicio?.toDate?.() ?? new Date(b.fechaInicio || 0)
@@ -71,10 +78,12 @@ export const getTournaments = async () => {
     return tournaments
 }
 
-export const createTournament = async ({ nombre, fechaInicio, participantes }) => {
+export const createTournament = async ({ nombre, fechaInicio, participantes, tipo = 'airsoft' }) => {
     if (!nombre || !fechaInicio) {
         throw new Error('Nombre y fecha de inicio son obligatorios para crear un torneo.')
     }
+
+    const tipoNorm = tipo === 'traumatico' ? 'traumatico' : 'airsoft'
 
     const fecha = typeof fechaInicio === 'string'
         ? Timestamp.fromDate(new Date(fechaInicio))
@@ -93,6 +102,7 @@ export const createTournament = async ({ nombre, fechaInicio, participantes }) =
         nombre,
         fechaInicio: fecha,
         estado: determineEstado(fecha.toDate()),
+        tipo: tipoNorm,
         participantes: participantesData,
         actividades: [],
         galeria: [],
@@ -100,13 +110,12 @@ export const createTournament = async ({ nombre, fechaInicio, participantes }) =
         updatedAt: now
     })
 
-    // Registrar log
     await logAction(
         'crear',
         'torneos',
         docRef.id,
-        `Torneo creado: ${nombre}`,
-        { nombre, fechaInicio: fecha.toDate() }
+        `Torneo ${tipoNorm} creado: ${nombre}`,
+        { nombre, fechaInicio: fecha.toDate(), tipo: tipoNorm }
     )
 
     const snapshot = await getDoc(docRef)

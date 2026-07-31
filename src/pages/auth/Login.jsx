@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '../../firebase/config'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { getUserByEmail } from '../../services/userService'
+import { isActivo } from '../../utils/activoStatus'
 import logoImage from '../../assets/logo.png'
 
 function Login() {
@@ -19,7 +21,17 @@ function Login() {
         setLoading(true)
 
         try {
-            await signInWithEmailAndPassword(auth, email.trim(), password)
+            const cred = await signInWithEmailAndPassword(auth, email.trim(), password)
+            try {
+                const profile = await getUserByEmail(cred.user.email)
+                if (profile && !isActivo(profile)) {
+                    await signOut(auth)
+                    setError('Tu cuenta de operador está desactivada. Contacta al administrador.')
+                    return
+                }
+            } catch (profileErr) {
+                console.error('Error verificando estado del operador:', profileErr)
+            }
             navigate('/usuarios')
         } catch (error) {
             console.error('Error en autenticación:', error)

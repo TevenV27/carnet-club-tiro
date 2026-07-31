@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '../firebase/config'
 import { getUserByAuthUid, getUserByEmail } from '../services/userService'
+import { isActivo } from '../utils/activoStatus'
 
 const PROFILE_FETCH_MS = 20000
 
@@ -44,6 +45,11 @@ export function AuthProfileProvider({ children }) {
               setTimeout(() => reject(new Error('PROFILE_FETCH_TIMEOUT')), PROFILE_FETCH_MS)
             })
           ])
+          if (docUser && !isActivo(docUser)) {
+            await signOut(auth)
+            setProfile(null)
+            return
+          }
           setProfile(docUser)
         } catch (err) {
           console.error('Error cargando perfil de usuario:', err)
