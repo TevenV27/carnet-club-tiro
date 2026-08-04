@@ -32,7 +32,10 @@ const ADMIN_SECTIONS = [
     {
         id: 'general',
         title: 'General',
-        items: [{ id: 'usuarios', label: 'Usuarios', path: '/usuarios' }]
+        items: [
+            { id: 'usuarios', label: 'Usuarios', path: '/usuarios' },
+            { id: 'asistencia', label: 'Asistencia', path: '/asistencia' }
+        ]
     },
     {
         id: 'airsoft',
@@ -78,6 +81,7 @@ const OPERATOR_SECTIONS = [
         id: 'operacion',
         title: 'Operación',
         items: [
+            { id: 'asistencia', label: 'Asistencia', path: '/asistencia' },
             { id: 'equipos', label: 'Equipos', path: '/equipos' },
             { id: 'torneos', label: 'Torneos', path: '/torneos' },
             { id: 'ranking', label: 'Ranking', path: '/ranking' },
@@ -462,7 +466,7 @@ function SidebarLayout({ onSignOut }) {
                         <div className="bg-red-900 text-white p-3 text-sm">{error}</div>
                     )}
 
-                    <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-surface">
+                    <div className="relative flex-1 min-h-0 min-w-0 overflow-auto bg-surface">
                         {loading ? (
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-tactical-gold font-tactical uppercase tracking-[0.08em]">

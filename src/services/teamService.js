@@ -36,6 +36,10 @@ const normalizeTeamDoc = (docSnap) => {
 export const getTeams = async () => {
     const snapshot = await getDocs(teamsCollection)
     return snapshot.docs
+        .filter((docSnap) => {
+            const modulo = docSnap.data()?._modulo
+            return modulo !== 'asistencia' && modulo !== 'asistencia_parametro'
+        })
         .map(normalizeTeamDoc)
         .filter(Boolean)
         .sort((a, b) => {
@@ -51,6 +55,11 @@ export const getTeamById = async (teamId) => {
 
     const docRef = doc(db, 'equipos', teamId)
     const snapshot = await getDoc(docRef)
+
+    const modulo = snapshot.exists() ? snapshot.data()?._modulo : null
+    if (modulo === 'asistencia' || modulo === 'asistencia_parametro') {
+        return null
+    }
 
     return normalizeTeamDoc(snapshot)
 }

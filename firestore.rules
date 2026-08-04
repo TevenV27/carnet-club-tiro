@@ -1,24 +1,19 @@
-// ============================================
-// COPIA TODO ESTO EN FIRESTORE → RULES → PUBLISH
-// Proyecto: campo-tiro-valle
-// URL directa:
-// https://console.firebase.google.com/project/campo-tiro-valle/firestore/rules
-// ============================================
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Carnets: lectura pública (credencial por cédula)
     match /carnets/{cardId} {
       allow read: if true;
       allow create, update, delete: if request.auth != null;
     }
 
+    // Logs: solo autenticados; inmutables
     match /logs/{logId} {
       allow read, create: if request.auth != null;
       allow update, delete: if false;
     }
 
-    // Incluye asistencias, usuarios, equipos, torneos, etc.
+    // Asistencias + resto del panel
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

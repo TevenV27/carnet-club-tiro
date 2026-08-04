@@ -34,6 +34,8 @@ import LogsView from '../pages/logs/LogsView'
 import LogDetailView from '../pages/logs/LogDetailView'
 import AdministracionView from '../pages/administration/AdministracionView'
 import ProfileView from '../pages/profile/ProfileView'
+import AsistenciaView from '../pages/asistencia/AsistenciaView'
+import AsistenciaDetailView from '../pages/asistencia/AsistenciaDetailView'
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -107,6 +109,8 @@ function App() {
           <Route path="traumatico/torneos/:torneoId" element={<TournamentDetailView />} />
           <Route path="ranking" element={<RankingView />} />
           <Route path="traumatico/ranking" element={<TraumaticoRankingView />} />
+          <Route path="asistencia" element={<AsistenciaView />} />
+          <Route path="asistencia/:asistenciaId" element={<AsistenciaDetailView />} />
           <Route path="perfil" element={<ProfileView />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
