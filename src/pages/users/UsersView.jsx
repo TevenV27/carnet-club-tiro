@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAllUsers } from '../../services/userService'
+import { getTeams } from '../../services/teamService'
 import InactiveBanner from '../../components/ui/InactiveBanner'
 import { isActivo } from '../../utils/activoStatus'
 
@@ -22,9 +23,11 @@ const formatTimestamp = (value) => {
 
 function UsersView() {
     const [users, setUsers] = useState([])
+    const [teams, setTeams] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
+    const [teamFilter, setTeamFilter] = useState('')
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -33,9 +36,13 @@ function UsersView() {
         const fetchUsers = async () => {
             try {
                 setLoading(true)
-                const data = await getAllUsers()
+                const [usersData, teamsData] = await Promise.all([
+                    getAllUsers(),
+                    getTeams().catch(() => [])
+                ])
                 if (isMounted) {
-                    setUsers(data)
+                    setUsers(usersData)
+                    setTeams(teamsData)
                 }
             } catch (err) {
                 console.error('Error cargando usuarios:', err)
@@ -57,17 +64,28 @@ function UsersView() {
     }, [])
 
     const filteredUsers = useMemo(() => {
+        let list = users
+
+        if (teamFilter === '__sin_equipo__') {
+            list = list.filter((user) => !(user.equipoTactico || '').trim())
+        } else if (teamFilter) {
+            const teamName = teamFilter.trim().toLowerCase()
+            list = list.filter(
+                (user) => (user.equipoTactico || '').trim().toLowerCase() === teamName
+            )
+        }
+
         if (!searchTerm.trim()) {
-            return users
+            return list
         }
 
         const term = searchTerm.trim().toLowerCase()
-        return users.filter((user) => {
+        return list.filter((user) => {
             const nombre = (user.nombre || '').toLowerCase()
             const cedula = (user.cedula || '').toLowerCase()
             return nombre.includes(term) || cedula.includes(term)
         })
-    }, [users, searchTerm])
+    }, [users, searchTerm, teamFilter])
 
     if (loading) {
         return (
@@ -89,6 +107,25 @@ function UsersView() {
         )
     }
 
+    const emptyMessage = (() => {
+        if (users.length === 0) {
+            return 'No hay usuarios registrados todavía.'
+        }
+        if (teamFilter && searchTerm.trim()) {
+            return `Sin coincidencias para "${searchTerm}" en el equipo seleccionado`
+        }
+        if (teamFilter === '__sin_equipo__') {
+            return 'No hay operadores sin equipo asignado'
+        }
+        if (teamFilter) {
+            return `No hay operadores en el equipo "${teamFilter}"`
+        }
+        if (searchTerm.trim()) {
+            return `Sin coincidencias para "${searchTerm}"`
+        }
+        return 'Sin resultados'
+    })()
+
     return (
         <div className="p-3 md:p-8 bg-tactical-dark min-h-0 h-auto text-tactical-brass">
             <section className="mb-8 relative">
@@ -108,35 +145,63 @@ function UsersView() {
                 </div>
             </section>
             <section className="mb-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm px-[10px] py-[10px] md:px-5 md:py-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border border-tactical-border bg-black/40 backdrop-blur-sm px-[10px] py-[10px] md:px-5 md:py-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     <div>
                         <p className="text-xs font-tactical text-tactical-brass uppercase tracking-[0.08em]">
                             Buscar operadores por nombre o cédula
                         </p>
                         <p className="text-[10px] font-tactical text-tactical-brass/90 uppercase tracking-[0.12em] mt-1">
                             {filteredUsers.length} resultados
+                            {teamFilter && teamFilter !== '__sin_equipo__'
+                                ? ` · ${teamFilter}`
+                                : teamFilter === '__sin_equipo__'
+                                  ? ' · Sin equipo'
+                                  : ''}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-black/60 border border-tactical-border px-3 py-2 rounded-md w-full lg:w-96 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
-                        <span className="text-tactical-gold text-xs font-tactical uppercase tracking-[0.08em]">Scan</span>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Ej: Carlos | 1234567890"
-                            className="flex-1 bg-transparent border-0 text-tactical-brass text-sm font-tactical uppercase tracking-[0.05em] placeholder:text-tactical-brass/75 focus:outline-none"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto lg:max-w-2xl">
+                        <label className="flex flex-col gap-1 min-w-0 sm:w-56">
+                            <span className="text-[9px] font-tactical uppercase tracking-[0.1em] text-tactical-brass/80">
+                                Equipo
+                            </span>
+                            <select
+                                value={teamFilter}
+                                onChange={(e) => setTeamFilter(e.target.value)}
+                                className="bg-black/60 border border-tactical-border px-3 py-2 rounded-md text-tactical-brass text-sm font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold/60 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]"
+                            >
+                                <option value="">Todos los equipos</option>
+                                <option value="__sin_equipo__">Sin equipo</option>
+                                {teams.map((team) => (
+                                    <option key={team.id} value={team.nombre}>
+                                        {team.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="flex flex-col gap-1 flex-1 min-w-0">
+                            <span className="text-[9px] font-tactical uppercase tracking-[0.1em] text-tactical-brass/80">
+                                Buscar
+                            </span>
+                            <div className="flex items-center gap-2 bg-black/60 border border-tactical-border px-3 py-2 rounded-md w-full shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
+                                <span className="text-tactical-gold text-xs font-tactical uppercase tracking-[0.08em]">
+                                    Scan
+                                </span>
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Ej: Carlos | 1234567890"
+                                    className="flex-1 bg-transparent border-0 text-tactical-brass text-sm font-tactical uppercase tracking-[0.05em] placeholder:text-tactical-brass/75 focus:outline-none"
+                                />
+                            </div>
+                        </label>
                     </div>
                 </div>
             </section>
 
-            {users.length === 0 ? (
-                <div className="bg-black border border-dashed border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase">
-                    No hay usuarios registrados todavía.
-                </div>
-            ) : filteredUsers.length === 0 ? (
-                <div className="bg-black border border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.08em] text-tactical-brass">
-                    Sin coincidencias para "{searchTerm}"
+            {users.length === 0 || filteredUsers.length === 0 ? (
+                <div className="bg-black border border-dashed border-tactical-border p-6 rounded text-center font-tactical text-sm uppercase tracking-[0.08em] text-tactical-brass">
+                    {emptyMessage}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -201,6 +266,12 @@ function UsersView() {
                                         </div>
 
                                         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 break-words">
+                                            {user.equipoTactico && (
+                                                <div className="space-y-1">
+                                                    <dt className="text-[9px] text-tactical-brass/90">Equipo</dt>
+                                                    <dd className="text-tactical-gold break-words">{user.equipoTactico}</dd>
+                                                </div>
+                                            )}
                                             {user.contacto && (
                                                 <div className="hidden sm:block space-y-1">
                                                     <dt className="text-[9px] text-tactical-brass/90">Contacto</dt>
@@ -245,4 +316,3 @@ function UsersView() {
 }
 
 export default UsersView
-

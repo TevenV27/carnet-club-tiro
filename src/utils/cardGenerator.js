@@ -9,8 +9,12 @@ export const CARD_HEIGHT = 1063 // 9 cm
 /** Escala de render (p. ej. 2 = ~600 DPI efectivos en el PNG). Mejora nitidez de texto, QR y fotos. */
 const RENDER_SCALE = 2
 
-/** Lado máximo del logo del equipo (cara trasera), en coordenadas lógicas del carnet */
-const TEAM_LOGO_MAX_SIDE = 180
+/** Lado máximo del logo del equipo (cara trasera airsoft), en coordenadas lógicas del carnet */
+const TEAM_LOGO_MAX_SIDE = 200
+
+/** Tamaño del QR en coordenadas lógicas del carnet */
+const QR_SIZE_AIRSOFT = 150
+const QR_SIZE_TRAUMATICO = 100
 
 /** Grosor de trazo en espacio lógico para que en el PNG final coincida con el diseño a escala 1× */
 const strokePx = (devicePixels) => devicePixels / RENDER_SCALE
@@ -836,13 +840,21 @@ export const generateBackCard = async (formData) => {
     ctx.lineTo(CARD_WIDTH - padding - 10, lineIdentificadorY)
     ctx.stroke()
 
-    // Foto del miembro (a la izquierda, cuadrada)
+    // Foto del miembro (a la izquierda, cuadrada) — File/Blob o data URL / base64
     let photoImg = null
     if (formData.foto) {
         try {
-            const photoUrl = URL.createObjectURL(formData.foto)
+            let photoUrl
+            let shouldRevoke = false
+            if (typeof formData.foto === 'string') {
+                const s = formData.foto.trim()
+                photoUrl = s.startsWith('data:') ? s : `data:image/jpeg;base64,${s}`
+            } else {
+                photoUrl = URL.createObjectURL(formData.foto)
+                shouldRevoke = true
+            }
             photoImg = await loadImage(photoUrl)
-            URL.revokeObjectURL(photoUrl)
+            if (shouldRevoke) URL.revokeObjectURL(photoUrl)
         } catch (error) {
             console.error('Error cargando foto:', error)
         }
@@ -1168,14 +1180,14 @@ export const generateBackCard = async (formData) => {
     }
 
     // QR Code (abajo a la derecha)
-    const qrSize = 100
+    const qrSize = isTraumatico ? QR_SIZE_TRAUMATICO : QR_SIZE_AIRSOFT
     const qrPadding = 5
     const qrBorderWidth = 2
     const qrX = CARD_WIDTH - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
     const qrY = CARD_HEIGHT - qrSize - qrPadding * 2 - qrBorderWidth * 2 - padding - 5
 
     const qrBgX = qrX - qrPadding - qrBorderWidth
-    const availLogoWidth = Math.max(72, qrBgX - teamX - 12)
+    const availLogoWidth = Math.max(100, qrBgX - teamX - 16)
 
     // Logo del equipo (solo airsoft)
     if (!isTraumatico && formData.equipoLogo) {
@@ -1201,25 +1213,19 @@ export const generateBackCard = async (formData) => {
 
     // Generar y dibujar el QR Code
     try {
-        // Generar URL para el QR code que redirige a la vista de credencial
-        // Intentar obtener la URL base desde el entorno o usar window.location.origin
-        let baseUrl = ''
-        if (typeof window !== 'undefined' && window.location) {
-            baseUrl = window.location.origin
-        } else if (typeof process !== 'undefined' && process.env.VITE_APP_URL) {
-            baseUrl = process.env.VITE_APP_URL
-        }
+        // Siempre el dominio desplegado (no localhost), para que el QR funcione al escanearlo
+        const baseUrl =
+            (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APP_URL) ||
+            'https://clubdetirodelvalle.vercel.app'
 
         // URL del QR: incluye tipo para no confundir airsoft vs traumático
         const tipoQr =
             formData.tipoCarnet === 'traumatico' ? 'traumatico' : 'airsoft'
         const cedulaQr = encodeURIComponent(String(formData.cedula || '').trim())
-        const qrData = baseUrl
-            ? `${baseUrl}/credencial/${cedulaQr}?tipo=${tipoQr}`
-            : `/credencial/${cedulaQr}?tipo=${tipoQr}`
+        const qrData = `${baseUrl.replace(/\/$/, '')}/credencial/${cedulaQr}?tipo=${tipoQr}`
 
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 200 * RENDER_SCALE,
+            width: Math.round(qrSize * 2 * RENDER_SCALE),
             margin: 2,
             color: {
                 dark: '#000000',

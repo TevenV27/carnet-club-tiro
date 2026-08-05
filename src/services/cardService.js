@@ -18,6 +18,34 @@ import {
     noOperatorAuthAccountsForEmails
 } from './operatorAuthService'
 import { logAction } from './logService'
+import { generateFrontCard, generateBackCard } from '../utils/cardGenerator'
+import { getTeams } from './teamService'
+
+/** Comprime blobs de carnet como en saveCard (límite Firestore). */
+const compressCardFaceBlobs = async (frontCardBlob, backCardBlob) => {
+    let frontCardBase64 = await compressImage(frontCardBlob, 800, 0.5)
+    let backCardBase64 = await compressImage(backCardBlob, 800, 0.5)
+
+    let frontSize = frontCardBase64.length
+    let backSize = backCardBase64.length
+    let maxWidth = 800
+    let quality = 0.5
+
+    while ((frontSize > 400000 || backSize > 400000) && quality > 0.2) {
+        quality -= 0.1
+        maxWidth -= 50
+        if (frontSize > 400000) {
+            frontCardBase64 = await compressImage(frontCardBlob, maxWidth, quality)
+            frontSize = frontCardBase64.length
+        }
+        if (backSize > 400000) {
+            backCardBase64 = await compressImage(backCardBlob, maxWidth, quality)
+            backSize = backCardBase64.length
+        }
+    }
+
+    return { frontCardBase64, backCardBase64 }
+}
 
 // Comprimir imagen Blob a base64 con calidad reducida
 const compressImage = (blob, maxWidth = 1200, quality = 0.75) => {
@@ -450,6 +478,132 @@ export const getAllCarnets = async (tipoCarnet = null) => {
         console.error('Error obteniendo todos los carnets:', error)
         throw error
     }
+}
+
+/**
+ * Regenera frente/reverso con los datos ya guardados del carnet y actualiza solo las imágenes.
+ * Útil tras cambios de diseño (colores, tamaños, QR, etc.).
+ */
+export const regenerateStoredCarnet = async (card, teams = []) => {
+    if (!card?.id) {
+        throw new Error('Carnet sin ID')
+    }
+    if (!card.cedula) {
+        throw new Error(`Carnet ${card.id} sin cédula`)
+    }
+
+    const tipoCarnet = card.tipoCarnet === 'traumatico' ? 'traumatico' : 'airsoft'
+    const equipoSeleccionado = teams.find((eq) => eq.nombre === card.equipoTactico)
+
+    const formData = {
+        nombre: card.nombre || '',
+        nivel: card.nivel || '',
+        numeroMembresia: card.numeroMembresia || '',
+        emision: card.emision || '',
+        vigencia: card.vigencia || '',
+        nombreClub: card.nombreClub || 'CLUB DE TIRO DEPORTIVO DEL VALLE',
+        rh: card.rh || '',
+        contacto: card.contacto || '',
+        contactoEmergencia: card.contactoEmergencia || '',
+        cedula: card.cedula,
+        email: card.email || '',
+        identificador:
+            tipoCarnet === 'traumatico'
+                ? card.identificador || 'INFORMACIÓN'
+                : card.identificador || '',
+        especialidad: card.especialidad || '',
+        equipoTactico: card.equipoTactico || '',
+        equipoLogo: equipoSeleccionado?.logo ?? card.equipoLogo ?? null,
+        rolEnEquipo: card.rolEnEquipo || '',
+        pistola: card.pistola || '',
+        fusil: card.fusil || '',
+        marca: card.marca || card.arma || '',
+        calibre: card.calibre || '',
+        an: card.an || '',
+        disciplina:
+            card.disciplina ||
+            (tipoCarnet === 'traumatico' ? 'BAJA LETALIDAD' : 'AIRSOFT'),
+        tipo: card.tipo || (tipoCarnet === 'traumatico' ? 'TRAUMÁTICA' : ''),
+        tipoCarnet,
+        foto:
+            typeof card.foto === 'string' && card.foto.trim()
+                ? card.foto.trim().startsWith('data:')
+                    ? card.foto.trim()
+                    : `data:image/jpeg;base64,${card.foto.trim()}`
+                : null
+    }
+
+    const frontCardBlob = await generateFrontCard(formData)
+    const backCardBlob = await generateBackCard(formData)
+    const { frontCardBase64, backCardBase64 } = await compressCardFaceBlobs(
+        frontCardBlob,
+        backCardBlob
+    )
+
+    await updateDoc(doc(db, 'carnets', card.id), {
+        frontCardBase64,
+        backCardBase64,
+        updatedAt: new Date()
+    })
+
+    await logAction(
+        'actualizar',
+        'carnets',
+        card.id,
+        `Carnet regenerado (diseño): ${card.numeroMembresia || card.cedula}`,
+        { cedula: card.cedula, numeroMembresia: card.numeroMembresia, tipoCarnet }
+    )
+
+    return {
+        id: card.id,
+        frontCardBase64,
+        backCardBase64
+    }
+}
+
+/**
+ * Regenera y guarda todos los carnets de un tipo.
+ * `onProgress({ current, total, card, ok, error? })` se llama tras cada uno.
+ */
+export const regenerateAllCarnets = async (tipoCarnet = 'airsoft', { onProgress } = {}) => {
+    const cards = await getAllCarnets(tipoCarnet)
+    const teams =
+        tipoCarnet === 'traumatico' ? [] : await getTeams().catch(() => [])
+
+    const ok = []
+    const errors = []
+
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i]
+        try {
+            const updated = await regenerateStoredCarnet(card, teams)
+            ok.push({ id: card.id, cedula: card.cedula, nombre: card.nombre })
+            onProgress?.({
+                current: i + 1,
+                total: cards.length,
+                card,
+                ok: true,
+                updated
+            })
+        } catch (error) {
+            console.error(`Error regenerando carnet ${card.id}:`, error)
+            errors.push({
+                id: card.id,
+                cedula: card.cedula,
+                nombre: card.nombre,
+                error: error?.message || String(error)
+            })
+            onProgress?.({
+                current: i + 1,
+                total: cards.length,
+                card,
+                ok: false,
+                error
+            })
+        }
+    }
+
+    return { total: cards.length, ok, errors }
 }
 
 // Generar el siguiente número de membresía airsoft (CTV-1001, CTV-1002, …)

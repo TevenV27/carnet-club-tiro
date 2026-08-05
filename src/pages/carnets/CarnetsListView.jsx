@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getAllCarnets } from '../../services/cardService'
+import { getAllCarnets, regenerateAllCarnets } from '../../services/cardService'
 import { buildCarnetsZipBlob } from '../../utils/carnetZip'
 import TiltCarnetFace from '../../components/carnet/TiltCarnetFace'
 import InactiveBanner from '../../components/ui/InactiveBanner'
@@ -89,7 +89,23 @@ function CarnetsListView({ tipoCarnet = 'airsoft' }) {
     const [error, setError] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [downloading, setDownloading] = useState(false)
+    const [updating, setUpdating] = useState(false)
+    const [updateProgress, setUpdateProgress] = useState(null)
     const isTraumatico = tipoCarnet === 'traumatico'
+
+    const loadCarnets = useCallback(async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const data = await getAllCarnets(tipoCarnet)
+            setCarnets(data)
+        } catch (err) {
+            console.error('Error cargando carnets:', err)
+            setError('No se pudieron cargar los carnets.')
+        } finally {
+            setLoading(false)
+        }
+    }, [tipoCarnet])
 
     useEffect(() => {
         let isMounted = true
@@ -159,6 +175,51 @@ function CarnetsListView({ tipoCarnet = 'airsoft' }) {
         }
     }, [carnets, isTraumatico])
 
+    const handleUpdateAllCarnets = useCallback(async () => {
+        if (carnets.length === 0 || updating) return
+
+        const okConfirm = window.confirm(
+            `Se regenerarán ${carnets.length} carnet(es) con el diseño actual y se guardarán en la base de datos.\n\n` +
+                'Esto puede tardar varios minutos. ¿Continuar?'
+        )
+        if (!okConfirm) return
+
+        setUpdating(true)
+        setUpdateProgress({ current: 0, total: carnets.length })
+
+        try {
+            const result = await regenerateAllCarnets(tipoCarnet, {
+                onProgress: ({ current, total }) => {
+                    setUpdateProgress({ current, total })
+                }
+            })
+
+            await loadCarnets()
+
+            if (result.errors.length === 0) {
+                alert(`Listo: se actualizaron ${result.ok.length} carnet(es).`)
+            } else {
+                const sample = result.errors
+                    .slice(0, 5)
+                    .map((e) => `• ${e.nombre || e.cedula}: ${e.error}`)
+                    .join('\n')
+                alert(
+                    `Actualizados: ${result.ok.length} de ${result.total}.\n` +
+                        `Fallidos: ${result.errors.length}.\n\n${sample}` +
+                        (result.errors.length > 5 ? '\n…' : '')
+                )
+            }
+        } catch (err) {
+            console.error('Error actualizando carnets:', err)
+            alert(
+                `No se pudo completar la actualización: ${err?.message || 'error desconocido'}`
+            )
+        } finally {
+            setUpdating(false)
+            setUpdateProgress(null)
+        }
+    }, [carnets.length, updating, tipoCarnet, loadCarnets])
+
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center bg-tactical-dark">
@@ -194,16 +255,35 @@ function CarnetsListView({ tipoCarnet = 'airsoft' }) {
                                         ? 'Baja letalidad · CTV-T · frente y reverso'
                                         : 'Frente y reverso en fila · mueve el cursor sobre cada cara para el efecto 3D'}
                                 </p>
+                                {updating && updateProgress ? (
+                                    <p className="text-[11px] font-tactical text-tactical-gold tracking-[0.08em] uppercase mt-3">
+                                        Actualizando {updateProgress.current} / {updateProgress.total}…
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={handleDownloadZip}
-                            disabled={downloading || carnets.length === 0}
-                            className="shrink-0 border border-tactical-gold/80 bg-tactical-gold/10 px-5 py-3 text-xs font-tactical uppercase tracking-[0.1em] text-tactical-gold hover:bg-tactical-gold/20 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-                        >
-                            {downloading ? 'Generando ZIP…' : 'Descargar carnets'}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                            <button
+                                type="button"
+                                onClick={handleUpdateAllCarnets}
+                                disabled={updating || downloading || carnets.length === 0}
+                                className="border border-tactical-gold/80 bg-tactical-gold/10 px-5 py-3 text-xs font-tactical uppercase tracking-[0.1em] text-tactical-gold hover:bg-tactical-gold/20 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            >
+                                {updating
+                                    ? updateProgress
+                                        ? `Actualizando ${updateProgress.current}/${updateProgress.total}…`
+                                        : 'Actualizando…'
+                                    : 'Actualizar carnets'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDownloadZip}
+                                disabled={downloading || updating || carnets.length === 0}
+                                className="border border-tactical-gold/80 bg-tactical-gold/10 px-5 py-3 text-xs font-tactical uppercase tracking-[0.1em] text-tactical-gold hover:bg-tactical-gold/20 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            >
+                                {downloading ? 'Generando ZIP…' : 'Descargar carnets'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
