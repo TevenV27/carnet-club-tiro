@@ -53,3 +53,5 @@ Las tarjetas se generan en formato **VERTICAL** (más alto que ancho) con las si
 - Alto: 8.5 cm (1004 píxeles a 300 DPI)
 - Resolución: 300 DPI (apta para impresión profesional)
 - Formato: Vertical (portrait orientation)
+
+
