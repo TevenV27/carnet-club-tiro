@@ -498,6 +498,7 @@ export const regenerateStoredCarnet = async (card, teams = []) => {
     const formData = {
         nombre: card.nombre || '',
         nivel: card.nivel || '',
+        rolCarnet: card.rolCarnet === 'instructor' ? 'instructor' : 'miembro',
         numeroMembresia: card.numeroMembresia || '',
         emision: card.emision || '',
         vigencia: card.vigencia || '',

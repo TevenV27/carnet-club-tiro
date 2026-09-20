@@ -16,7 +16,9 @@ function FifaOperatorCard({ card }) {
     const active = isActivo(card)
     const extra = [
         isTraumatico ? (card.disciplina || 'BAJA LETALIDAD') : card.nivel,
-        card.numeroMembresia
+        isTraumatico && card.rolCarnet === 'instructor'
+            ? 'INSTRUCTOR DE TIRO'
+            : card.numeroMembresia
     ].filter(Boolean).join(' · ')
 
     return (

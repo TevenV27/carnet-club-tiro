@@ -270,7 +270,11 @@ function CredencialView() {
                                         }}
                                     >
                                         &gt; {tipoLabel(card).toUpperCase()}
-                                        {card.numeroMembresia ? ` · ${card.numeroMembresia}` : ''}
+                                        {card.tipoCarnet === 'traumatico' && card.rolCarnet === 'instructor'
+                                            ? ' · INSTRUCTOR DE TIRO'
+                                            : card.numeroMembresia
+                                                ? ` · ${card.numeroMembresia}`
+                                                : ''}
                                     </h2>
                                     {inactive ? (
                                         <InactiveBanner
@@ -306,14 +310,21 @@ function CredencialView() {
                                 )}
 
                                 <div className="grid grid-cols-2 gap-2 text-tactical-brass font-tactical text-xs mb-4">
-                                    {card.numeroMembresia && (
+                                    {card.tipoCarnet === 'traumatico' && card.rolCarnet === 'instructor' ? (
+                                        <div>
+                                            <span className="text-tactical-gold opacity-80">
+                                                Rol:{' '}
+                                            </span>
+                                            INSTRUCTOR DE TIRO
+                                        </div>
+                                    ) : card.numeroMembresia ? (
                                         <div>
                                             <span className="text-tactical-gold opacity-80">
                                                 Membresía:{' '}
                                             </span>
                                             {card.numeroMembresia}
                                         </div>
-                                    )}
+                                    ) : null}
                                     {card.nivel && (
                                         <div>
                                             <span className="text-tactical-gold opacity-80">Nivel: </span>

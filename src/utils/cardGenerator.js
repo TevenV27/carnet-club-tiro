@@ -650,15 +650,20 @@ export const generateFrontCard = async (formData) => {
     ctx.textAlign = 'center'
     drawTextWithShadow(ctx, nombreText, CARD_WIDTH / 2, memberInfoY, nombreFontSize, 'Arial', theme.value, true)
 
-    const frontSubtitle = isTraumatico
-        ? 'CÓDIGO DE MIEMBRO'
-        : (formData.nivel || 'NIVEL').toUpperCase()
-    ctx.font = 'bold 28px Arial'
+    const isInstructorTiro = isTraumatico && formData.rolCarnet === 'instructor'
+    const frontSubtitle = isInstructorTiro
+        ? 'INSTRUCTOR DE TIRO'
+        : isTraumatico
+            ? 'CÓDIGO DE MIEMBRO'
+            : (formData.nivel || 'NIVEL').toUpperCase()
+    const subtitleSize = isInstructorTiro ? 36 : 28
     ctx.fillStyle = theme.accent
-    drawTextWithShadow(ctx, frontSubtitle, CARD_WIDTH / 2, memberInfoY + 55, 28, 'Arial', theme.accent)
+    drawTextWithShadow(ctx, frontSubtitle, CARD_WIDTH / 2, memberInfoY + 55, subtitleSize, 'Arial', theme.accent)
 
-    ctx.font = 'bold 36px Arial'
-    drawTextWithShadow(ctx, formData.numeroMembresia || 'CTDV-0000', CARD_WIDTH / 2, memberInfoY + 105, 36, 'Arial', theme.value, false)
+    if (!isInstructorTiro) {
+        ctx.font = 'bold 36px Arial'
+        drawTextWithShadow(ctx, formData.numeroMembresia || 'CTDV-0000', CARD_WIDTH / 2, memberInfoY + 105, 36, 'Arial', theme.value, false)
+    }
 
     const lastValueY = CARD_HEIGHT - padding - 10
     const bottomY = lastValueY - 205

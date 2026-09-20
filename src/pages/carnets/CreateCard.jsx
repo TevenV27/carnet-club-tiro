@@ -84,6 +84,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '', variant = 'ai
     // Datos del frente
     nombre: '',
     nivel: '',
+    rolCarnet: 'miembro',
     numeroMembresia: '',
     emision: '',
     vigencia: '',
@@ -177,6 +178,7 @@ function CreateCard({ onSignOut, editCedula = '', returnPath = '', variant = 'ai
           ...prev,
           nombre: cardData.nombre ?? '',
           nivel: cardData.nivel ?? '',
+          rolCarnet: cardData.rolCarnet === 'instructor' ? 'instructor' : 'miembro',
           numeroMembresia: cardData.numeroMembresia ?? '',
           emision: cardData.emision ?? '',
           vigencia: cardData.vigencia ?? '',
@@ -592,6 +594,23 @@ Revisa la consola del navegador para más detalles.
                 <h3 className="text-sm font-tactical text-tactical-gold uppercase tracking-[0.05em] mb-4">
                   Datos Cara Frontal
                 </h3>
+
+                {isTraumatico ? (
+                <div className="mb-4">
+                  <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
+                    Tipo de titular
+                  </label>
+                  <select
+                    name="rolCarnet"
+                    value={formData.rolCarnet}
+                    onChange={handleInputChange}
+                    className="w-full bg-black/60 border border-tactical-border px-4 py-2 text-tactical-gold font-tactical uppercase tracking-[0.05em] focus:outline-none focus:border-tactical-gold"
+                  >
+                    <option value="miembro">Miembro</option>
+                    <option value="instructor">Instructor de tiro</option>
+                  </select>
+                </div>
+                ) : null}
 
                 <div className="mb-4">
                   <label className="block text-[10px] text-tactical-brass/90 uppercase tracking-[0.1em] mb-2">
